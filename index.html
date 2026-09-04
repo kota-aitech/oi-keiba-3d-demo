@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大井競馬 予想シミュレーション 3Dデモ — 第8回大井 9/3・9/4（実データ版）</title>
+<style>
+:root{
+  --night:#0b1626; --panel:#0f1c2f; --line:rgba(255,255,255,.10);
+  --amber:#f2b134; --ink:#eef2f7; --mute:#9fb0c6; --dim:#6d7d94;
+  --nige:#e4572e; --senko:#f2b134; --sashi:#3fa7b8; --oikomi:#8e6cc2;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#app{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);height:100vh;height:100dvh;overflow:hidden}
+header,main{min-width:0}
+.hdr-row{display:flex;align-items:center;gap:16px}
+#tabbar{display:none;background:#0e1b2e;border-top:1px solid var(--line)}
+#tabbar button{flex:1;padding:11px 4px 12px;border:0;background:transparent;color:var(--mute);font-size:13px}
+#tabbar button.on{color:var(--amber);font-weight:700}
+header{display:flex;align-items:center;gap:16px;padding:8px 16px;border-bottom:1px solid var(--line);background:#0e1b2e;flex-wrap:wrap}
+header h1{font-size:15px;font-weight:700;margin:0}
+header h1 small{font-weight:400;color:var(--mute);margin-left:10px;font-size:12px}
+.tabs{display:flex;gap:4px}
+.tab{padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--mute);white-space:nowrap}
+.tab.on{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+#races{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.rbtn{min-width:40px;padding:3px 6px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px;line-height:1.25;text-align:center}
+.rbtn small{display:block;color:var(--mute);font-size:10px}
+.rbtn.on{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+main{display:grid;grid-template-columns:262px 1fr 356px;min-height:0}
+aside{overflow:auto;padding:12px 14px 24px;background:var(--panel);border-right:1px solid var(--line)}
+aside.right{border-right:0;border-left:1px solid var(--line)}
+h2{font-size:12px;color:var(--mute);font-weight:600;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+aside h2:first-child{margin-top:0}
+.seg{display:flex;gap:3px;flex-wrap:wrap}
+.seg button{flex:1;padding:5px 4px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px}
+.seg button.on{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.row label{flex:1;color:var(--mute)}
+.row .val{min-width:44px;text-align:right;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--amber);margin:2px 0 0}
+.ends{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:-2px}
+.btn{width:100%;padding:8px 10px;border:1px solid var(--line);background:#132339;border-radius:8px;margin-top:6px;font-size:13px}
+.btn.primary{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.hint{color:var(--mute);font-size:11px;margin:4px 0 0}
+select,textarea,input[type=number]{font:inherit;color:var(--ink);background:#132339;border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+textarea{width:100%;height:120px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+details summary{cursor:pointer;color:var(--mute);font-size:12px;margin:10px 0 4px}
+#stage{position:relative;min-width:0;background:#08111f}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.cams{position:absolute;top:10px;left:10px;display:flex;gap:4px}
+.cams button{padding:4px 10px;border:1px solid var(--line);background:rgba(13,24,40,.8);border-radius:6px;font-size:12px}
+.cams button.on{background:var(--amber);color:#1a1200;border-color:var(--amber)}
+.badge{position:absolute;top:10px;right:10px;background:rgba(13,24,40,.8);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--mute)}
+.badge b{color:var(--ink);font-size:14px}
+#bottom{position:absolute;left:10px;right:10px;bottom:10px;display:grid;grid-template-columns:1fr 220px;gap:8px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+.prog{background:rgba(13,24,40,.82);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.prog .ctl{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.prog .ctl button{padding:3px 10px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px}
+.prog .ctl button.on{background:var(--amber);color:#1a1200;border-color:var(--amber)}
+.prog .ctl .t{margin-left:auto;color:var(--mute);font-size:12px}
+.bar{position:relative;height:18px;border-radius:9px;background:#1a2c45;overflow:visible}
+.bar .mk{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35)}
+.bar .mk span{position:absolute;top:19px;left:0;transform:translateX(-50%);font-size:10px;color:var(--mute);white-space:nowrap}
+.bar .pin{position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:var(--amber);transform:translateX(-50%);box-shadow:0 0 6px var(--amber)}
+.bar .pin.p2{background:#fff;width:8px;height:8px;top:5px;box-shadow:none;opacity:.8}
+.live{background:rgba(13,24,40,.82);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px}
+.live .h{color:var(--mute);font-size:11px;margin-bottom:2px}
+.live div.r{display:flex;gap:6px;align-items:center;padding:1px 0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.num{display:inline-block;min-width:18px;text-align:center;border-radius:3px;font-weight:700;font-size:11px;color:#111;padding:0 2px}
+table.pred{width:100%;border-collapse:collapse;font-size:11.5px}
+table.pred th{font-weight:600;color:var(--mute);text-align:left;padding:3px 4px;border-bottom:1px solid var(--line);font-size:11px}
+table.pred td{padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;white-space:nowrap}
+table.pred td:nth-child(2){white-space:normal;line-height:1.25}
+table.pred th{white-space:nowrap}
+table.pred td.r{text-align:right}
+.mark{font-weight:700;font-size:14px;color:var(--amber)}
+.wbar{height:6px;background:#1a2c45;border-radius:3px;overflow:hidden}
+.wbar i{display:block;height:100%;background:var(--amber)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
+.kv span:nth-child(odd){color:var(--mute)}
+.pace{display:inline-block;padding:0 8px;border-radius:4px;font-weight:700;color:#111}
+ul.points{margin:4px 0 0;padding-left:18px}
+ul.points li{margin:3px 0}
+.tr{margin:6px 0}
+.tr .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute)}
+.tr .stack{display:flex;height:12px;border-radius:3px;overflow:hidden;margin-top:2px}
+.tr .stack i{display:block;height:100%}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--mute);margin:4px 0 8px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+.result{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(13,24,40,.92);border:1px solid var(--amber);border-radius:10px;padding:12px 18px;min-width:300px;display:none}
+.result h3{margin:0 0 6px;font-size:14px}
+.result .r{display:flex;gap:10px;padding:2px 0;font-size:13px}
+.src{color:var(--dim);font-size:10px;margin-top:8px}
+@media (max-width:900px){
+  header{padding:6px 10px;gap:6px;flex-direction:column;align-items:stretch;flex-wrap:nowrap}
+  .hdr-row{gap:8px;justify-content:space-between}
+  header h1{font-size:13px;white-space:nowrap} header h1 small{display:none}
+  .tab{padding:4px 10px;font-size:12px}
+  #races{margin-left:0;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #races::-webkit-scrollbar{display:none}
+  .rbtn{flex:none;min-width:48px;padding:4px 7px}
+  main{display:block;position:relative;min-height:0}
+  #stage{position:absolute;inset:0}
+  aside{position:absolute;inset:0;z-index:5;display:none;border:0;padding:12px 14px 24px}
+  body[data-tab="cond"] aside.left{display:block}
+  body[data-tab="pred"] aside.right{display:block}
+  #tabbar{display:flex}
+  .badge{display:none}
+  .cams{gap:3px;left:6px;top:6px}.cams button{padding:5px 8px;font-size:11px}
+  #bottom{grid-template-columns:1fr;left:6px;right:6px;bottom:6px;gap:6px}
+  .prog{padding:6px 10px}
+  .prog .ctl button{padding:4px 9px}
+  .bar .mk span{font-size:9px}
+  .live{max-height:96px;overflow:hidden;font-size:11px;padding:5px 9px}
+  .live div.r:nth-child(n+4){display:none}
+  .result{min-width:0;width:92vw;top:12%;padding:10px 12px}
+  .result .r{font-size:12px;gap:6px}
+  .btn{padding:11px 10px;font-size:14px}
+  .seg button{padding:8px 4px}
+  input[type=range]{height:28px}
+}
+@media (prefers-reduced-motion:reduce){ .bar .pin{transition:none} }
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="hdr-row">
+    <h1>大井競馬 予想シミュレーション <small>第8回大井 ナイター開催 — 3Dデモ</small></h1>
+    <div class="tabs" id="dayTabs"></div>
+  </div>
+  <div id="races"></div>
+</header>
+<main>
+  <aside class="left">
+    <h2>馬場状態</h2>
+    <div class="seg" id="babaSeg"></div>
+    <h2>天候</h2>
+    <div class="seg" id="wxSeg"></div>
+    <p class="hint" id="wxHint"></p>
+    <div class="row"><label>直線の風</label><span class="val" id="windV">無風</span></div>
+    <input type="range" id="wind" min="-1" max="1" step="0.1" value="0">
+    <div class="ends"><span>向かい風</span><span>追い風</span></div>
+
+    <h2>馬場バイアス（傾向から自動算出・手動調整可）</h2>
+    <div class="row"><label>前残り度</label><span class="val" id="frontV">0</span></div>
+    <input type="range" id="front" min="-1" max="1" step="0.05" value="0">
+    <div class="ends"><span>差し・追込有利</span><span>前残り</span></div>
+    <div class="row"><label>内外バイアス</label><span class="val" id="outV">0</span></div>
+    <input type="range" id="out" min="-1" max="1" step="0.05" value="0">
+    <div class="ends"><span>内有利</span><span>外伸び</span></div>
+    <div class="row"><label>直近重視度</label><span class="val" id="recentV">0.6</span></div>
+    <input type="range" id="recent" min="0" max="1" step="0.1" value="0.6">
+    <div class="ends"><span>近1年重視</span><span>今開催重視</span></div>
+    <button class="btn" id="autoBias">傾向データから再計算</button>
+    <p class="hint" id="autoHint"></p>
+
+    <h2>シミュレーション</h2>
+    <div class="row"><label>試行回数</label>
+      <select id="trials"><option>200</option><option selected>500</option><option>1000</option></select></div>
+    <button class="btn primary" id="runBtn">予想を計算する</button>
+    <button class="btn" id="playBtn" disabled>代表シナリオを3D再生</button>
+    <button class="btn" id="altBtn" disabled>別シナリオを再生（ばらつきを見る）</button>
+
+    <h2>カスタムレース</h2>
+    <div class="row"><label>距離</label>
+      <select id="cDist"><option>1200</option><option>1400</option><option selected>1600</option><option>1650</option><option>1800</option><option>2000</option></select></div>
+    <div class="row"><label>頭数</label><input type="number" id="cN" min="6" max="16" value="12" style="width:70px"></div>
+    <button class="btn" id="cGen">サンプル出走馬を生成</button>
+    <details><summary>出走馬データ（JSON） — 実データに差し替え可</summary>
+      <textarea id="json"></textarea>
+      <div class="seg" style="margin-top:4px"><button id="jsonLoad">読み込む</button><button id="jsonDump">現在の馬を書き出す</button></div>
+      <p class="hint">style: 逃げ/先行/差し/追込、gate: 枠番(1-8)、ability/close/stamina/wet: 0〜1</p>
+    </details>
+  </aside>
+
+  <div id="stage">
+    <div class="cams" id="cams"></div>
+    <div class="badge" id="badge">レースを選択</div>
+    <div class="result" id="resultBox"></div>
+    <div id="bottom">
+      <div class="prog">
+        <div class="ctl">
+          <button id="ppBtn">▶ 再生</button>
+          <button class="spd on" data-s="1">×1</button><button class="spd" data-s="2">×2</button><button class="spd" data-s="4">×4</button>
+          <span class="t" id="clock">—</span>
+        </div>
+        <div class="bar" id="bar"></div>
+      </div>
+      <div class="live" id="live"><div class="h">通過順（先頭から）</div><div id="liveRows">—</div></div>
+    </div>
+  </div>
+
+  <aside class="right">
+    <h2>予想</h2>
+    <div id="predHead" class="kv"></div>
+    <div style="margin:8px 0 4px" id="paceBox"></div>
+    <table class="pred"><thead><tr><th>印</th><th>馬</th><th>脚質</th><th class="r">勝率</th><th class="r">3着内</th><th class="r">3角</th><th class="r">4角</th></tr></thead><tbody id="predBody"><tr><td colspan="7" style="color:var(--mute)">「予想を計算する」で試行を開始</td></tr></tbody></table>
+    <details><summary>出走馬の根拠（前5走の通過順・着順から脚質と能力を推定）</summary><div id="memoList" style="font-size:11px;color:var(--mute)"></div></details>
+    <h2>読みのポイント</h2>
+    <ul class="points" id="points"><li style="color:var(--mute)">—</li></ul>
+    <h2>傾向データ（この距離）</h2>
+    <div class="legend"><span style="--c:var(--nige)">逃げ</span><span style="--c:var(--senko)">先行</span><span style="--c:var(--sashi)">差し</span><span style="--c:var(--oikomi)">追込</span></div>
+    <div id="trendStyle"></div>
+    <div class="legend" style="margin-top:8px"><span style="--c:#c9d3e0">内（1〜3枠）</span><span style="--c:#7f93ad">中（4〜6枠）</span><span style="--c:#4e6180">外（7〜8枠）</span></div>
+    <div id="trendGate"></div>
+    <div id="meetFacts" style="margin-top:8px;font-size:12px"></div>
+    <p class="src">出走馬：9/3 8R〜12R と 9/4 全12R は楽天競馬の出馬表（前5走の通過順・上がり・馬場）から取り込んだ実データ。9/3 1R〜7R は番組のみ実データで出走馬はサンプル。今開催（8/31〜9/3）の傾向は nankankeiba.com「レース傾向」の実測。近1年・直近2ヶ月の脚質別・枠別は参考値。</p>
+  </aside>
+</main>
+<nav id="tabbar"><button data-t="3d" class="on">3D</button><button data-t="pred">予想</button><button data-t="cond">条件</button></nav>
+</div>
+
+<script>
+
+/* ============================================================
+   0. ユーティリティ
+   ============================================================ */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const mod=(a,n)=>((a%n)+n)%n;
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const $=id=>document.getElementById(id);
+const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return (m?m+':':'')+(m?s.toFixed(1).padStart(4,'0'):s.toFixed(1));};
+
+/* ============================================================
+   1. データ
+   ============================================================ */
+const STYLE={
+  '逃げ':{ke:0.045,kl:-0.040,laneT:1.0,front:true, color:'#e4572e'},
+  '先行':{ke:0.026,kl:-0.016,laneT:2.4,front:true, color:'#f2b134'},
+  '差し':{ke:-0.010,kl:0.038,laneT:4.2,front:false,color:'#3fa7b8'},
+  '追込':{ke:-0.026,kl:0.060,laneT:5.6,front:false,color:'#8e6cc2'},
+};
+const STYLES=Object.keys(STYLE);
+const WAKU_COLOR=['','#ffffff','#2b2b2b','#e03a3a','#3b6cf0','#f4d23a','#3aa657','#f08a2a','#f27bb5'];
+const BABA={
+  '良':  {speed:1.000,front:0.00,noise:1.0,wet:false,sandCss:'#cfa872',label:'標準。力の要る馬場'},
+  '稍重':{speed:1.006,front:0.12,noise:1.0,wet:true, sandCss:'#b99464',label:'湿って締まり時計が速い。前が止まりにくい'},
+  '重':  {speed:1.010,front:0.22,noise:1.15,wet:true,sandCss:'#a4835a',label:'さらに高速化。前残り傾向が最も強い'},
+  '不良':{speed:1.004,front:0.10,noise:1.6,wet:true, sandCss:'#8a6e4c',label:'水が浮き脚抜き次第。波乱含みでばらつき大'},
+};
+const WEATHER={
+  '晴':{rain:false,hint:'乾いた馬場のまま推移しやすい',noise:1.0},
+  '曇':{rain:false,hint:'馬場は前日の状態を引き継ぎやすい',noise:1.0},
+  '雨':{rain:true, hint:'開催中に稍重→重へ悪化する想定。前残り度が上がり時計も速くなる',noise:1.1},
+  '雨上がり':{rain:false,hint:'乾き際は外の砂が乾きやすく、内外差が出やすい',noise:1.05},
+};
+const REF_TIME={1000:60.8,1200:74.5,1400:88.0,1600:102.5,1650:106.0,1800:116.5,2000:130.5,2400:159.5};
+
+// --- 近1年・直近2ヶ月：デモ用参考値（実集計に差し替え前提） ---
+const TREND_REF={
+  1200:{year:{front3:.66,style:[.20,.38,.30,.12],gate:[.29,.35,.36]},recent:{front3:.70,style:[.22,.40,.27,.11],gate:[.27,.35,.38]}},
+  1400:{year:{front3:.64,style:[.17,.38,.32,.13],gate:[.32,.35,.33]},recent:{front3:.68,style:[.19,.40,.29,.12],gate:[.30,.35,.35]}},
+  1600:{year:{front3:.62,style:[.16,.37,.33,.14],gate:[.35,.34,.31]},recent:{front3:.66,style:[.18,.39,.30,.13],gate:[.33,.34,.33]}},
+  1650:{year:{front3:.66,style:[.19,.39,.30,.12],gate:[.34,.34,.32]},recent:{front3:.69,style:[.21,.40,.28,.11],gate:[.32,.35,.33]}},
+  1800:{year:{front3:.60,style:[.15,.36,.35,.14],gate:[.34,.34,.32]},recent:{front3:.64,style:[.17,.38,.32,.13],gate:[.32,.34,.34]}},
+  2000:{year:{front3:.58,style:[.14,.35,.36,.15],gate:[.33,.34,.33]},recent:{front3:.62,style:[.16,.37,.33,.14],gate:[.32,.34,.34]}},
+  2400:{year:{front3:.56,style:[.14,.34,.36,.16],gate:[.33,.34,.33]},recent:{front3:.60,style:[.15,.36,.34,.15],gate:[.32,.34,.34]}},
+};
+TREND_REF[1000]=TREND_REF[1200];
+// --- 今開催 第8回大井（実測：nankankeiba レース傾向 3角位置 / 3着内回数ベスト3枠） ---
+const MEET={
+  name:'第8回 大井競馬（8/31〜9/4）',
+  days:[
+    {d:'8/31(月)',front:28,back:8,best:[[5,7],[6,7],[2,6]]},
+    {d:'9/1(火)', front:27,back:9,best:[[6,7],[8,6],[4,5]]},
+    {d:'9/2(水)', front:30,back:6,best:[[4,7],[5,6],[6,6]]},
+    {d:'9/3(木)', front:8, back:1,best:[[8,3],[6,2]],partial:'3R終了時点'},
+  ],
+};
+MEET.frontShare=(()=>{let f=0,b=0;MEET.days.forEach(x=>{f+=x.front;b+=x.back;});return f/(f+b);})();
+MEET.gateShare=(()=>{let s=[0,0,0];MEET.days.forEach(x=>x.best.forEach(([w,c])=>{s[w<=3?0:w<=6?1:2]+=c;}));const t=s[0]+s[1]+s[2];return s.map(v=>v/t);})();
+
+// --- 番組（楽天競馬 出馬表より）---
+const DAYS={
+  '9/3(木) 第4日':[
+    {r:1,time:'14:50',dist:1600,n:10,cls:'C3一二'},{r:2,time:'15:22',dist:1200,n:16,cls:'C3一二'},
+    {r:3,time:'15:54',dist:1400,n:10,cls:'2歳三四'},{r:4,time:'16:26',dist:1200,n:7,cls:'2歳三四'},
+    {r:5,time:'16:58',dist:1600,n:12,cls:'3歳四五'},{r:6,time:'17:30',dist:1200,n:15,cls:'3歳四五'},
+    {r:7,time:'18:02',dist:1600,n:12,cls:'C2三四五'},{r:8,time:'18:35',dist:1400,n:14,cls:'ネグローニ賞 C2三四五'},
+    {r:9,time:'19:07',dist:1200,n:12,cls:'C2三四五'},{r:10,time:'19:40',dist:1600,n:11,cls:'オフトひたちなか賞 B2三 選抜特別'},
+    {r:11,time:'20:15',dist:1800,n:9,cls:'セプテンバー賞 A2B1一 選抜特別'},{r:12,time:'20:50',dist:1650,n:10,cls:'うお座特別 C1二 選抜特別'},
+  ],
+  '9/4(金) 第5日':[
+    {r:1,time:'14:50',dist:1600,n:10,cls:'3歳一二三'},{r:2,time:'15:22',dist:1400,n:11,cls:'3歳一二三'},
+    {r:3,time:'15:54',dist:1200,n:13,cls:'3歳一二三'},{r:4,time:'16:26',dist:1200,n:7,cls:'2歳一二'},
+    {r:5,time:'16:58',dist:1600,n:5,cls:'はやぶさ特別 2歳'},{r:6,time:'17:30',dist:1400,n:12,cls:'3歳 選抜牝馬'},
+    {r:7,time:'18:02',dist:1600,n:9,cls:'C1三四五'},{r:8,time:'18:35',dist:1400,n:6,cls:'シャンゼリゼ賞 C1三四五'},
+    {r:9,time:'19:07',dist:2400,n:7,cls:'処暑賞 B2二 選抜'},{r:10,time:'19:40',dist:1800,n:14,cls:'こうま座特別 C2一'},
+    {r:11,time:'20:15',dist:1400,n:13,cls:'デイリースポーツ賞'},{r:12,time:'20:50',dist:1200,n:15,cls:'月見特別 C1三四五'},
+  ],
+};
+// --- 実出走馬（楽天競馬 出馬表 9/3、前5走の通過順・着順・上がり3F・馬場から推定）---
+// style: 直近の通過順位／頭数から分類, ability: 近走着順と格, close: 上がり3F, stamina: 距離実績, wet: 稍重〜不良での成績
+const REAL={
+ '9/3(木) 第4日|10':[
+  {no:1,name:'プリメイラ',gate:1,style:'差し',ability:.30,close:.35,stamina:.5,wet:.45,memo:'名古屋A級から転入初戦。前走取消、名古屋では中団〜後方（5-7-7-8）から届かず'},
+  {no:2,name:'ココナッツガーデン',gate:2,style:'逃げ',ability:.62,close:.55,stamina:.55,wet:.5,memo:'内1600で2-2-2-2から1着、1800で逃げ切り勝ちあり。前走1400は5-7-6の3着'},
+  {no:3,name:'ソルベット',gate:3,style:'先行',ability:.52,close:.45,stamina:.5,wet:.6,memo:'内1600を逃げて3着・5着（不良）。前走川崎1500は7着'},
+  {no:4,name:'スタードラマー',gate:4,style:'追込',ability:.22,close:.5,stamina:.4,wet:.45,memo:'近5走すべて後方から2桁着順'},
+  {no:5,name:'テンドウ',gate:5,style:'先行',ability:.45,close:.45,stamina:.45,wet:.5,memo:'前走内1600を1-1-3-3で4着。1400 2-2-3の6着'},
+  {no:6,name:'メイショウタビズキ',gate:6,style:'差し',ability:.70,close:.62,stamina:.6,wet:.62,memo:'前走内1600（不良）を10-8-6-5から差し切り1着。1800でも2着、昇級初戦'},
+  {no:7,name:'パレルモ',gate:6,style:'差し',ability:.55,close:.55,stamina:.6,wet:.5,memo:'B1で6着、1650で1着あり。中団後ろから'},
+  {no:8,name:'アイビーサムライオ',gate:7,style:'先行',ability:.78,close:.5,stamina:.55,wet:.68,memo:'内1600で3連勝を含む[3-1-1-1]。前走1番人気2着（3-1-1-1）。楽天予想1番人気'},
+  {no:9,name:'エルツ',gate:7,style:'逃げ',ability:.45,close:.45,stamina:.45,wet:.55,memo:'前走1400をハナ（1-1-1）で5着。内1600は8着・11着と不振'},
+  {no:10,name:'レベリオス',gate:8,style:'先行',ability:.74,close:.6,stamina:.62,wet:.58,memo:'前走内1600を1-2-1-1で1着（1:40.6）。1800で2着、2000で5着'},
+  {no:11,name:'タッチャブル',gate:8,style:'追込',ability:.28,close:.5,stamina:.55,wet:.4,memo:'JRA2勝クラスから転入。前走9頭立て9着、後方のまま'},
+ ],
+ '9/3(木) 第4日|11':[
+  {no:1,name:'フジマサテイオー',gate:1,style:'先行',ability:.55,close:.45,stamina:.65,wet:.62,memo:'2000（不良）で4-4-1-1から1着。A2B1では6着・12着。1650重で1着'},
+  {no:2,name:'アルゴナヴィス',gate:2,style:'先行',ability:.70,close:.58,stamina:.6,wet:.5,memo:'JRA3勝クラスから転入。前走船橋1600を3-3-2-2で4着。楽天予想1番人気'},
+  {no:3,name:'ティルドーン',gate:3,style:'逃げ',ability:.48,close:.4,stamina:.55,wet:.55,memo:'船橋1700を逃げて4着、川崎1600を2-2-1-1で2着（不良）。単騎逃げ濃厚'},
+  {no:4,name:'トノパー',gate:4,style:'先行',ability:.55,close:.55,stamina:.5,wet:.45,memo:'川崎1500を逃げて3着。浦和A2下で1着、重馬場は8着'},
+  {no:5,name:'スマートサニー',gate:5,style:'差し',ability:.68,close:.70,stamina:.45,wet:.6,memo:'JRA OP（ポラリスS5着）。前走内1600（重）を5-7-8-7から上がり37.4で3着。1800は初'},
+  {no:6,name:'ムットクルフェ',gate:6,style:'差し',ability:.72,close:.62,stamina:.65,wet:.65,memo:'1800で3着・4着、内1600で1着・3着。前走1番人気5着（4-3-5-5）'},
+  {no:7,name:'プレミアムハンド',gate:7,style:'差し',ability:.35,close:.4,stamina:.55,wet:.45,memo:'近走9着・10着・13着と大敗続き'},
+  {no:8,name:'ケンアトラス',gate:8,style:'先行',ability:.70,close:.6,stamina:.55,wet:.5,memo:'浦和1500で2着・2着（3-2-2-1）、内1600を1-1-1-1で2着'},
+  {no:9,name:'ピックアップライン',gate:8,style:'差し',ability:.5,close:.55,stamina:.3,wet:.5,memo:'JRA転入初戦。実績は1150〜1400の短距離、1800は大幅な距離延長'},
+ ],
+ '9/3(木) 第4日|12':[
+  {no:1,name:'ヴェスタリス',gate:1,style:'先行',ability:.35,close:.4,stamina:.35,wet:.5,memo:'3歳牝馬53kg。1400で逃げ切り勝ちあるが近3走は9・11・13着'},
+  {no:2,name:'ゴンザーゴ',gate:2,style:'追込',ability:.55,close:.65,stamina:.55,wet:.5,memo:'近2走とも後方から上がり37.3で5着。1800では逃げて3着、内1600で2着'},
+  {no:3,name:'カヴァス',gate:3,style:'追込',ability:.2,close:.4,stamina:.4,wet:.35,memo:'9歳。近4走は殿〜2桁着順'},
+  {no:4,name:'ナイトウォーリア',gate:4,style:'逃げ',ability:.62,close:.5,stamina:.55,wet:.6,memo:'前走内1600（不良）を1-1-1-1で3着。内1600で2着あり'},
+  {no:5,name:'ヴォルクメア',gate:5,style:'追込',ability:.25,close:.4,stamina:.5,wet:.35,memo:'近3走11・8・14着。後方から'},
+  {no:6,name:'リケアミネオラ',gate:6,style:'差し',ability:.55,close:.5,stamina:.6,wet:.58,memo:'1650（不良）を6-6-5-3で3着。前走1番人気5着'},
+  {no:7,name:'クアッズ',gate:7,style:'逃げ',ability:.6,close:.45,stamina:.5,wet:.55,memo:'内1600をすべてハナ（1-1-1-1）で1・3・2着。前走重馬場は7着'},
+  {no:8,name:'オメガドライヴ',gate:7,style:'差し',ability:.66,close:.62,stamina:.6,wet:.65,memo:'前走1650（重）を9-9-8-4から差し切り1着。昇級初戦、楽天予想1番人気'},
+  {no:9,name:'マイネルイージス',gate:8,style:'追込',ability:.52,close:.58,stamina:.62,wet:.62,memo:'1650（不良）を13-13-11-8から2着、内1600（重）3着。展開待ち'},
+  {no:10,name:'グレック',gate:8,style:'先行',ability:.3,close:.35,stamina:.45,wet:.35,memo:'近走13着・12着・8着。浦和所属、前で運ぶ型'},
+ ],
+};
+
+REAL['9/3(木) 第4日|8']=[
+ {no:1,name:'サントレッダー',gate:1,style:'差し',ability:.25,close:.4,stamina:.5,wet:.4,memo:'牝4 51kg。近5走すべて2桁着順寄り、中団後ろから伸びず'},
+ {no:2,name:'ウイングウインド',gate:2,style:'先行',ability:.5,close:.4,stamina:.45,wet:.55,memo:'8歳。1400で先行して5・4・2着、前走2-2-2で5着（0.6秒差）'},
+ {no:3,name:'チマル',gate:3,style:'逃げ',ability:.68,close:.58,stamina:.5,wet:.58,memo:'前走1400を1-1-1で逃げ切り1着。不良1400でも7-6-4から上がり37.6で1着。楽天予想1番人気'},
+ {no:4,name:'ヘビーキュー',gate:3,style:'先行',ability:.38,close:.4,stamina:.4,wet:.5,memo:'578kgの大型馬。前走1番人気で殿負け、好走は前で運んだ3-2-2の3着'},
+ {no:5,name:'ベイステート',gate:4,style:'差し',ability:.3,close:.45,stamina:.45,wet:.4,memo:'近走中団から伸びず10・10・7着'},
+ {no:6,name:'アサネガミ',gate:4,style:'追込',ability:.15,close:.4,stamina:.4,wet:.35,memo:'牝4 51kg。近5走すべて後方から2桁着順'},
+ {no:7,name:'ヨシノローズ',gate:5,style:'差し',ability:.3,close:.4,stamina:.5,wet:.4,memo:'7歳牝馬。中団から7・12・9着、C1でも凡走'},
+ {no:8,name:'ドレッドノート',gate:5,style:'先行',ability:.5,close:.5,stamina:.4,wet:.4,memo:'1400で3-3-3、1-1-1で連勝歴あり。復帰後2走は中団〜後方で9・7着'},
+ {no:9,name:'パワーキングダム',gate:6,style:'先行',ability:.45,close:.5,stamina:.45,wet:.45,memo:'前で運んで7・6着、重馬場1200で上がり37.6'},
+ {no:10,name:'リコーファルコン',gate:6,style:'先行',ability:.66,close:.6,stamina:.45,wet:.55,memo:'1400で2着・2着（前走0.2差、前々走ハナで0.0差・上がり37.6）'},
+ {no:11,name:'アオイフォトグラフ',gate:7,style:'先行',ability:.6,close:.6,stamina:.5,wet:.55,memo:'1400で4・3・2着、前々走は上がり37.5。3-4-4の位置から'},
+ {no:12,name:'メープルピア',gate:7,style:'先行',ability:.62,close:.5,stamina:.45,wet:.62,memo:'前走1400（不良）を1-2-1で1着、4走前2着。今回は組が上がる'},
+ {no:13,name:'サンサンラルーナ',gate:8,style:'差し',ability:.35,close:.45,stamina:.4,wet:.4,memo:'C1では掲示板前後、前走重馬場で15着'},
+ {no:14,name:'クレイジーフルーツ',gate:8,style:'追込',ability:.38,close:.55,stamina:.4,wet:.45,memo:'前走13-12-12から上がり38.5で6着。C1で4・5着あり'},
+];
+REAL['9/3(木) 第4日|9']=[
+ {no:1,name:'ジーティーマジカル',gate:1,style:'先行',ability:.6,close:.55,stamina:.4,wet:.5,memo:'1200で3-3の位置から3着（0.2差）が3回、4着1回。安定して掲示板。楽天予想1番人気'},
+ {no:2,name:'クミンフレイバー',gate:2,style:'逃げ',ability:.62,close:.6,stamina:.4,wet:.4,memo:'前々走1200を1-1で逃げ切り1着（1:13.4・上がり37.3）。前走1400は不良でハナ切って6着'},
+ {no:3,name:'ケイコウギュウゴ',gate:3,style:'差し',ability:.2,close:.4,stamina:.35,wet:.35,memo:'近5走すべて殿寄り（12・9・14・14・14着）'},
+ {no:4,name:'ダイヤメ',gate:4,style:'先行',ability:.64,close:.65,stamina:.45,wet:.55,memo:'前走1200を3-3で3着（上がり37.6）、前々走8-8から2着（0.2差）。上がり37.4の実績'},
+ {no:5,name:'イクノガキタゾ',gate:5,style:'差し',ability:.3,close:.45,stamina:.3,wet:.45,memo:'川崎900mを使われ8・5・7着。大井1200は初'},
+ {no:6,name:'パールペンダント',gate:5,style:'差し',ability:.28,close:.45,stamina:.4,wet:.35,memo:'近走10・7・11着、前々走1番人気で7着'},
+ {no:7,name:'フレーズボンボン',gate:6,style:'追込',ability:.52,close:.7,stamina:.4,wet:.62,memo:'後方から上がり36.8〜37.6を連発。不良で2着・3着、前走11-11から6着'},
+ {no:8,name:'リュウジンオー',gate:6,style:'逃げ',ability:.4,close:.35,stamina:.45,wet:.45,memo:'前走1400をハナ（1-1-1）で8着、3-1で8着。逃げるが粘れない'},
+ {no:9,name:'ミチノディディ',gate:7,style:'差し',ability:.3,close:.45,stamina:.4,wet:.4,memo:'近走8・8・13・8着。C2三四五では1200で3着あり'},
+ {no:10,name:'アルデフォックス',gate:7,style:'差し',ability:.48,close:.5,stamina:.4,wet:.4,memo:'1200で5着・5着（7-7、9-10から）。53kg減量騎手'},
+ {no:11,name:'デルバイス',gate:8,style:'追込',ability:.18,close:.45,stamina:.4,wet:.4,memo:'7歳。近5走すべて後方から12・12・13着'},
+ {no:12,name:'アダラズプレイヤー',gate:8,style:'差し',ability:.4,close:.5,stamina:.4,wet:.6,memo:'5ヶ月ぶり。重馬場1200で3着（上がり37.3）あり、前走8着'},
+];
+REAL['9/4(金) 第5日|10']=[
+ {no:1,name:'コスモギンガ',gate:1,style:'追込',ability:.3,close:.45,stamina:.6,wet:.4,memo:'9歳牝馬。近走後方から7・12・9着。1800で6着あり'},
+ {no:2,name:'ショーシャンク',gate:2,style:'差し',ability:.6,close:.6,stamina:.68,wet:.5,memo:'2000で3着（上がり39.7）、1800で4着（8-8-1-1）。前走2400は1番人気5着'},
+ {no:3,name:'ラピード',gate:3,style:'追込',ability:.28,close:.45,stamina:.5,wet:.35,memo:'7歳。近走後方から11・8・8着'},
+ {no:4,name:'コウフウセイゲツ',gate:3,style:'逃げ',ability:.5,close:.45,stamina:.6,wet:.4,memo:'2400で1-1-4-4、1-2-2-1で2着あり。前走ハナ切って8着。3ヶ月半ぶり'},
+ {no:5,name:'エクラシェール',gate:4,style:'差し',ability:.45,close:.55,stamina:.4,wet:.45,memo:'前走1400を8-11-10から上がり38.1で4着（0.3差）。1800は未知'},
+ {no:6,name:'カルサパラストリス',gate:4,style:'差し',ability:.62,close:.62,stamina:.62,wet:.6,memo:'前走内1600（不良）9-9-8-6から2着、前々走1800を3-3-4-4で2着（0.0差・上がり38.4）'},
+ {no:7,name:'リバイブメイラード',gate:5,style:'先行',ability:.68,close:.55,stamina:.6,wet:.66,memo:'内1600で1着・3着、1800（不良）を1-1-1-3で3着。53kg減量騎手。楽天予想1番人気'},
+ {no:8,name:'デルマアリエル',gate:5,style:'逃げ',ability:.62,close:.5,stamina:.7,wet:.45,memo:'2400を1-1-1-1で1着、2000を3-3-3-1で4着（1番人気）。前走2400は1番人気7着'},
+ {no:9,name:'ディサイデッド',gate:6,style:'差し',ability:.45,close:.5,stamina:.6,wet:.5,memo:'2400で12-12-6-5から6着、内1600で5着。中団後ろから'},
+ {no:10,name:'イトウ',gate:6,style:'追込',ability:.25,close:.4,stamina:.5,wet:.4,memo:'近走殿負け続き（14・14・8着）。1年前は2-2-1-1で3着'},
+ {no:11,name:'サラニキケン',gate:7,style:'差し',ability:.28,close:.45,stamina:.5,wet:.35,memo:'前走2400で殿、JRAでも下位。中団から伸びず'},
+ {no:12,name:'クルーミーズクライ',gate:7,style:'追込',ability:.3,close:.45,stamina:.5,wet:.4,memo:'後方のまま9・10着。C1時代に内1600で4着'},
+ {no:13,name:'デスタン',gate:8,style:'差し',ability:.6,close:.58,stamina:.68,wet:.6,memo:'2400で3着・2着（1番人気）、2000で7着。後方〜中団から差す'},
+ {no:14,name:'カズピレウス',gate:8,style:'先行',ability:.3,close:.4,stamina:.5,wet:.45,memo:'近走10・11・12着。前々に行くが失速'},
+];
+REAL['9/4(金) 第5日|11']=[
+ {no:1,name:'ラペルシェール',gate:1,style:'追込',ability:.4,close:.62,stamina:.4,wet:.5,memo:'8歳。毎回最後方から上がり37.2〜38.1で追い込むが8・10・10着。1400不良で1着歴'},
+ {no:2,name:'エスプリボクチャン',gate:2,style:'先行',ability:.5,close:.5,stamina:.45,wet:.55,memo:'1400不良を1-1-1で2着（0.3差）、5着。前走3番人気12着。3ヶ月ぶり'},
+ {no:3,name:'ラブリールチア',gate:3,style:'先行',ability:.58,close:.6,stamina:.45,wet:.5,memo:'1400で1着（上がり37.6）・1着。前走内1600（不良）7-7-6-7で8着。1400なら'},
+ {no:4,name:'アルティメットサガ',gate:4,style:'先行',ability:.5,close:.5,stamina:.45,wet:.45,memo:'名古屋A2で1着（4-4-6-4）、大井転入初戦は12-8-7で11着'},
+ {no:5,name:'シンギングブルース',gate:4,style:'逃げ',ability:.78,close:.7,stamina:.4,wet:.68,memo:'4連勝中（1400稍重1着 上がり37.1、1200 1着×2、2着）。上がり35.7の実績。楽天予想1番人気'},
+ {no:6,name:'イチニチショチョウ',gate:5,style:'先行',ability:.45,close:.5,stamina:.45,wet:.45,memo:'前走1400を4-4-5で6着、B3では9・8着。1番人気で凡走も'},
+ {no:7,name:'グラシアレス',gate:5,style:'差し',ability:.55,close:.68,stamina:.4,wet:.55,memo:'3歳。1200を8-7から上がり37.4で5着（1番人気）、盛岡で35.9。後方から鋭い脚'},
+ {no:8,name:'シビックフォイル',gate:6,style:'先行',ability:.62,close:.55,stamina:.45,wet:.6,memo:'3歳牝馬53kg。1400稍重で1着（3-2-2）・1着（2-2-2）。前走2番人気7着'},
+ {no:9,name:'ジーゲル',gate:6,style:'追込',ability:.2,close:.4,stamina:.45,wet:.4,memo:'近5走すべて後方から2桁着順。馬体390kg台'},
+ {no:10,name:'ポリトナリティー',gate:7,style:'先行',ability:.15,close:.35,stamina:.6,wet:.35,memo:'JRA障害から転入、大井では16着・殿。前走4-3-9-9'},
+ {no:11,name:'ノーブルジーク',gate:7,style:'差し',ability:.35,close:.5,stamina:.35,wet:.4,memo:'1000〜1200で7・9・13着。1400で5着歴'},
+ {no:12,name:'ヴィルミーキスミー',gate:8,style:'先行',ability:.55,close:.5,stamina:.5,wet:.55,memo:'前走内1600（不良）を5-4-4-4で4着。川崎1500で1着（3-3-4-2）'},
+ {no:13,name:'サトノエンパイア',gate:8,style:'追込',ability:.6,close:.68,stamina:.55,wet:.6,memo:'前走内1600（不良）13-13-10-9から3着（0.3差）、1400で上がり37.2。後方一気'},
+];
+REAL['9/4(金) 第5日|12']=[
+ {no:1,name:'ヤンノカステップ',gate:1,style:'追込',ability:.5,close:.7,stamina:.35,wet:.55,memo:'6歳牝馬。毎回後方から上がり36.4〜37.1で3・5・5着。展開待ち'},
+ {no:2,name:'グルナルーフス',gate:2,style:'先行',ability:.68,close:.6,stamina:.4,wet:.6,memo:'1200で3連勝→2着（1番人気）→前走1番人気3着（7-6）。1:12.9の持ち時計'},
+ {no:3,name:'トップレジェンド',gate:2,style:'逃げ',ability:.72,close:.62,stamina:.4,wet:.6,memo:'南関東3戦3勝（1200 1:12.7 上がり36.9、1-1で逃げ切り）。楽天予想1番人気'},
+ {no:4,name:'ドピエッタ',gate:3,style:'差し',ability:.45,close:.55,stamina:.35,wet:.55,memo:'前走不良1200を10-8から差し切り1着（51kg減量）。それ以前は2桁着順'},
+ {no:5,name:'ヤマノウォーリア',gate:3,style:'先行',ability:.55,close:.5,stamina:.4,wet:.5,memo:'1200で1-1から2着（0.4差）、前走5-6で6着。B3では8・14着'},
+ {no:6,name:'ワンウェイ',gate:4,style:'追込',ability:.48,close:.68,stamina:.4,wet:.5,memo:'後方から上がり36.5〜37.8、7・7・5着。B3で5着'},
+ {no:7,name:'エイシンネクタル',gate:4,style:'差し',ability:.38,close:.55,stamina:.4,wet:.4,memo:'中団から10・5・8着。上がり37.2はあるが決め手不足'},
+ {no:8,name:'シャンデリアソング',gate:5,style:'差し',ability:.62,close:.7,stamina:.4,wet:.62,memo:'前走重1200を10-10から上がり37.0で2着、2着・3着・2着と堅実。1番人気2着あり'},
+ {no:9,name:'ティーズアペックス',gate:5,style:'逃げ',ability:.5,close:.45,stamina:.35,wet:.55,memo:'1-2の形で5・4着。1000mで4着。前で運ぶ'},
+ {no:10,name:'ジューンアカデミー',gate:6,style:'差し',ability:.52,close:.55,stamina:.35,wet:.6,memo:'3歳牝馬53kg。前走不良1200を7-7から2着、不良で1着・3着。湿った馬場向き'},
+ {no:11,name:'サブノリョウマ',gate:6,style:'先行',ability:.3,close:.4,stamina:.4,wet:.4,memo:'7歳。前走1-2で9着、近走9・10・13着'},
+ {no:12,name:'マジシャンガール',gate:7,style:'先行',ability:.6,close:.55,stamina:.4,wet:.58,memo:'1200で3着・4着（1-1）・3着・2着。安定して前で運ぶ'},
+ {no:13,name:'フレンドリーシップ',gate:7,style:'追込',ability:.48,close:.62,stamina:.35,wet:.5,memo:'1000mを10-7から上がり35.9で1着。1200では8・8・3着'},
+ {no:14,name:'トーキングザゴッド',gate:8,style:'先行',ability:.7,close:.6,stamina:.4,wet:.65,memo:'3歳。デビュー3戦3勝（1200 1:13.2、3-3から抜け出し）。古馬C1初対戦'},
+ {no:15,name:'ドナソレイ',gate:8,style:'差し',ability:.3,close:.5,stamina:.3,wet:.45,memo:'3歳牝馬53kg。川崎900mで6・4・2着。大井1200は初'},
+];
+REAL['9/4(金) 第5日|9']=[
+ {no:1,name:'トランジェント',gate:1,style:'先行',ability:.62,close:.55,stamina:.62,wet:.62,memo:'前走2000（重）を3-3-3-3で1着（上がり38.7）。1800でハナ切って9着も。2400は初'},
+ {no:2,name:'ナンパセン',gate:2,style:'逃げ',ability:.68,close:.55,stamina:.65,wet:.6,memo:'前走2000（重）を1-1-1-1で2着（0.1差・1番人気）、1800で1着。541kgの大型馬'},
+ {no:3,name:'スリーレジェンド',gate:3,style:'先行',ability:.72,close:.62,stamina:.68,wet:.62,memo:'1650で1着、2000（重）で2着、2000（不良）で1着。B2で安定。楽天予想1番人気'},
+ {no:4,name:'ヒロシゲジャック',gate:4,style:'差し',ability:.55,close:.5,stamina:.72,wet:.5,memo:'7歳。前走船橋2200を8-9-1-1で2着（0.3差）。2000〜2200の長距離で堅実'},
+ {no:5,name:'ポンドボーイ',gate:5,style:'差し',ability:.5,close:.6,stamina:.6,wet:.45,memo:'9ヶ月ぶり。2000で1着（7-7-7-5）、1800で4・5着。前走1番人気で最後方11着'},
+ {no:6,name:'ファーガス',gate:6,style:'逃げ',ability:.5,close:.45,stamina:.62,wet:.55,memo:'7歳。前走B1 2000をハナで5着（0.3差）。A2では大敗'},
+ {no:7,name:'ドウジギリ',gate:7,style:'先行',ability:.58,close:.55,stamina:.6,wet:.5,memo:'2000で4着（5-5-1-1）、1800を3-3-1-1で1着。前で運んで粘る'},
+];
+REAL['9/4(金) 第5日|8']=[
+ {no:1,name:'ルガルバンダ',gate:1,style:'逃げ',ability:.65,close:.62,stamina:.45,wet:.68,memo:'3歳。1400不良を1-2-1で2着（上がり37.2）、1400不良で1着。4ヶ月ぶりの実戦'},
+ {no:2,name:'ジャストリアン',gate:2,style:'先行',ability:.45,close:.45,stamina:.4,wet:.5,memo:'1400で3-3-3から3着、1-2-2で4着。前走B3で1-2-2から13着。4ヶ月ぶり'},
+ {no:3,name:'ドライブミーホーム',gate:3,style:'追込',ability:.5,close:.72,stamina:.4,wet:.6,memo:'3歳。後方から上がり35.6〜37.8を連発、1400不良で3着。届くかは展開次第'},
+ {no:4,name:'ゴッドバーグ',gate:4,style:'先行',ability:.66,close:.6,stamina:.4,wet:.62,memo:'前走不良1200を4-4から1着（1番人気）、1200で3着（1:12.9）。1400は3-5-4で7着'},
+ {no:5,name:'ヴァンビー',gate:5,style:'差し',ability:.45,close:.55,stamina:.45,wet:.5,memo:'B3の1400で4着（上がり37.8）、C1では6・12着。中団後ろから'},
+ {no:6,name:'ビッティンキバラ',gate:6,style:'差し',ability:.35,close:.5,stamina:.45,wet:.4,memo:'近走8・8・7着。1400で1着歴はあるが後方のまま'},
+];
+REAL['9/4(金) 第5日|7']=[
+ {no:1,name:'カラーオブジアース',gate:1,style:'追込',ability:.35,close:.5,stamina:.55,wet:.5,memo:'前走内1600（不良）10-11-10-10から4着。それ以前は2桁着順'},
+ {no:2,name:'ユーヒナタ',gate:2,style:'差し',ability:.5,close:.55,stamina:.5,wet:.55,memo:'6歳牝馬51kg。前走内1600（重）9-9-7-7から5着（0.5差）。内1600で勝ち鞍多数'},
+ {no:3,name:'バズッチ',gate:3,style:'先行',ability:.35,close:.4,stamina:.45,wet:.4,memo:'前で運んで8・10着。内1600 3-3-3-3で失速'},
+ {no:4,name:'ウータンビート',gate:4,style:'先行',ability:.5,close:.5,stamina:.45,wet:.5,memo:'4ヶ月ぶり。1400（重）で2着、内1600を3-3-3-3で2着。B3では大敗'},
+ {no:5,name:'オンリーユーズド',gate:5,style:'逃げ',ability:.45,close:.4,stamina:.55,wet:.5,memo:'2000〜2400をハナで運び3着あり。前走1200は後方10着'},
+ {no:6,name:'グリークトレジャー',gate:6,style:'先行',ability:.6,close:.5,stamina:.5,wet:.62,memo:'前走内1600（不良）を3-3-3-3で2着（0.0差）。C1七八から昇級'},
+ {no:7,name:'コーゲンシルバー',gate:7,style:'差し',ability:.66,close:.62,stamina:.5,wet:.58,memo:'内1600で2着（上がり38.2）・3着・2着・4着と堅実。前走1番人気4着'},
+ {no:8,name:'グロワールスカイ',gate:8,style:'差し',ability:.6,close:.6,stamina:.5,wet:.5,memo:'内1600で1着（6-6-5-4）、3着（8-7-2-1）。前走重馬場は10着'},
+ {no:9,name:'ヴィラスターリ',gate:8,style:'逃げ',ability:.72,close:.55,stamina:.55,wet:.6,memo:'内1600で5連勝中（1-1-1-1で逃げ切り含む）。6ヶ月半ぶり。楽天予想1番人気'},
+];
+REAL['9/4(金) 第5日|6']=[
+ {no:1,name:'フィールドアピール',gate:1,style:'逃げ',ability:.62,close:.5,stamina:.45,wet:.6,memo:'前走1200（不良）を1-1で2着（0.5差）。1400で2-1-1から4着、門別で2勝。楽天予想1番人気'},
+ {no:2,name:'アリアケグレイト',gate:2,style:'追込',ability:.3,close:.45,stamina:.5,wet:.4,memo:'後方から11・4・8着。内1600で4着はあるが決め手不足'},
+ {no:3,name:'ヴァルディ',gate:3,style:'差し',ability:.35,close:.45,stamina:.45,wet:.45,memo:'53kg減量騎手。1400で5・4着、前走1200は10-9から6着'},
+ {no:4,name:'ケンブリッジグレイ',gate:4,style:'先行',ability:.35,close:.4,stamina:.55,wet:.4,memo:'JRA芝未勝利から転入初戦。芝1400で1-1から8着、ダートは初'},
+ {no:5,name:'エレノアクイーン',gate:5,style:'先行',ability:.62,close:.58,stamina:.45,wet:.62,memo:'1200で2連勝中（2-2で1着、不良で1-1から1着）。518kgの大型牝馬、1400は初'},
+ {no:6,name:'ボンヴィアッジョ',gate:5,style:'逃げ',ability:.5,close:.45,stamina:.55,wet:.55,memo:'内1600をハナで4着、重馬場内1600で1着。1400はJRAで大敗'},
+ {no:7,name:'スクラッチクラッチ',gate:6,style:'追込',ability:.25,close:.4,stamina:.5,wet:.4,memo:'51kg減量騎手。近走6・12・8着、後方から'},
+ {no:8,name:'クリノエーデル',gate:6,style:'差し',ability:.4,close:.5,stamina:.5,wet:.4,memo:'内1600で2着（8-9-5-3）あり。前走1400は12-12-12から7着'},
+ {no:9,name:'ステイフリー',gate:7,style:'逃げ',ability:.52,close:.45,stamina:.45,wet:.5,memo:'1400で1-1-1から2着・2着・3着。前走重馬場は殿（4ヶ月半ぶりの後）'},
+ {no:10,name:'エスクラス',gate:7,style:'差し',ability:.42,close:.5,stamina:.5,wet:.5,memo:'1200不良を1-1で1着。内1600では7・10着、中団から'},
+ {no:11,name:'ボワヴェール',gate:8,style:'先行',ability:.38,close:.45,stamina:.5,wet:.45,memo:'内1600で3・4着あるが近走8・8・9着。3-3-3-3で運ぶ'},
+ {no:12,name:'カンタベリータイム',gate:8,style:'先行',ability:.55,close:.55,stamina:.45,wet:.6,memo:'1400で2着（不良）、前走重1400を4-3-4で5着（0.9差）。1:27.6の持ち時計'},
+];
+REAL['9/4(金) 第5日|5']=[
+ {no:1,name:'ロワゾドゥフ',gate:1,style:'先行',ability:.55,close:.5,stamina:.55,wet:.55,memo:'2歳牝馬。新馬内1600（不良）を3-3-5-4で2着（1番人気・0.4差）'},
+ {no:2,name:'ケテンパッション',gate:2,style:'先行',ability:.65,close:.58,stamina:.5,wet:.55,memo:'新馬1400を2-1-1で1着（2.0秒差の圧勝）、前走1200は3-1で2着（1番人気）。楽天予想1番人気'},
+ {no:3,name:'タルガフローリオ',gate:3,style:'先行',ability:.55,close:.58,stamina:.5,wet:.5,memo:'新馬1400を2-2-2で2着（0.3差・上がり37.5）。キャリア1戦'},
+ {no:4,name:'シンプウキセキ',gate:4,style:'差し',ability:.4,close:.5,stamina:.5,wet:.5,memo:'新馬1200を7-7から2着（3.0秒差）。前走は除外'},
+ {no:5,name:'アウン',gate:5,style:'逃げ',ability:.4,close:.45,stamina:.5,wet:.4,memo:'キャリア5戦。1400を3-3-3で2着（0.0差）あるが、前走ハナ切って6着'},
+];
+REAL['9/4(金) 第5日|4']=[
+ {no:1,name:'サーブルエース',gate:1,style:'先行',ability:.5,close:.45,stamina:.4,wet:.5,memo:'2歳。前走重1200を1-2で2着（1.6差）、新馬4着'},
+ {no:2,name:'モンサンマナオラナ',gate:2,style:'逃げ',ability:.6,close:.55,stamina:.4,wet:.62,memo:'2歳牝馬51kg。前走重1200を1-2で1着（0.6差）。414kgの小柄な馬。楽天予想1番人気'},
+ {no:3,name:'ガブリン',gate:3,style:'差し',ability:.42,close:.5,stamina:.4,wet:.45,memo:'新馬1200で2着（3-3）、前走6-6から4着'},
+ {no:4,name:'サラカノ',gate:4,style:'先行',ability:.35,close:.45,stamina:.4,wet:.45,memo:'門別で7・7・3着、前走重1200を4-4で3着（2.9差）'},
+ {no:5,name:'ゴールドシュミット',gate:5,style:'差し',ability:.5,close:.6,stamina:.45,wet:.5,memo:'1200で2着（0.2差・上がり37.3）・3着。前走1400は1番人気5着'},
+ {no:6,name:'イントゥザライト',gate:6,style:'逃げ',ability:.5,close:.5,stamina:.45,wet:.5,memo:'新馬1400をハナで2着、1200で3着。前走1400は1-1-2で4着'},
+ {no:7,name:'キングビー',gate:7,style:'逃げ',ability:.52,close:.5,stamina:.4,wet:.55,memo:'新馬1200（不良）を1-1で2着（0.8差・1番人気）。3ヶ月ぶり、キャリア1戦'},
+];
+REAL['9/4(金) 第5日|3']=[
+ {no:1,name:'ニジイロピカール',gate:1,style:'逃げ',ability:.42,close:.45,stamina:.35,wet:.4,memo:'3歳牝馬53kg。1200を1-1で1着歴。前走1400をハナで10着（1番人気）'},
+ {no:2,name:'マインゴールド',gate:2,style:'差し',ability:.58,close:.68,stamina:.4,wet:.55,memo:'前走1200を12-11から上がり37.0で3着、1200で1着（6-7）。後方から鋭い'},
+ {no:3,name:'ポルタロマーナ',gate:3,style:'逃げ',ability:.45,close:.4,stamina:.35,wet:.55,memo:'重1200を1-1で1着（3ヶ月ぶり）。逃げられなければ脆い'},
+ {no:4,name:'アフロッチ',gate:4,style:'先行',ability:.6,close:.55,stamina:.4,wet:.65,memo:'不良1200で1着（5-6から）、不良1200で1着（1-1）。2戦2勝は湿った馬場'},
+ {no:5,name:'ブイスリー',gate:4,style:'先行',ability:.45,close:.45,stamina:.4,wet:.5,memo:'1200で3着（1-1）・3着（2-5）。前走4-6から12着'},
+ {no:6,name:'トゥーナウィッシュ',gate:5,style:'追込',ability:.3,close:.45,stamina:.5,wet:.4,memo:'6ヶ月半ぶり。内1600で最後方9着、1400で4着'},
+ {no:7,name:'レヴェルトディオ',gate:5,style:'逃げ',ability:.62,close:.55,stamina:.4,wet:.55,memo:'前走1200を1-1で2着（0.6差・3番人気）。門別C1で4着。楽天予想1番人気'},
+ {no:8,name:'ラスールフルール',gate:6,style:'逃げ',ability:.35,close:.4,stamina:.4,wet:.4,memo:'51kg減量騎手。川崎900mで1-1-1から10着、4着。大井1200は初'},
+ {no:9,name:'タイセイディエティ',gate:6,style:'差し',ability:.5,close:.5,stamina:.4,wet:.55,memo:'1200で2着（不良・6-5）、2着（0.0差）。前走4-5から13着'},
+ {no:10,name:'リアンリーヴァ',gate:7,style:'差し',ability:.5,close:.5,stamina:.45,wet:.45,memo:'前走1200を6-4から5着（0.9差）。内1600で7・4着'},
+ {no:11,name:'ボビー',gate:7,style:'差し',ability:.4,close:.5,stamina:.45,wet:.45,memo:'527kgの大型馬。前走1400を10-8-8から6着。近走中団以下'},
+ {no:12,name:'サヴォア',gate:8,style:'差し',ability:.3,close:.5,stamina:.4,wet:.5,memo:'近走11・9・8着。不良1200で1着歴あり（1:13.9）'},
+ {no:13,name:'オレンジマン',gate:8,style:'追込',ability:.55,close:.72,stamina:.4,wet:.55,memo:'前走1200を12-13から上がり37.0で4着、上がり36.4の実績。後方一気'},
+];
+REAL['9/4(金) 第5日|2']=[
+ {no:1,name:'コブラツイスト',gate:1,style:'差し',ability:.55,close:.55,stamina:.45,wet:.5,memo:'1200で1着（6-4）・2着・2着。前走2番人気8着'},
+ {no:2,name:'タケゾウ',gate:2,style:'追込',ability:.35,close:.55,stamina:.45,wet:.55,memo:'毎回最後方から。不良1200で3着（上がり38.0）、前走1番人気10着'},
+ {no:3,name:'サイカンサンユウ',gate:3,style:'差し',ability:.5,close:.55,stamina:.55,wet:.5,memo:'京浜盃5着・羽田盃10着の実績馬。1400で1着歴。4ヶ月ぶり'},
+ {no:4,name:'シンプウエース',gate:4,style:'差し',ability:.35,close:.5,stamina:.4,wet:.45,memo:'1200で7・6・7・4着。中団から伸び切れない'},
+ {no:5,name:'プレイバック',gate:5,style:'先行',ability:.5,close:.5,stamina:.5,wet:.6,memo:'53kg減量騎手。1400で3着（不良）・2着（重）、内1600で3着。湿った馬場向き'},
+ {no:6,name:'リトルデビル',gate:6,style:'先行',ability:.5,close:.5,stamina:.5,wet:.62,memo:'7ヶ月ぶり。重1400を3-3-3で1着、1200で3着。509kgの大型馬'},
+ {no:7,name:'サヨノグッドデイ',gate:6,style:'先行',ability:.68,close:.6,stamina:.55,wet:.55,memo:'2戦2勝（1400 7-3-3から1着、内1600 3-3-1-1で1着）。両方1番人気。楽天予想1番人気'},
+ {no:8,name:'ローズプリンセス',gate:7,style:'先行',ability:.25,close:.4,stamina:.45,wet:.4,memo:'JRA未勝利から転入、前走内1600で殿（4.9秒差）'},
+ {no:9,name:'グラスリッキー',gate:7,style:'逃げ',ability:.65,close:.55,stamina:.45,wet:.62,memo:'前走1400（不良）を1-1-1で1着（1.9秒差）、1400で2着、水沢1着。逃げて押し切る'},
+ {no:10,name:'レンソイス',gate:8,style:'逃げ',ability:.58,close:.55,stamina:.45,wet:.55,memo:'3ヶ月半ぶり。1400を3-1-1で1着、1-1-1で2着、2着。53kg減量騎手'},
+ {no:11,name:'ピルゴスアイトス',gate:8,style:'追込',ability:.5,close:.65,stamina:.45,wet:.6,memo:'前走重1400を11-11-11から上がり37.6で3着（1:27.4）。後方一気'},
+];
+REAL['9/4(金) 第5日|1']=[
+ {no:1,name:'キャリアラダー',gate:1,style:'差し',ability:.45,close:.5,stamina:.5,wet:.5,memo:'内1600で5・4・4・3着と掲示板常連だが勝ち切れず。前走取消'},
+ {no:2,name:'ミエノワイルド',gate:2,style:'先行',ability:.58,close:.55,stamina:.5,wet:.55,memo:'前走内1600（重）を3-2-1-1で3着、内1600で2着（0.0差）。楽天予想1番人気'},
+ {no:3,name:'エドノスターウッド',gate:3,style:'先行',ability:.5,close:.45,stamina:.45,wet:.45,memo:'1400で2連勝（1-1-1、5-1-1）。前走6-6-6から9着、内1600は初'},
+ {no:4,name:'ミュウチャン',gate:4,style:'先行',ability:.5,close:.5,stamina:.5,wet:.5,memo:'前走1400を2-1-1で4着（0.8差）、内1600で3-1-2-2から4着（0.2差）'},
+ {no:5,name:'ハルイチバン',gate:5,style:'先行',ability:.62,close:.55,stamina:.5,wet:.62,memo:'前走内1600（不良）を2-2-1-1で1着、1400（不良）も2-1-1で1着。2戦2勝'},
+ {no:6,name:'ハヤマデイズ',gate:6,style:'差し',ability:.3,close:.45,stamina:.5,wet:.4,memo:'近走8・7・7・9着。前走1番人気で8着'},
+ {no:7,name:'ユーロハートビート',gate:7,style:'差し',ability:.35,close:.45,stamina:.5,wet:.45,memo:'6ヶ月ぶり。内1600で6着、1700で4着。中団から'},
+ {no:8,name:'エンリッチザハート',gate:7,style:'逃げ',ability:.6,close:.55,stamina:.5,wet:.6,memo:'前走内1600（重）を1-1-1-1で2着（0.0差・上がり38.1）、内1600で2着。551kg'},
+ {no:9,name:'タリスマンチャント',gate:8,style:'先行',ability:.55,close:.5,stamina:.5,wet:.6,memo:'53kg減量騎手。前走内1600（不良）4-4-4-3で2着（0.5差）、内1600で3着×2'},
+ {no:10,name:'フラワーキングエス',gate:8,style:'差し',ability:.35,close:.45,stamina:.5,wet:.4,memo:'内1600で3着あるが前走重馬場で殿（1番人気）'},
+];
+
+/* ============================================================
+   2. コース幾何（大井 外回り：1周約1600m・右回り・直線386m・幅25m）
+   ============================================================ */
+const TRACK={S:440,R:115,W:25};
+TRACK.T=Math.PI*TRACK.R; TRACK.L=2*TRACK.S+2*TRACK.T;      // ≈1605m
+// s: ラチ沿い距離（0=直線入口, S=ゴール）, d: ラチからの外側オフセット(m)
+function trackPos(s,d){
+  s=mod(s,TRACK.L);const {S,R,T}=TRACK;
+  if(s<S) return {x:-S/2+s, z:-(R+d)};
+  s-=S; if(s<T){const th=s/R;return {x:S/2+(R+d)*Math.sin(th), z:-(R+d)*Math.cos(th)};}
+  s-=T; if(s<S) return {x:S/2-s, z:(R+d)};
+  s-=S; const th=s/R; return {x:-S/2-(R+d)*Math.sin(th), z:(R+d)*Math.cos(th)};
+}
+function inTurn(s){s=mod(s,TRACK.L);const {S,T}=TRACK;return (s>=S&&s<S+T)||(s>=2*S+T);}
+const GOAL_S=386; // 4角出口から386mがゴール、ゴール後1角まで約50m
+
+/* ============================================================
+   3. 出走馬（サンプル生成）
+   ============================================================ */
+const SYL=['アイ','ノ','サ','ミ','ラ','ト','キ','ル','ハ','シ','ユ','ク','ホ','マ','ゼ','ダ','リ','オ','ウ','エ','ス','ネ','ブ','ゴ','ロ','ナ','テ','コ','モ','ヒ','ヤ','ワ','レ','ン','ム','チ','セ','カ','タ'];
+function genHorses(n,seed){
+  const rng=mulberry32(seed);const out=[];
+  const nN=Math.max(1,Math.round(n*0.15)),nS=Math.round(n*0.35),nO=Math.round(n*0.12);
+  const styles=[];for(let i=0;i<n;i++)styles.push(i<nN?'逃げ':i<nN+nS?'先行':i<n-nO?'差し':'追込');
+  for(let i=n-1;i>0;i--){const j=Math.floor(rng()*(i+1));[styles[i],styles[j]]=[styles[j],styles[i]];}
+  for(let i=0;i<n;i++){
+    const len=3+Math.floor(rng()*2);let nm='';for(let k=0;k<len;k++)nm+=SYL[Math.floor(rng()*SYL.length)];
+    const gate=Math.ceil((i+1)/n*8);
+    out.push({no:i+1,name:nm,gate,style:styles[i],ability:+(0.3+rng()*0.6).toFixed(2),close:+(0.2+rng()*0.7).toFixed(2),stamina:+(0.2+rng()*0.7).toFixed(2),wet:+(0.2+rng()*0.7).toFixed(2)});
+  }
+  return out;
+}
+
+/* ============================================================
+   4. シミュレーション本体
+   ============================================================ */
+function paceOf(horses){
+  const nN=horses.filter(h=>h.style==='逃げ').length,nS=horses.filter(h=>h.style==='先行').length;
+  const score=(nN+nS*0.35)/horses.length;
+  const label=(nN>=2||score>0.36)?'H':(nN<=1&&score<0.20)?'S':'M';
+  return {nN,nS,score,label,pf:clamp((score-0.26)*0.15+(nN-1)*0.012,-0.03,0.05)};
+}
+function simRace(race,cond,seed,record){
+  const rng=mulberry32(seed);const D=race.dist,n=race.horses.length;
+  const baba=BABA[cond.baba],wx=WEATHER[cond.weather];const pace=paceOf(race.horses);
+  const v0=D/REF_TIME[D]*baba.speed;
+  const fb=clamp(cond.front+baba.front,-1.2,1.2),ob=cond.out;
+  const s0=mod(GOAL_S-D,TRACK.L);
+  const noiseAmp=0.011*baba.noise*wx.noise;
+  const H=race.horses.map((h,i)=>{
+    const st=STYLE[h.style],front=st.front;
+    let ke=st.ke+(front?pace.pf*0.5:-pace.pf*0.3);
+    let kl=st.kl+(front?(-pace.pf*0.6+0.045*fb+0.012*cond.wind):(pace.pf*0.5-0.045*fb+0.004*cond.wind));
+    kl+=(h.ability-0.5)*0.06+(h.close-0.5)*0.03+(D>=1600?(h.stamina-0.5)*0.02*Math.min(1,(D-1200)/800):0);
+    const mult=(1+(h.ability-0.5)*0.015)*(1+(rng()-0.5)*0.03)*(baba.wet?1+(h.wet-0.5)*0.02:1);
+    const startLane=1.2+(h.gate-1)*2.6+rng()*1.2;
+    const base=st.laneT+rng()*1.4+0.12*(h.gate-1);
+    return {i,h,st,front,ke,kl,mult,rail:0,s:s0,lane:startLane,startLane,base,done:false,time:null,t600:null,tLast:null,v:0};
+  });
+  const frames=[],dt=record?0.1:0.2;let t=0,fin=0;const snaps={800:null,400:null};
+  while(fin<n&&t<260){
+    for(const x of H){
+      if(x.done)continue;
+      const prog=x.rail/D,rem=D-x.rail;
+      const wE=clamp(1-prog/0.40,0,1),wL=clamp((prog-0.62)/0.38,0,1);
+      const laneF=clamp((x.lane-4)/8,-1,1);
+      const m=1+x.ke*wE+(x.kl+0.03*ob*laneF)*wL;
+      const accel=Math.min(1,0.4+t/1.8);
+      const v=v0*x.mult*m*accel*(1+gauss(rng)*noiseAmp);
+      const ds=v*dt*(inTurn(x.s)?1-0.7*(1-TRACK.R/(TRACK.R+x.lane)):1);
+      x.rail+=ds;x.s=s0+x.rail;x.v=v;
+      if(x.t600===null&&x.rail>=600)x.t600=t+dt;
+      if(x.tLast===null&&x.rail>=D-600)x.tLast=t+dt;
+      if(x.rail>=D){x.done=true;x.time=t+dt-(x.rail-D)/Math.max(v,1);fin++;}
+      let target;
+      if(x.rail<160)target=lerp(x.startLane,x.base,x.rail/160);
+      else if(rem>700)target=x.base;
+      else if(rem>390)target=x.base+(x.front?0.3:2.0)+1.6*Math.max(0,ob);
+      else target=x.front?x.base+0.6*Math.max(0,ob):x.base+3.5+2.2*Math.max(0,ob)+(x.h.style==='追込'?1.5:0);
+      const lr=x.rail<300?2.6:1.4;x.lane+=clamp(target-x.lane,-lr*dt,lr*dt);
+    }
+    const lead=Math.max(...H.map(x=>x.rail));
+    for(const k of [800,400]){if(!snaps[k]&&D-lead<=k){snaps[k]=H.slice().sort((a,b)=>b.rail-a.rail).map(x=>x.i);}}
+    t+=dt;
+    if(record)frames.push({t,p:H.map(x=>[x.s,x.lane,x.done?1:0])});
+  }
+  const order=H.slice().sort((a,b)=>a.time-b.time);
+  return {order:order.map(x=>x.i),times:H.map(x=>x.time),snaps,frames,pace,
+    lead600:Math.min(...H.map(x=>x.t600||99)),winLast:order[0].time-(order[0].tLast||0),winTime:order[0].time};
+}
+function monteCarlo(race,cond,N){
+  const n=race.horses.length;const win=new Array(n).fill(0),top3=new Array(n).fill(0),pos=new Array(n).fill(0),c3=new Array(n).fill(0),c4=new Array(n).fill(0);
+  let sumT=0,sum600=0,sumLast=0;
+  for(let k=0;k<N;k++){
+    const r=simRace(race,cond,1000+k*7919,false);
+    r.order.forEach((i,p)=>{pos[i]+=p+1;if(p===0)win[i]++;if(p<3)top3[i]++;});
+    if(r.snaps[800])r.snaps[800].forEach((i,p)=>c3[i]+=p+1);else r.order.forEach((i,p)=>c3[i]+=p+1);
+    if(r.snaps[400])r.snaps[400].forEach((i,p)=>c4[i]+=p+1);else r.order.forEach((i,p)=>c4[i]+=p+1);
+    sumT+=r.winTime;sum600+=r.lead600;sumLast+=r.winLast;
+  }
+  return {N,win:win.map(v=>v/N),top3:top3.map(v=>v/N),pos:pos.map(v=>v/N),c3:c3.map(v=>v/N),c4:c4.map(v=>v/N),
+    winTime:sumT/N,lead600:sum600/N,winLast:sumLast/N,pace:paceOf(race.horses)};
+}
+
+/* ============================================================
+   5. 状態
+   ============================================================ */
+const state={dayKey:Object.keys(DAYS)[1],raceIdx:10,race:null,cond:{baba:'良',weather:'曇',wind:0,front:0.45,out:0.45,recent:0.6},
+  mc:null,rec:null,playing:false,playT:0,speed:1,cam:'俯瞰',seedAlt:0,manualBias:false};
+
+function combinedTrend(dist){
+  const ref=TREND_REF[dist]||TREND_REF[1600];const w=state.cond.recent;
+  const wy=1-w,wr=w*0.5,wm=w*0.5;
+  const front3=wy*ref.year.front3+wr*ref.recent.front3+wm*MEET.frontShare;
+  const gate=[0,1,2].map(i=>wy*ref.year.gate[i]+wr*ref.recent.gate[i]+wm*MEET.gateShare[i]);
+  return {front3,gate,ref};
+}
+function autoBias(){
+  const c=combinedTrend(state.race.dist);
+  state.cond.front=+clamp((c.front3-0.60)/0.25,-1,1).toFixed(2);
+  const gd=(c.gate[1]+c.gate[2])/2-c.gate[0];state.cond.out=+clamp(gd/0.2,-1,1).toFixed(2);
+  $('front').value=state.cond.front;$('out').value=state.cond.out;syncVals();
+  $('autoHint').textContent=`総合の前方集団3着内率 ${(c.front3*100).toFixed(0)}%（今開催 実測 ${(MEET.frontShare*100).toFixed(0)}%）→ 前残り度 ${state.cond.front>0?'+':''}${state.cond.front}／中〜外−内 ${(gd*100).toFixed(0)}pt → 内外 ${state.cond.out>0?'+':''}${state.cond.out}`;
+}
+function loadRace(dayKey,idx,seedBump){
+  const r=DAYS[dayKey][idx];
+  state.dayKey=dayKey;state.raceIdx=idx;
+  const real=REAL[dayKey+'|'+r.r];
+  const seed=(dayKey.length*131+idx*17+r.dist)+(seedBump||0);
+  state.race={...r,real:!!real,title:`${dayKey.split(' ')[0]} ${r.r}R ${r.cls}`,horses:real?real.map(h=>({...h})):genHorses(r.n,seed)};
+  afterRaceChange();
+}
+function afterRaceChange(){
+  state.mc=null;state.rec=null;state.playing=false;state.playT=0;
+  $('playBtn').disabled=true;$('altBtn').disabled=true;$('resultBox').style.display='none';
+  autoBias();renderRaceButtons();renderPred();renderTrend();
+  scene3.setRace(state.race);
+  $('badge').innerHTML=`${state.race.title}<br><b>${state.race.dist}m</b> ${state.race.n}頭 ${state.race.time?'発走 '+state.race.time:''} <span style="color:${state.race.real?'var(--amber)':'var(--dim)'}">${state.race.real?'実出走馬':'出走馬はサンプル'}</span>`;
+  $('clock').textContent='—';$('liveRows').textContent='—';buildBar();
+}
+
+/* ============================================================
+   6. 3Dシーン（外部ライブラリ不要：Canvas 2D への自前透視投影）
+   ============================================================ */
+const scene3=(()=>{
+  const el=$('stage');const cv=document.createElement('canvas');el.insertBefore(cv,el.firstChild);const ctx=cv.getContext('2d');
+  let W=1,H=1,dpr=1;
+  function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1,el.clientWidth);H=Math.max(1,el.clientHeight);cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';}
+  window.addEventListener('resize',()=>{resize();if(state.cam==='俯瞰')setCam('俯瞰');});resize();
+
+  // --- カメラ ---
+  const cam={x:0,y:300,z:-520,tx:0,ty:0,tz:-30,fov:46};
+  let bR=[1,0,0],bU=[0,1,0],bF=[0,0,1],scl=1;
+  function setupView(){
+    let fx=cam.tx-cam.x,fy=cam.ty-cam.y,fz=cam.tz-cam.z;let l=Math.hypot(fx,fy,fz)||1;fx/=l;fy/=l;fz/=l;
+    let rx=-fz,rz=fx;l=Math.hypot(rx,rz)||1;rx/=l;rz/=l;
+    bF=[fx,fy,fz];bR=[rx,0,rz];bU=[-rz*fy,rz*fx-rx*fz,rx*fy];
+    scl=(H/2)/Math.tan(cam.fov*Math.PI/360);
+  }
+  function proj(x,y,z){const dx=x-cam.x,dy=y-cam.y,dz=z-cam.z;const d=dx*bF[0]+dy*bF[1]+dz*bF[2];if(d<1.5)return null;
+    return {x:W/2+(dx*bR[0]+dy*bR[1]+dz*bR[2])/d*scl,y:H/2-(dx*bU[0]+dy*bU[1]+dz*bU[2])/d*scl,d};}
+  const fogA=d=>clamp(1-(d-650)/1100,0.2,1);
+
+  // --- 静的な形状 ---
+  const SEG=220;
+  function ringPts(lane){const a=[];for(let i=0;i<=SEG;i++){const p=trackPos(i/SEG*TRACK.L,lane);a.push([p.x,p.z]);}return a;}
+  const RING={infieldIn:ringPts(-TRACK.R+0.8),rail:ringPts(-0.4),railOut:ringPts(TRACK.W+0.4),apron:ringPts(TRACK.W+6),lane9:ringPts(9),lane13:ringPts(13)};
+  function fillStrip(inner,outer,color,alpha){
+    ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=alpha===undefined?1:alpha;
+    for(let i=0;i<SEG;i++){
+      const a=proj(inner[i][0],0,inner[i][1]),b=proj(outer[i][0],0,outer[i][1]),c=proj(outer[i+1][0],0,outer[i+1][1]),d=proj(inner[i+1][0],0,inner[i+1][1]);
+      if(!a||!b||!c||!d)continue;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill();if(alpha===undefined)ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+  function strokeRing(ring,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();let pen=false;
+    for(let i=0;i<=SEG;i++){const p=proj(ring[i][0],0.9,ring[i][1]);if(!p){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);pen=true;}ctx.stroke();}
+  const MARKS=[['ゴール',GOAL_S,TRACK.W+12],['1角',TRACK.S+TRACK.T*0.25,TRACK.W+14],['2角',TRACK.S+TRACK.T*0.75,TRACK.W+14],['向正面',TRACK.S+TRACK.T+TRACK.S/2,TRACK.W+12],['3角',2*TRACK.S+TRACK.T+TRACK.T*0.25,TRACK.W+14],['4角',2*TRACK.S+TRACK.T+TRACK.T*0.75,TRACK.W+14],['残400',GOAL_S-400,TRACK.W+8],['残200',GOAL_S-200,TRACK.W+8]].map(([t,s,d])=>{const p=trackPos(s,d);return {t,x:p.x,z:p.z};});
+  const POLES=[[-280,-172],[0,-182],[280,-172],[-350,50],[350,50],[0,182]];
+  const STAND={x:0,z:-(TRACK.R+TRACK.W+40),w:420,h:22,dep:40};
+  const COATS=['#5a3a22','#3b2a1e','#7b4a2a','#2a2320','#8a5a33','#a4784a','#6b4426','#4a3a35'];
+
+  // --- 状態 ---
+  let race=null,horsePose=[],gatePts=[],startLabel=null,cond={baba:'良',weather:'曇',out:0};
+  function setRace(r){race=r;const s0=mod(GOAL_S-r.dist,TRACK.L);
+    horsePose=r.horses.map(h=>{const lane=1.2+(h.gate-1)*2.6+0.6;return {s:s0-2,lane,done:false};});
+    gatePts=r.horses.map(h=>{const lane=1.2+(h.gate-1)*2.6+0.6;const p=trackPos(s0,lane),q=trackPos(s0+1.5,lane);return {x:p.x,z:p.z,dx:q.x-p.x,dz:q.z-p.z};});
+    const pp=trackPos(s0,TRACK.W+10);startLabel={x:pp.x,z:pp.z,t:'スタート '+r.dist+'m'};setCam(state.cam);}
+  function setCond(c){cond=c;}
+  function setPose(i,s,lane,done){horsePose[i]={s,lane,done};}
+
+  // --- カメラ操作 ---
+  const orbit={tx:0,ty:0,tz:-30,theta:Math.PI,phi:0.8,r:950};
+  function setCam(mode){
+    state.cam=mode;
+    if(mode==='俯瞰'){const portrait=H>W*1.05;Object.assign(orbit,portrait?{tx:0,ty:0,tz:-45,theta:Math.PI*1.5,phi:0.78,r:920}:{tx:0,ty:0,tz:-30,theta:Math.PI,phi:0.8,r:950});}
+    if(mode==='ゴール前'){const g=trackPos(GOAL_S-30,12);Object.assign(orbit,{tx:g.x,ty:1.5,tz:g.z,theta:Math.PI+0.55,phi:0.18,r:95});}
+    if(mode==='スタート'&&race){const s0=mod(GOAL_S-race.dist,TRACK.L);const p=trackPos(s0+40,10);const q=trackPos(s0,TRACK.W+40);
+      Object.assign(orbit,{tx:p.x,ty:1,tz:p.z,theta:Math.atan2(q.x-p.x,q.z-p.z),phi:0.25,r:90});}
+    document.querySelectorAll('#cams button').forEach(b=>b.classList.toggle('on',b.dataset.c===mode));
+  }
+  function applyOrbit(){cam.x=orbit.tx+orbit.r*Math.cos(orbit.phi)*Math.sin(orbit.theta);cam.y=orbit.ty+orbit.r*Math.sin(orbit.phi);cam.z=orbit.tz+orbit.r*Math.cos(orbit.phi)*Math.cos(orbit.theta);cam.tx=orbit.tx;cam.ty=orbit.ty;cam.tz=orbit.tz;}
+  let drag=null;const pts=new Map();let pinch0=0,r0=0;
+  const pd=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);
+    if(pts.size===2){pinch0=pd();r0=orbit.r;drag=null;}else drag={x:e.clientX,y:e.clientY};});
+  cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){const d=pd();if(pinch0>0)orbit.r=clamp(r0*pinch0/d,20,2000);return;}
+    if(!drag)return;orbit.theta-=(e.clientX-drag.x)*0.005;orbit.phi=clamp(orbit.phi+(e.clientY-drag.y)*0.004,0.06,1.45);drag={x:e.clientX,y:e.clientY};
+    if(state.cam!=='自由'){state.cam='自由';document.querySelectorAll('#cams button').forEach(b=>b.classList.toggle('on',b.dataset.c==='自由'));}});
+  const up=e=>{pts.delete(e.pointerId);drag=null;pinch0=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();orbit.r=clamp(orbit.r*(1+e.deltaY*0.001),20,2000);},{passive:false});
+
+  // --- 描画部品 ---
+  function drawBox(cx,cz,w,h,dep,color,top){
+    const cs=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([sx,sz])=>[cx+sx*w/2,cz+sz*dep/2]);
+    const lo=cs.map(([x,z])=>proj(x,0,z)),hi=cs.map(([x,z])=>proj(x,h,z));
+    if(lo.some(p=>!p)||hi.some(p=>!p))return;
+    const faces=[[hi[0],hi[1],hi[2],hi[3],top],[lo[0],lo[1],hi[1],hi[0],color],[lo[2],lo[3],hi[3],hi[2],color],[lo[1],lo[2],hi[2],hi[1],color],[lo[3],lo[0],hi[0],hi[3],color]];
+    faces.map(f=>({f,d:(f[0].d+f[1].d+f[2].d+f[3].d)/4})).sort((a,b)=>b.d-a.d).forEach(({f})=>{ctx.fillStyle=f[4];ctx.beginPath();ctx.moveTo(f[0].x,f[0].y);for(let k=1;k<4;k++)ctx.lineTo(f[k].x,f[k].y);ctx.closePath();ctx.fill();});
+  }
+  function label(x,y,text,opts){const size=opts.size||11;ctx.font=(opts.bold?'700 ':'')+size+'px "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif';
+    const w=ctx.measureText(text).width+12,h=size+8;ctx.globalAlpha=opts.alpha===undefined?1:opts.alpha;ctx.fillStyle=opts.bg||'rgba(13,24,40,0.85)';
+    ctx.beginPath();ctx.roundRect(x-w/2,y-h,w,h,4);ctx.fill();
+    if(opts.bar){ctx.fillStyle=opts.bar;ctx.beginPath();ctx.roundRect(x-w/2,y-h,5,h,2);ctx.fill();}
+    ctx.fillStyle=opts.fg||'#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x+(opts.bar?2:0),y-h/2+1);ctx.globalAlpha=1;}
+  function drawHorse(o,now){
+    const {h,p,k,flip,moving,alpha}=o;const dir=flip?-1:1;ctx.globalAlpha=alpha;
+    const fore=Math.max(0.12,-bF[1]);
+    // 脚質マーカー（地面）
+    ctx.fillStyle=STYLE[h.style].color;ctx.globalAlpha=alpha*0.5;ctx.beginPath();ctx.ellipse(p.x,p.y,1.7*k,1.7*k*fore,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=alpha;
+    const coat=COATS[(h.no*5+h.gate)%COATS.length];
+    // 脚
+    ctx.strokeStyle=coat;ctx.lineWidth=Math.max(1,0.16*k);const sw=moving?Math.sin(now*0.02+h.no*1.3)*0.45*k:0;
+    [[0.75,1],[0.55,-1],[-0.75,-1],[-0.55,1]].forEach(([ox,ph])=>{ctx.beginPath();ctx.moveTo(p.x+ox*k*dir,p.y-1.05*k);ctx.lineTo(p.x+ox*k*dir+sw*ph,p.y);ctx.stroke();});
+    // 胴
+    ctx.fillStyle=coat;ctx.beginPath();ctx.ellipse(p.x,p.y-1.25*k,1.25*k,0.55*k,0,0,Math.PI*2);ctx.fill();
+    // 尻尾・首・頭
+    ctx.lineWidth=Math.max(1,0.14*k);ctx.beginPath();ctx.moveTo(p.x-1.2*k*dir,p.y-1.3*k);ctx.lineTo(p.x-1.8*k*dir,p.y-0.8*k);ctx.stroke();
+    ctx.lineWidth=Math.max(1,0.42*k);ctx.beginPath();ctx.moveTo(p.x+1.0*k*dir,p.y-1.45*k);ctx.lineTo(p.x+1.65*k*dir,p.y-2.05*k);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(p.x+1.95*k*dir,p.y-2.05*k,0.42*k,0.22*k,dir*-0.35,0,Math.PI*2);ctx.fill();
+    // ゼッケン（脚質色）
+    ctx.fillStyle=STYLE[h.style].color;ctx.fillRect(p.x-0.35*k,p.y-1.6*k,0.9*k,0.55*k);
+    if(k>7){ctx.fillStyle='#111';ctx.font='700 '+Math.max(8,0.45*k)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(h.no,p.x+0.1*k,p.y-1.32*k);}
+    // 騎手
+    ctx.fillStyle='hsl('+((h.no*67)%360)+',60%,50%)';ctx.fillRect(p.x-0.22*k,p.y-2.3*k,0.45*k,0.6*k);
+    ctx.fillStyle=WAKU_COLOR[h.gate];ctx.beginPath();ctx.arc(p.x,p.y-2.42*k,0.22*k,0,Math.PI*2);ctx.fill();
+    if(h.gate===1){ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.stroke();}
+    ctx.globalAlpha=1;
+    if(k<3){ctx.globalAlpha=alpha;ctx.fillStyle=STYLE[h.style].color;ctx.beginPath();ctx.arc(p.x,p.y-2.6*k-9,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111';ctx.font='700 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(h.no,p.x,p.y-2.6*k-8.5);ctx.globalAlpha=1;}
+    else label(p.x,p.y-Math.max(2.7*k+8,20),h.no+'  '+h.name,{bar:STYLE[h.style].color,bold:true,alpha:alpha});
+  }
+
+  // --- フレーム ---
+  let lastT=performance.now();const rainDrops=Array.from({length:260},()=>[Math.random(),Math.random(),0.6+Math.random()*0.8]);
+  function frame(now){
+    const dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    // 再生
+    let leadS=-1e9,leadI=0,fr0=null;
+    if(state.rec&&state.playing){state.playT+=dt*state.speed;const end=state.rec.frames[state.rec.frames.length-1].t;if(state.playT>=end){state.playT=end;state.playing=false;$('ppBtn').textContent='▶ 再生';showResult();}}
+    if(state.rec){const fr=state.rec.frames,fi=Math.min(fr.length-1,state.playT/0.1),i0=Math.floor(fi),i1=Math.min(fr.length-1,i0+1),f=fi-i0;fr0=fr[i0];
+      horsePose.forEach((_,i)=>{const a=fr[i0].p[i],b=fr[i1].p[i];const s=lerp(a[0],b[0],f);setPose(i,s,lerp(a[1],b[1],f),!!a[2]);if(s>leadS){leadS=s;leadI=i;}});}
+    if(state.cam==='追走'&&state.rec){const s=leadS-12;const p=trackPos(s-28,TRACK.W+11),q=trackPos(s+6,6);cam.x=p.x;cam.y=9;cam.z=p.z;cam.tx=q.x;cam.ty=1.2;cam.tz=q.z;}
+    else applyOrbit();
+    setupView();
+    // 空と地面
+    const hx=bF[0],hz=bF[2],hl=Math.hypot(hx,hz)||1;const hu=(hx/hl)*bU[0]+(hz/hl)*bU[2],hf=(hx/hl)*bF[0]+(hz/hl)*bF[2];
+    const horizon=hf>0.01?clamp(H/2-hu/hf*scl,-H,2*H):-H;
+    const sky=ctx.createLinearGradient(0,0,0,Math.max(1,horizon));sky.addColorStop(0,'#06101d');sky.addColorStop(1,'#1a2b46');ctx.fillStyle=sky;ctx.fillRect(0,0,W,Math.max(0,horizon));
+    ctx.fillStyle='#14201b';ctx.fillRect(0,Math.max(0,horizon),W,H);
+    // 馬場
+    fillStrip(RING.railOut,RING.apron,'#2c3441');
+    fillStrip(RING.rail,RING.railOut,BABA[cond.baba].sandCss);
+    fillStrip(RING.infieldIn,RING.rail,'#274b33');
+    if(cond.out>0.02)fillStrip(RING.lane13,RING.railOut,'#f2b134',cond.out*0.45);
+    if(cond.out<-0.02)fillStrip(RING.rail,RING.lane9,'#3fa7b8',-cond.out*0.45);
+    strokeRing(RING.rail,'rgba(255,255,255,0.9)',1.2);strokeRing(RING.railOut,'rgba(220,220,220,0.7)',1);
+    // ゴール線・ゴール板
+    const g0=trackPos(GOAL_S,0),g1=trackPos(GOAL_S,TRACK.W);const G0=proj(g0.x,0.1,g0.z),G1=proj(g1.x,0.1,g1.z);
+    if(G0&&G1){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(G0.x,G0.y);ctx.lineTo(G1.x,G1.y);ctx.stroke();
+      [g0,g1].forEach(g=>{const a=proj(g.x,0,g.z),b=proj(g.x,9,g.z);if(a&&b){ctx.lineWidth=Math.max(1.5,0.5*scl/a.d);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}});}
+    // 発馬機
+    gatePts.forEach((g,i)=>{const a=proj(g.x,0,g.z),b=proj(g.x,2.6,g.z);if(!a||!b)return;const k=scl/a.d;ctx.fillStyle='rgba(75,87,102,0.75)';ctx.fillRect(a.x-0.7*k,b.y,1.4*k,a.y-b.y);});
+    // 3Dオブジェクト（奥から順に）
+    const objs=[];
+    const sp=proj(STAND.x,STAND.h/2,STAND.z);if(sp)objs.push({d:sp.d,draw:()=>{drawBox(STAND.x,STAND.z,STAND.w,STAND.h,STAND.dep,'#2a3a55','#3c4f70');
+      const z=STAND.z+STAND.dep/2+0.1;for(let i=0;i<28;i++){const x=-202+i*15;const a=proj(x-5,11,z),b=proj(x+5,17,z);if(a&&b){ctx.fillStyle='#ffe7a8';ctx.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}}}});
+    POLES.forEach(([x,z])=>{const a=proj(x,0,z),b=proj(x,60,z);if(!a||!b)return;objs.push({d:a.d,draw:()=>{ctx.strokeStyle='#8b93a1';ctx.lineWidth=Math.max(1,1.4*scl/a.d);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      const r=Math.max(3,4*scl/a.d);const gr=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,r*4);gr.addColorStop(0,'rgba(255,246,221,0.95)');gr.addColorStop(0.3,'rgba(255,240,200,0.35)');gr.addColorStop(1,'rgba(255,240,200,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(b.x,b.y,r*4,0,Math.PI*2);ctx.fill();}});});
+    MARKS.forEach(m=>{const p=proj(m.x,3,m.z);if(p)objs.push({d:p.d,draw:()=>label(p.x,p.y,m.t,{size:11,alpha:fogA(p.d)})});});
+    if(startLabel){const p=proj(startLabel.x,4,startLabel.z);if(p)objs.push({d:p.d,draw:()=>label(p.x,p.y,startLabel.t,{size:11,bold:true,bg:'rgba(242,177,52,0.92)',fg:'#1a1200',alpha:fogA(p.d)})});}
+    if(race)horsePose.forEach((hp,i)=>{const h=race.horses[i];const w=trackPos(hp.s,hp.lane),q=trackPos(hp.s+2,hp.lane);const p=proj(w.x,0,w.z);if(!p)return;const ahead=proj(q.x,0,q.z);
+      objs.push({d:p.d,draw:()=>drawHorse({h,p,k:scl/p.d,flip:ahead?ahead.x<p.x:false,moving:state.playing&&!hp.done,alpha:fogA(p.d)},now)});});
+    objs.sort((a,b)=>b.d-a.d).forEach(o=>o.draw());
+    // 雨
+    if(WEATHER[cond.weather].rain){ctx.strokeStyle='rgba(170,196,232,0.45)';ctx.lineWidth=1;ctx.beginPath();rainDrops.forEach(r=>{r[1]+=dt*r[2];if(r[1]>1)r[1]-=1;const x=r[0]*W,y=r[1]*H;ctx.moveTo(x,y);ctx.lineTo(x-3,y+14*r[2]);});ctx.stroke();}
+    if(fr0)updateHud(leadS,leadI,fr0);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return {setRace,setCond,setCam};
+})();
+/* ============================================================
+   7. HUD（進捗バー・通過順・結果）
+   ============================================================ */
+function buildBar(){
+  const D=state.race.dist;const bar=$('bar');bar.innerHTML='';
+  const pts=[[0,'スタート'],[D-800,'3角'],[D-388,'4角'],[D-200,'残200'],[D,'ゴール']];
+  pts.forEach(([x,l])=>{if(x<0)return;const m=document.createElement('div');m.className='mk';m.style.left=(x/D*100)+'%';m.innerHTML=`<span>${l}</span>`;bar.appendChild(m);});
+  const pin=document.createElement('div');pin.className='pin';pin.id='pin';pin.style.left='0%';bar.appendChild(pin);
+  const pin2=document.createElement('div');pin2.className='pin p2';pin2.id='pin2';pin2.style.left='0%';bar.appendChild(pin2);
+}
+let hudTick=0;
+function updateHud(leadS,leadI,frame){
+  const D=state.race.dist,s0=mod(GOAL_S-D,TRACK.L);
+  const cov=i=>frame.p[i][0]-s0;
+  const lead=clamp(cov(leadI),0,D);
+  const ord=frame.p.map((p,i)=>i).sort((a,b)=>cov(b)-cov(a));
+  const last=clamp(cov(ord[ord.length-1]),0,D);
+  $('pin').style.left=(lead/D*100)+'%';$('pin2').style.left=(last/D*100)+'%';
+  $('clock').textContent=`${fmtT(state.playT)}　残り ${Math.max(0,Math.round(D-lead))}m`;
+  if((hudTick++%6)===0){
+    $('liveRows').innerHTML=ord.slice(0,8).map((i,p)=>{const h=state.race.horses[i];const gap=p===0?'':(((cov(ord[0])-cov(i))/2.4).toFixed(1)+'馬身');
+      return `<div class="r"><span class="dot" style="background:${STYLE[h.style].color}"></span><span class="num" style="background:${WAKU_COLOR[h.gate]};color:${h.gate===1||h.gate===5?'#111':'#fff'}">${h.no}</span><span>${h.name}</span><span style="margin-left:auto;color:var(--mute)">${gap}</span></div>`;}).join('');
+  }
+}
+function showResult(){
+  const r=state.rec,mc=state.mc;const box=$('resultBox');
+  const marks=predMarks(mc);
+  box.innerHTML=`<h3>着順（このシナリオ）</h3>`+r.order.slice(0,5).map((i,p)=>{const h=state.race.horses[i];
+    return `<div class="r"><b style="width:18px">${p+1}</b><span class="num" style="background:${WAKU_COLOR[h.gate]};color:${h.gate===1||h.gate===5?'#111':'#fff'}">${h.no}</span><span style="min-width:120px">${h.name}</span><span style="color:${STYLE[h.style].color}">${h.style}</span><span style="color:var(--mute)">${fmtT(r.times[i])}</span><span class="mark">${marks[i]||''}</span></div>`;}).join('')
+    +`<div class="hint">ペース ${r.pace.label}　前半3F ${r.lead600.toFixed(1)}s　勝ち馬の上がり3F ${r.winLast.toFixed(1)}s</div>`;
+  box.style.display='block';
+}
+function predMarks(mc){const m={};if(!mc)return m;const ord=mc.win.map((w,i)=>[w,i]).sort((a,b)=>b[0]-a[0]);['◎','○','▲','△','△'].forEach((k,p)=>{if(ord[p])m[ord[p][1]]=k;});return m;}
+
+/* ============================================================
+   8. 右パネル：予想・読み・傾向
+   ============================================================ */
+function renderPred(){
+  const race=state.race,mc=state.mc,c=state.cond;
+  $('predHead').innerHTML=`<span>レース</span><span>${race.title}${race.real?'':'<span style="color:var(--dim)">（出走馬はサンプル）</span>'}</span><span>条件</span><span>${race.dist}m ${race.n}頭　馬場 ${c.baba}／${c.weather}</span>`
+    +(mc?`<span>想定タイム</span><span>${fmtT(mc.winTime)}（前半3F ${mc.lead600.toFixed(1)}・上がり3F ${mc.winLast.toFixed(1)}）</span>`:'');
+  const pace=paceOf(race.horses);const pc={H:'#e4572e',M:'#f2b134',S:'#3fa7b8'}[pace.label];
+  $('paceBox').innerHTML=`想定ペース <span class="pace" style="background:${pc}">${pace.label}</span>　逃げ${pace.nN}頭・先行${pace.nS}頭${mc?`　試行 ${mc.N}回`:''}`;
+  const marks=predMarks(mc);
+  const rows=race.horses.map((h,i)=>({h,i,w:mc?mc.win[i]:0,t3:mc?mc.top3[i]:0})).sort((a,b)=>b.w-a.w||b.t3-a.t3||a.i-b.i);
+  $('predBody').innerHTML=rows.map(({h,i,w,t3})=>`<tr><td class="mark">${marks[i]||''}</td>
+    <td><span class="num" style="background:${WAKU_COLOR[h.gate]};color:${h.gate===1||h.gate===5?'#111':'#fff'}">${h.no}</span> ${h.name}</td>
+    <td><span class="dot" style="background:${STYLE[h.style].color}"></span> ${h.style}</td>
+    <td class="r">${mc?(w*100).toFixed(1)+'%':'—'}<div class="wbar"><i style="width:${mc?Math.min(100,w*100*2.5):0}%"></i></div></td>
+    <td class="r">${mc?(t3*100).toFixed(0)+'%':'—'}</td><td class="r">${mc?mc.c3[i].toFixed(1):'—'}</td><td class="r">${mc?mc.c4[i].toFixed(1):'—'}</td></tr>`).join('');
+  $('memoList').innerHTML=race.real?race.horses.map(h=>`<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)"><b style="color:var(--ink)">${h.no} ${h.name}</b> <span style="color:${STYLE[h.style].color}">${h.style}</span>｜${h.memo}</div>`).join(''):'<div style="padding:4px 0">このレースの出走馬はサンプル生成です。楽天競馬などの出馬表から前5走をJSONに落とすと実データで走らせられます。</div>';
+  renderPoints();
+}
+function renderPoints(){
+  const race=state.race,mc=state.mc,c=state.cond,b=BABA[c.baba];const li=[];
+  const ct=combinedTrend(race.dist);
+  li.push(`今開催は3角で前方集団にいた馬が3着内の <b>${(MEET.frontShare*100).toFixed(0)}%</b>（8/31〜9/3 集計）。近1年参考値 ${(ct.ref.year.front3*100).toFixed(0)}% より明確に前残り。`);
+  const gateTxt=c.out>0.15?`外目をスムーズに回った馬が届く外伸び傾向（内外バイアス +${c.out}）`:c.out<-0.15?`ただしこの距離は内枠優勢の参考値が強く、経済コースを通る馬が有利（内外バイアス ${c.out}）`:`この距離では枠の有利不利は小さい設定（内外バイアス ${c.out>0?'+':''}${c.out}）`;
+  li.push(`今開催の3着内回数ベスト3枠は 5・6・2 → 6・8・4 → 4・5・6 → 8・6 と中〜外枠が並ぶ。${gateTxt}。`);
+  const pace=paceOf(race.horses);
+  if(pace.label==='H')li.push(`逃げ${pace.nN}頭でHペース想定。前が競り合えば差し馬の台頭余地があり、前残り度だけで押し切りを決め打ちしない。`);
+  else if(pace.label==='S')li.push(`逃げ馬が少なくSペース想定。前残り傾向と重なるため、先行勢の押し切り確率が高い。`);
+  else li.push(`平均ペース想定。馬場バイアス（前残り度 ${c.front>0?'+':''}${c.front}）がそのまま結果に出やすい。`);
+  li.push(`馬場 ${c.baba}：${b.label}。${c.weather==='雨'?'雨で悪化すれば時計が速くなり前がさらに止まりにくい。':c.weather==='雨上がり'?'乾き際は外から差す馬に注意。':''}`);
+  if(Math.abs(c.wind)>=0.3)li.push(`直線${c.wind>0?'追い風':'向かい風'}：${c.wind>0?'先行馬が最後まで脚を残しやすい':'逃げ・先行馬の失速が早まり差しが決まりやすい'}。`);
+  if(mc){const top=mc.win.map((w,i)=>[w,i]).sort((a,b)=>b[0]-a[0]);const h=race.horses[top[0][1]],h2=race.horses[top[1][1]];
+    li.push(`本線は <b>${h.no} ${h.name}</b>（${h.style}・${h.gate}枠、勝率 ${(top[0][0]*100).toFixed(1)}%）。3角平均 ${mc.c3[top[0][1]].toFixed(1)}番手→4角 ${mc.c4[top[0][1]].toFixed(1)}番手の位置取りが今の馬場に合う。${h.memo?'根拠：'+h.memo+'。':''}`);
+    if(h2)li.push(`対抗 <b>${h2.no} ${h2.name}</b>（${h2.style}、${(top[1][0]*100).toFixed(1)}%）。${h2.memo?h2.memo+'。':''}`);}
+  $('points').innerHTML=li.map(x=>`<li>${x}</li>`).join('');
+}
+function stackRow(label,vals,colors,note){
+  return `<div class="tr"><div class="lab"><span>${label}</span><span>${note||''}</span></div><div class="stack">${vals.map((v,i)=>`<i style="width:${v*100}%;background:${colors[i]}" title="${(v*100).toFixed(0)}%"></i>`).join('')}</div></div>`;
+}
+function renderTrend(){
+  const ref=TREND_REF[state.race.dist]||TREND_REF[1600];const sc=STYLES.map(s=>STYLE[s].color);const gc=['#c9d3e0','#7f93ad','#4e6180'];
+  const f=MEET.frontShare;const ms=[f*0.3,f*0.7,(1-f)*0.75,(1-f)*0.25];
+  $('trendStyle').innerHTML=stackRow('近1年（参考値）',ref.year.style,sc,`前方 ${(ref.year.front3*100).toFixed(0)}%`)+stackRow('直近2ヶ月（参考値）',ref.recent.style,sc,`前方 ${(ref.recent.front3*100).toFixed(0)}%`)+stackRow('今開催 8/31〜9/3（前方/後方の実測比を按分）',ms,sc,`前方集団 ${(f*100).toFixed(0)}%`);
+  $('trendGate').innerHTML=stackRow('近1年（参考値）',ref.year.gate,gc)+stackRow('直近2ヶ月（参考値）',ref.recent.gate,gc)+stackRow('今開催（ベスト3枠の回数から）',MEET.gateShare,gc);
+  $('meetFacts').innerHTML=MEET.days.map(d=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:2px 0"><span>${d.d}${d.partial?' <span style="color:var(--mute)">'+d.partial+'</span>':''}</span><span>前方 ${d.front} / 後方 ${d.back}　枠 ${d.best.map(b=>b[0]).join('・')}</span></div>`).join('');
+}
+
+/* ============================================================
+   9. UI 配線
+   ============================================================ */
+function renderRaceButtons(){
+  $('dayTabs').innerHTML=Object.keys(DAYS).map(k=>`<button class="tab ${k===state.dayKey?'on':''}" data-k="${k}">${k}</button>`).join('');
+  $('races').innerHTML=DAYS[state.dayKey].map((r,i)=>`<button class="rbtn ${i===state.raceIdx?'on':''}" data-i="${i}" title="${r.cls}">${r.r}R<small>${r.dist}m ${r.n}頭</small></button>`).join('');
+  document.querySelectorAll('#dayTabs .tab').forEach(b=>b.onclick=()=>loadRace(b.dataset.k,0));
+  document.querySelectorAll('#races .rbtn').forEach(b=>b.onclick=()=>loadRace(state.dayKey,+b.dataset.i));
+}
+function seg(id,keys,cur,onPick){$(id).innerHTML=keys.map(k=>`<button class="${k===cur?'on':''}" data-k="${k}">${k}</button>`).join('');
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{onPick(b.dataset.k);seg(id,keys,b.dataset.k,onPick);});}
+function syncVals(){
+  const c=state.cond;$('windV').textContent=c.wind===0?'無風':(c.wind>0?'追い風 ':'向かい風 ')+Math.abs(c.wind).toFixed(1);
+  $('frontV').textContent=(c.front>0?'+':'')+c.front.toFixed(2);$('outV').textContent=(c.out>0?'+':'')+c.out.toFixed(2);$('recentV').textContent=c.recent.toFixed(1);
+  scene3.setCond(c);
+}
+function condChanged(){state.mc=null;state.rec=null;state.playing=false;$('playBtn').disabled=true;$('altBtn').disabled=true;$('resultBox').style.display='none';syncVals();renderPred();}
+const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
+function setTab(t){document.body.dataset.tab=t;document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
+function init(){
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab('3d');
+  seg('babaSeg',Object.keys(BABA),state.cond.baba,k=>{state.cond.baba=k;condChanged();});
+  seg('wxSeg',Object.keys(WEATHER),state.cond.weather,k=>{state.cond.weather=k;$('wxHint').textContent=WEATHER[k].hint;condChanged();});
+  $('wxHint').textContent=WEATHER[state.cond.weather].hint;
+  $('wind').oninput=e=>{state.cond.wind=+e.target.value;condChanged();};
+  $('front').oninput=e=>{state.cond.front=+e.target.value;condChanged();};
+  $('out').oninput=e=>{state.cond.out=+e.target.value;condChanged();};
+  $('recent').oninput=e=>{state.cond.recent=+e.target.value;autoBias();condChanged();renderTrend();};
+  $('autoBias').onclick=()=>{autoBias();condChanged();};
+  $('runBtn').onclick=()=>{
+    $('runBtn').textContent='計算中…';$('runBtn').disabled=true;
+    setTimeout(()=>{
+      const N=+$('trials').value;state.mc=monteCarlo(state.race,state.cond,N);
+      // 代表シナリオ：予想上位が上位に来た試行を選ぶ
+      let best=null,bestScore=-1;for(let k=0;k<14;k++){const r=simRace(state.race,state.cond,50000+k*104729,true);const sc=r.order.slice(0,3).reduce((a,i,p)=>a+state.mc.win[i]*(3-p),0);if(sc>bestScore){bestScore=sc;best=r;}}
+      state.rec=best;state.playT=0;state.playing=false;state.seedAlt=0;
+      renderPred();$('runBtn').textContent='予想を計算する';$('runBtn').disabled=false;$('playBtn').disabled=false;$('altBtn').disabled=false;$('resultBox').style.display='none';if(isMobile())setTab('pred');
+    },30);
+  };
+  const startPlay=()=>{if(isMobile())setTab('3d');state.playT=0;state.playing=true;$('ppBtn').textContent='❚❚ 停止';$('resultBox').style.display='none';if(state.cam==='俯瞰'||state.cam==='自由')scene3.setCam('追走');};
+  $('playBtn').onclick=startPlay;
+  $('altBtn').onclick=()=>{state.seedAlt++;state.rec=simRace(state.race,state.cond,777+state.seedAlt*31337,true);startPlay();};
+  $('ppBtn').onclick=()=>{if(!state.rec)return;if(state.playing){state.playing=false;$('ppBtn').textContent='▶ 再生';}else{if(state.playT>=state.rec.frames[state.rec.frames.length-1].t-0.05)state.playT=0;state.playing=true;$('ppBtn').textContent='❚❚ 停止';$('resultBox').style.display='none';}};
+  document.querySelectorAll('.spd').forEach(b=>b.onclick=()=>{state.speed=+b.dataset.s;document.querySelectorAll('.spd').forEach(x=>x.classList.toggle('on',x===b));});
+  $('cams').innerHTML=['俯瞰','追走','ゴール前','スタート','自由'].map(c=>`<button data-c="${c}">${c}</button>`).join('');
+  document.querySelectorAll('#cams button').forEach(b=>b.onclick=()=>scene3.setCam(b.dataset.c));
+  $('cGen').onclick=()=>{const d=+$('cDist').value,n=clamp(+$('cN').value||12,6,16);const key='カスタム';
+    DAYS[key]=[{r:'C',time:'',dist:d,n,cls:'カスタム'}];state.dayKey=key;state.raceIdx=0;
+    state.race={r:'C',dist:d,n,cls:'カスタム',title:`カスタム ${d}m`,horses:genHorses(n,Date.now()%100000)};afterRaceChange();};
+  $('jsonDump').onclick=()=>{$('json').value=JSON.stringify({dist:state.race.dist,horses:state.race.horses},null,1);};
+  $('jsonLoad').onclick=()=>{try{const o=JSON.parse($('json').value);if(!Array.isArray(o.horses)||!o.horses.length)throw new Error('horses が空');
+      const d=REF_TIME[o.dist]?o.dist:state.race.dist;const hs=o.horses.map((h,i)=>({no:h.no||i+1,name:h.name||('馬'+(i+1)),gate:clamp(+h.gate||Math.ceil((i+1)/o.horses.length*8),1,8),style:STYLES.includes(h.style)?h.style:'先行',ability:clamp(+h.ability||0.5,0,1),close:clamp(+h.close||0.5,0,1),stamina:clamp(+h.stamina||0.5,0,1),wet:clamp(+h.wet||0.5,0,1),memo:h.memo||''}));
+      state.race={r:'J',dist:d,n:hs.length,cls:'読込',title:`読込データ ${d}m`,real:true,horses:hs};DAYS['読込']=[{r:'J',dist:d,n:hs.length,cls:'読込'}];state.dayKey='読込';state.raceIdx=0;afterRaceChange();}
+    catch(e){alert('JSONを読み込めません: '+e.message);}};
+  loadRace(state.dayKey,state.raceIdx);
+  syncVals();
+}
+init();
+</script>
+</body>
+</html>
