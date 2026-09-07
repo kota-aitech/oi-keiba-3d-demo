@@ -11,11 +11,20 @@
 
 ## ファイル構成
 ```
-index.html   … アプリ本体（CSS / データ / シミュレーション / 3D / UI すべて）
+index.html   … アプリ本体（大井・川崎の両方を内蔵。ヘッダーの開催場タブで切替、URL は ?track=oi / ?track=kawasaki）
 render.yaml  … Render Blueprint（手動で Static Site を作った場合は不要）
 CLAUDE.md    … このファイル
 README.md
 ```
+
+### 開催場の切替のしくみ（セクション 1b `TRACKS`）
+- `TRACKS.oi` / `TRACKS.kawasaki` に開催場ごとの設定をまとめている：
+  `geo`（コース幾何・ゴール位置・左右回り mirror）、`cp`（3角/4角の残距離）、`lanePh`（進路取りの切替距離）、
+  `ref`（距離別基準タイム）、`trendRef`（近1年参考値）、`meet`（直近開催の実測傾向）、`days`（番組）、`real`（実出走馬）、
+  `styleAdj`（脚質係数の上書き）、`defaults`（初期表示レース・馬場・天候）、`scene`（照明・スタンド・カメラ）、`text`（パネルの文言）
+- 起動時に `?track=` から `TK` を決め、`REF_TIME / TREND_REF / MEET / DAYS / REAL` に割り当てる。切替はページ再読込
+- データは接尾辞で分ける：`REF_TIME_OI` / `REF_TIME_KW`、`DAYS_OI` / `DAYS_KW`、`REAL_OI` / `REAL_KW` など
+- **新しい開催場（船橋・浦和）を足す**：`_FB` 等の接尾辞でデータ定数を作り、`TRACKS` に1エントリ追加するだけ。船橋は左回り1周1,400m・直線308m、浦和は左回り1周1,200m・直線220m
 
 ## index.html のセクション（`/* N. ... */` コメントで区切ってある）
 | # | 内容 | 触る頻度 |
@@ -32,9 +41,9 @@ README.md
 | 9 | UI 配線 `init`, スマホタブ | 低 |
 
 ## いちばん多い作業: 新しい開催日のデータを入れる
-1. `DAYS` に日付キー（例 `'9/5(土) 第6日'`）とレース配列を追加  
+1. 該当開催場の `DAYS_OI` / `DAYS_KW` に日付キー（例 `'9/8(火) 第2日'`）とレース配列を追加  
    `{r:1,time:'14:50',dist:1600,n:10,cls:'C3一二'}` 距離は `REF_TIME` にあるものだけ（1000/1200/1400/1600/1650/1800/2000/2400）
-2. `REAL['<日付キー>|<R番号>']` に出走馬配列を追加（無いレースはサンプル馬で動く）
+2. `REAL_OI['<日付キー>|<R番号>']` / `REAL_KW[...]` に出走馬配列を追加（無いレースはサンプル馬で動く）
    ```js
    {no:1,name:'馬名',gate:1,style:'先行',ability:.62,close:.55,stamina:.5,wet:.55,memo:'根拠（前5走）'}
    ```
@@ -46,10 +55,10 @@ README.md
    - `wet`: 稍重〜不良での成績（湿った馬場で好走=.6以上）
    - `gate`: 枠番（1〜8）。馬番ではない
    - 頭数 `n` と `REAL` の配列長は一致させる（ズレると発馬機の数が合わない）
-3. 今開催の実測傾向は `MEET.days` に日ごとの `{d, front, back, best}` を追加  
+3. 直近開催の実測傾向は `MEET_OI.days` / `MEET_KW.days` に日ごとの `{d, front, back, best}` を追加  
    （nankankeiba「レース傾向」の 3角前方集団/後方集団の3着内回数と、3着内回数ベスト3枠）
-4. 初期表示レースは `state={dayKey:Object.keys(DAYS)[1], raceIdx:10,...}` で指定
-5. 右パネル下の出典注記（`.src`）の日付・レース範囲を更新
+4. 初期表示レースは `TRACKS.<場>.defaults`（dayIdx / raceIdx / 馬場 / 天候）で指定
+5. 出典注記・読みのポイントの文言は `TRACKS.<場>.text` を更新
 
 データ元: 楽天競馬の出馬表（`keiba.rakuten.co.jp/race_card/list/RACEID/...`、前5走の通過順・上がり・馬場が載る）。
 netkeiba のコース分析は有料のため使わない。

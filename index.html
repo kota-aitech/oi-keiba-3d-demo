@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>大井競馬 予想シミュレーション 3Dデモ — 第8回大井 9/3・9/4（実データ版）</title>
+<title>南関東競馬 予想シミュレーション 3Dデモ（大井・川崎）</title>
 <style>
 :root{
   --night:#0b1626; --panel:#0f1c2f; --line:rgba(255,255,255,.10);
@@ -102,7 +102,8 @@ ul.points li{margin:3px 0}
 .src{color:var(--dim);font-size:10px;margin-top:8px}
 @media (max-width:900px){
   header{padding:6px 10px;gap:6px;flex-direction:column;align-items:stretch;flex-wrap:nowrap}
-  .hdr-row{gap:8px;justify-content:space-between}
+  .hdr-row{gap:6px;justify-content:space-between;flex-wrap:wrap}
+  #trackTabs .tab{font-weight:700}
   header h1{font-size:13px;white-space:nowrap} header h1 small{display:none}
   .tab{padding:4px 10px;font-size:12px}
   #races{margin-left:0;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -135,13 +136,16 @@ ul.points li{margin:3px 0}
 <div id="app">
 <header>
   <div class="hdr-row">
-    <h1>大井競馬 予想シミュレーション <small>第8回大井 ナイター開催 — 3Dデモ</small></h1>
+    <h1 id="h1title">予想シミュレーション <small>3Dデモ</small></h1>
+    <div class="tabs" id="trackTabs"></div>
     <div class="tabs" id="dayTabs"></div>
   </div>
   <div id="races"></div>
 </header>
 <main>
   <aside class="left">
+    <h2>馬場データ（公表値）</h2>
+    <div class="kv" id="babaInfo" style="margin-bottom:4px"></div>
     <h2>馬場状態</h2>
     <div class="seg" id="babaSeg"></div>
     <h2>天候</h2>
@@ -214,7 +218,7 @@ ul.points li{margin:3px 0}
     <div class="legend" style="margin-top:8px"><span style="--c:#c9d3e0">内（1〜3枠）</span><span style="--c:#7f93ad">中（4〜6枠）</span><span style="--c:#4e6180">外（7〜8枠）</span></div>
     <div id="trendGate"></div>
     <div id="meetFacts" style="margin-top:8px;font-size:12px"></div>
-    <p class="src">出走馬：9/3 8R〜12R と 9/4 全12R は楽天競馬の出馬表（前5走の通過順・上がり・馬場）から取り込んだ実データ。9/3 1R〜7R は番組のみ実データで出走馬はサンプル。今開催（8/31〜9/3）の傾向は nankankeiba.com「レース傾向」の実測。近1年・直近2ヶ月の脚質別・枠別は参考値。</p>
+    <p class="src" id="srcNote"></p>
   </aside>
 </main>
 <nav id="tabbar"><button data-t="3d" class="on">3D</button><button data-t="pred">予想</button><button data-t="cond">条件</button></nav>
@@ -256,10 +260,11 @@ const WEATHER={
   '雨':{rain:true, hint:'開催中に稍重→重へ悪化する想定。前残り度が上がり時計も速くなる',noise:1.1},
   '雨上がり':{rain:false,hint:'乾き際は外の砂が乾きやすく、内外差が出やすい',noise:1.05},
 };
-const REF_TIME={1000:60.8,1200:74.5,1400:88.0,1600:102.5,1650:106.0,1800:116.5,2000:130.5,2400:159.5};
+const REF_TIME_OI={1000:60.8,1200:74.5,1400:88.0,1600:102.5,1650:106.0,1800:116.5,2000:130.5,2400:159.5};
+const REF_TIME_KW={900:54.6,1000:60.8,1200:75.0,1400:89.5,1500:96.5,1600:103.5,2000:131.0,2100:138.0,2400:160.0};
 
 // --- 近1年・直近2ヶ月：デモ用参考値（実集計に差し替え前提） ---
-const TREND_REF={
+const TREND_REF_OI={
   1200:{year:{front3:.66,style:[.20,.38,.30,.12],gate:[.29,.35,.36]},recent:{front3:.70,style:[.22,.40,.27,.11],gate:[.27,.35,.38]}},
   1400:{year:{front3:.64,style:[.17,.38,.32,.13],gate:[.32,.35,.33]},recent:{front3:.68,style:[.19,.40,.29,.12],gate:[.30,.35,.35]}},
   1600:{year:{front3:.62,style:[.16,.37,.33,.14],gate:[.35,.34,.31]},recent:{front3:.66,style:[.18,.39,.30,.13],gate:[.33,.34,.33]}},
@@ -268,9 +273,19 @@ const TREND_REF={
   2000:{year:{front3:.58,style:[.14,.35,.36,.15],gate:[.33,.34,.33]},recent:{front3:.62,style:[.16,.37,.33,.14],gate:[.32,.34,.34]}},
   2400:{year:{front3:.56,style:[.14,.34,.36,.16],gate:[.33,.34,.33]},recent:{front3:.60,style:[.15,.36,.34,.15],gate:[.32,.34,.34]}},
 };
-TREND_REF[1000]=TREND_REF[1200];
+TREND_REF_OI[1000]=TREND_REF_OI[1200];
+const TREND_REF_KW={
+  900: {year:{front3:.74,style:[.26,.40,.24,.10],gate:[.36,.34,.30]},recent:{front3:.73,style:[.25,.40,.25,.10],gate:[.30,.36,.34]}},
+  1400:{year:{front3:.70,style:[.22,.40,.27,.11],gate:[.36,.34,.30]},recent:{front3:.72,style:[.23,.41,.26,.10],gate:[.30,.37,.33]}},
+  1500:{year:{front3:.70,style:[.22,.40,.27,.11],gate:[.35,.34,.31]},recent:{front3:.72,style:[.23,.41,.26,.10],gate:[.30,.37,.33]}},
+  1600:{year:{front3:.68,style:[.20,.40,.28,.12],gate:[.36,.34,.30]},recent:{front3:.71,style:[.22,.41,.26,.11],gate:[.31,.36,.33]}},
+  2000:{year:{front3:.64,style:[.17,.38,.31,.14],gate:[.34,.34,.32]},recent:{front3:.68,style:[.19,.40,.28,.13],gate:[.31,.36,.33]}},
+  2100:{year:{front3:.64,style:[.17,.38,.31,.14],gate:[.34,.34,.32]},recent:{front3:.68,style:[.19,.40,.28,.13],gate:[.31,.36,.33]}},
+};
+TREND_REF_KW[1000]=TREND_REF_KW[900];TREND_REF_KW[1200]=TREND_REF_KW[1400];TREND_REF_KW[2400]=TREND_REF_KW[2100];
+
 // --- 今開催 第8回大井（実測：nankankeiba レース傾向 3角位置 / 3着内回数ベスト3枠） ---
-const MEET={
+const MEET_OI={
   name:'第8回 大井競馬（8/31〜9/4）',
   days:[
     {d:'8/31(月)',front:28,back:8,best:[[5,7],[6,7],[2,6]]},
@@ -279,11 +294,29 @@ const MEET={
     {d:'9/3(木)', front:8, back:1,best:[[8,3],[6,2]],partial:'3R終了時点'},
   ],
 };
-MEET.frontShare=(()=>{let f=0,b=0;MEET.days.forEach(x=>{f+=x.front;b+=x.back;});return f/(f+b);})();
-MEET.gateShare=(()=>{let s=[0,0,0];MEET.days.forEach(x=>x.best.forEach(([w,c])=>{s[w<=3?0:w<=6?1:2]+=c;}));const t=s[0]+s[1]+s[2];return s.map(v=>v/t);})();
+MEET_OI.frontShare=(()=>{let f=0,b=0;MEET_OI.days.forEach(x=>{f+=x.front;b+=x.back;});return f/(f+b);})();
+MEET_OI.gateShare=(()=>{let s=[0,0,0];MEET_OI.days.forEach(x=>x.best.forEach(([w,c])=>{s[w<=3?0:w<=6?1:2]+=c;}));const t=s[0]+s[1]+s[2];return s.map(v=>v/t);})();
+
+// --- 直近3開催 川崎（実測：nankankeiba レース傾向 3角位置 / 3着内回数ベスト3枠） ---
+const MEET_KW={
+  name:'第4〜6回 川崎競馬（7/6〜8/21）',
+  days:[
+    {d:'7/6(月)',front:27,back:9,best:[[6,8],[5,6],[8,6]]},{d:'7/7(火) 重',front:25,back:11,best:[[6,10],[7,7],[1,4]]},
+    {d:'7/8(水) 稍',front:26,back:10,best:[[8,8],[3,6],[5,6]]},{d:'7/9(木)',front:23,back:13,best:[[3,9],[1,5],[5,5]]},
+    {d:'7/10(金)',front:24,back:12,best:[[4,7],[1,6],[7,6]]},
+    {d:'7/27(月)',front:28,back:8,best:[[4,7],[2,6],[7,6]]},{d:'7/28(火)',front:28,back:8,best:[[6,7],[3,6],[5,5]]},
+    {d:'7/29(水)',front:23,back:13,best:[[5,6],[7,6],[8,6]]},{d:'7/30(木)',front:26,back:10,best:[[6,9],[5,7],[8,7]]},
+    {d:'7/31(金)',front:27,back:9,best:[[7,7],[3,5],[4,5]]},
+    {d:'8/18(火)',front:29,back:7,best:[[3,6],[6,6],[8,6]]},{d:'8/19(水)',front:26,back:10,best:[[6,8],[7,6],[8,6]]},
+    {d:'8/20(木)',front:24,back:12,best:[[2,8],[5,5],[8,5]]},{d:'8/21(金)',front:33,back:3,best:[[5,7],[2,6],[7,6]]},
+  ],
+};
+MEET_KW.frontShare=(()=>{let f=0,b=0;MEET_KW.days.forEach(x=>{f+=x.front;b+=x.back;});return f/(f+b);})();
+MEET_KW.gateShare=(()=>{let s=[0,0,0];MEET_KW.days.forEach(x=>x.best.forEach(([w,c])=>{s[w<=3?0:w<=6?1:2]+=1;}));const t=s[0]+s[1]+s[2];return s.map(v=>v/t);})();
+
 
 // --- 番組（楽天競馬 出馬表より）---
-const DAYS={
+const DAYS_OI={
   '9/3(木) 第4日':[
     {r:1,time:'14:50',dist:1600,n:10,cls:'C3一二'},{r:2,time:'15:22',dist:1200,n:16,cls:'C3一二'},
     {r:3,time:'15:54',dist:1400,n:10,cls:'2歳三四'},{r:4,time:'16:26',dist:1200,n:7,cls:'2歳三四'},
@@ -301,9 +334,21 @@ const DAYS={
     {r:11,time:'20:15',dist:1400,n:13,cls:'デイリースポーツ賞'},{r:12,time:'20:50',dist:1200,n:15,cls:'月見特別 C1三四五'},
   ],
 };
+// --- 番組（楽天競馬 出馬表より 9/7）---
+const DAYS_KW={
+  '9/7(月) 第1日':[
+    {r:1,time:'15:00',dist:1400,n:12,cls:'C3五'},{r:2,time:'15:30',dist:1400,n:7,cls:'2歳6ロ'},
+    {r:3,time:'16:00',dist:900,n:10,cls:'のぞみ賞 2歳未格付選抜'},{r:4,time:'16:30',dist:1400,n:6,cls:'2歳5イ'},
+    {r:5,time:'17:00',dist:1400,n:12,cls:'C2一二'},{r:6,time:'17:30',dist:1400,n:12,cls:'C2一二'},
+    {r:7,time:'18:00',dist:1500,n:11,cls:'啄木鳥賞 3歳1'},{r:8,time:'18:30',dist:1600,n:6,cls:'ルドベキア特別 B3下 3歳選定牝馬'},
+    {r:9,time:'19:05',dist:900,n:12,cls:'剛勇賞 C1 選定馬'},{r:10,time:'19:40',dist:1400,n:12,cls:'尾花賞 C1五'},
+    {r:11,time:'20:15',dist:1400,n:11,cls:'日高軽種馬農業協同組合特別 B1二B2一（5番取消）'},{r:12,time:'20:50',dist:900,n:12,cls:'花鳥風月賞 B3 選定馬'},
+  ],
+};
+
 // --- 実出走馬（楽天競馬 出馬表 9/3、前5走の通過順・着順・上がり3F・馬場から推定）---
 // style: 直近の通過順位／頭数から分類, ability: 近走着順と格, close: 上がり3F, stamina: 距離実績, wet: 稍重〜不良での成績
-const REAL={
+const REAL_OI={
  '9/3(木) 第4日|10':[
   {no:1,name:'プリメイラ',gate:1,style:'差し',ability:.30,close:.35,stamina:.5,wet:.45,memo:'名古屋A級から転入初戦。前走取消、名古屋では中団〜後方（5-7-7-8）から届かず'},
   {no:2,name:'ココナッツガーデン',gate:2,style:'逃げ',ability:.62,close:.55,stamina:.55,wet:.5,memo:'内1600で2-2-2-2から1着、1800で逃げ切り勝ちあり。前走1400は5-7-6の3着'},
@@ -342,7 +387,7 @@ const REAL={
  ],
 };
 
-REAL['9/3(木) 第4日|8']=[
+REAL_OI['9/3(木) 第4日|8']=[
  {no:1,name:'サントレッダー',gate:1,style:'差し',ability:.25,close:.4,stamina:.5,wet:.4,memo:'牝4 51kg。近5走すべて2桁着順寄り、中団後ろから伸びず'},
  {no:2,name:'ウイングウインド',gate:2,style:'先行',ability:.5,close:.4,stamina:.45,wet:.55,memo:'8歳。1400で先行して5・4・2着、前走2-2-2で5着（0.6秒差）'},
  {no:3,name:'チマル',gate:3,style:'逃げ',ability:.68,close:.58,stamina:.5,wet:.58,memo:'前走1400を1-1-1で逃げ切り1着。不良1400でも7-6-4から上がり37.6で1着。楽天予想1番人気'},
@@ -358,7 +403,7 @@ REAL['9/3(木) 第4日|8']=[
  {no:13,name:'サンサンラルーナ',gate:8,style:'差し',ability:.35,close:.45,stamina:.4,wet:.4,memo:'C1では掲示板前後、前走重馬場で15着'},
  {no:14,name:'クレイジーフルーツ',gate:8,style:'追込',ability:.38,close:.55,stamina:.4,wet:.45,memo:'前走13-12-12から上がり38.5で6着。C1で4・5着あり'},
 ];
-REAL['9/3(木) 第4日|9']=[
+REAL_OI['9/3(木) 第4日|9']=[
  {no:1,name:'ジーティーマジカル',gate:1,style:'先行',ability:.6,close:.55,stamina:.4,wet:.5,memo:'1200で3-3の位置から3着（0.2差）が3回、4着1回。安定して掲示板。楽天予想1番人気'},
  {no:2,name:'クミンフレイバー',gate:2,style:'逃げ',ability:.62,close:.6,stamina:.4,wet:.4,memo:'前々走1200を1-1で逃げ切り1着（1:13.4・上がり37.3）。前走1400は不良でハナ切って6着'},
  {no:3,name:'ケイコウギュウゴ',gate:3,style:'差し',ability:.2,close:.4,stamina:.35,wet:.35,memo:'近5走すべて殿寄り（12・9・14・14・14着）'},
@@ -372,7 +417,7 @@ REAL['9/3(木) 第4日|9']=[
  {no:11,name:'デルバイス',gate:8,style:'追込',ability:.18,close:.45,stamina:.4,wet:.4,memo:'7歳。近5走すべて後方から12・12・13着'},
  {no:12,name:'アダラズプレイヤー',gate:8,style:'差し',ability:.4,close:.5,stamina:.4,wet:.6,memo:'5ヶ月ぶり。重馬場1200で3着（上がり37.3）あり、前走8着'},
 ];
-REAL['9/4(金) 第5日|10']=[
+REAL_OI['9/4(金) 第5日|10']=[
  {no:1,name:'コスモギンガ',gate:1,style:'追込',ability:.3,close:.45,stamina:.6,wet:.4,memo:'9歳牝馬。近走後方から7・12・9着。1800で6着あり'},
  {no:2,name:'ショーシャンク',gate:2,style:'差し',ability:.6,close:.6,stamina:.68,wet:.5,memo:'2000で3着（上がり39.7）、1800で4着（8-8-1-1）。前走2400は1番人気5着'},
  {no:3,name:'ラピード',gate:3,style:'追込',ability:.28,close:.45,stamina:.5,wet:.35,memo:'7歳。近走後方から11・8・8着'},
@@ -388,7 +433,7 @@ REAL['9/4(金) 第5日|10']=[
  {no:13,name:'デスタン',gate:8,style:'差し',ability:.6,close:.58,stamina:.68,wet:.6,memo:'2400で3着・2着（1番人気）、2000で7着。後方〜中団から差す'},
  {no:14,name:'カズピレウス',gate:8,style:'先行',ability:.3,close:.4,stamina:.5,wet:.45,memo:'近走10・11・12着。前々に行くが失速'},
 ];
-REAL['9/4(金) 第5日|11']=[
+REAL_OI['9/4(金) 第5日|11']=[
  {no:1,name:'ラペルシェール',gate:1,style:'追込',ability:.4,close:.62,stamina:.4,wet:.5,memo:'8歳。毎回最後方から上がり37.2〜38.1で追い込むが8・10・10着。1400不良で1着歴'},
  {no:2,name:'エスプリボクチャン',gate:2,style:'先行',ability:.5,close:.5,stamina:.45,wet:.55,memo:'1400不良を1-1-1で2着（0.3差）、5着。前走3番人気12着。3ヶ月ぶり'},
  {no:3,name:'ラブリールチア',gate:3,style:'先行',ability:.58,close:.6,stamina:.45,wet:.5,memo:'1400で1着（上がり37.6）・1着。前走内1600（不良）7-7-6-7で8着。1400なら'},
@@ -403,7 +448,7 @@ REAL['9/4(金) 第5日|11']=[
  {no:12,name:'ヴィルミーキスミー',gate:8,style:'先行',ability:.55,close:.5,stamina:.5,wet:.55,memo:'前走内1600（不良）を5-4-4-4で4着。川崎1500で1着（3-3-4-2）'},
  {no:13,name:'サトノエンパイア',gate:8,style:'追込',ability:.6,close:.68,stamina:.55,wet:.6,memo:'前走内1600（不良）13-13-10-9から3着（0.3差）、1400で上がり37.2。後方一気'},
 ];
-REAL['9/4(金) 第5日|12']=[
+REAL_OI['9/4(金) 第5日|12']=[
  {no:1,name:'ヤンノカステップ',gate:1,style:'追込',ability:.5,close:.7,stamina:.35,wet:.55,memo:'6歳牝馬。毎回後方から上がり36.4〜37.1で3・5・5着。展開待ち'},
  {no:2,name:'グルナルーフス',gate:2,style:'先行',ability:.68,close:.6,stamina:.4,wet:.6,memo:'1200で3連勝→2着（1番人気）→前走1番人気3着（7-6）。1:12.9の持ち時計'},
  {no:3,name:'トップレジェンド',gate:2,style:'逃げ',ability:.72,close:.62,stamina:.4,wet:.6,memo:'南関東3戦3勝（1200 1:12.7 上がり36.9、1-1で逃げ切り）。楽天予想1番人気'},
@@ -420,7 +465,7 @@ REAL['9/4(金) 第5日|12']=[
  {no:14,name:'トーキングザゴッド',gate:8,style:'先行',ability:.7,close:.6,stamina:.4,wet:.65,memo:'3歳。デビュー3戦3勝（1200 1:13.2、3-3から抜け出し）。古馬C1初対戦'},
  {no:15,name:'ドナソレイ',gate:8,style:'差し',ability:.3,close:.5,stamina:.3,wet:.45,memo:'3歳牝馬53kg。川崎900mで6・4・2着。大井1200は初'},
 ];
-REAL['9/4(金) 第5日|9']=[
+REAL_OI['9/4(金) 第5日|9']=[
  {no:1,name:'トランジェント',gate:1,style:'先行',ability:.62,close:.55,stamina:.62,wet:.62,memo:'前走2000（重）を3-3-3-3で1着（上がり38.7）。1800でハナ切って9着も。2400は初'},
  {no:2,name:'ナンパセン',gate:2,style:'逃げ',ability:.68,close:.55,stamina:.65,wet:.6,memo:'前走2000（重）を1-1-1-1で2着（0.1差・1番人気）、1800で1着。541kgの大型馬'},
  {no:3,name:'スリーレジェンド',gate:3,style:'先行',ability:.72,close:.62,stamina:.68,wet:.62,memo:'1650で1着、2000（重）で2着、2000（不良）で1着。B2で安定。楽天予想1番人気'},
@@ -429,7 +474,7 @@ REAL['9/4(金) 第5日|9']=[
  {no:6,name:'ファーガス',gate:6,style:'逃げ',ability:.5,close:.45,stamina:.62,wet:.55,memo:'7歳。前走B1 2000をハナで5着（0.3差）。A2では大敗'},
  {no:7,name:'ドウジギリ',gate:7,style:'先行',ability:.58,close:.55,stamina:.6,wet:.5,memo:'2000で4着（5-5-1-1）、1800を3-3-1-1で1着。前で運んで粘る'},
 ];
-REAL['9/4(金) 第5日|8']=[
+REAL_OI['9/4(金) 第5日|8']=[
  {no:1,name:'ルガルバンダ',gate:1,style:'逃げ',ability:.65,close:.62,stamina:.45,wet:.68,memo:'3歳。1400不良を1-2-1で2着（上がり37.2）、1400不良で1着。4ヶ月ぶりの実戦'},
  {no:2,name:'ジャストリアン',gate:2,style:'先行',ability:.45,close:.45,stamina:.4,wet:.5,memo:'1400で3-3-3から3着、1-2-2で4着。前走B3で1-2-2から13着。4ヶ月ぶり'},
  {no:3,name:'ドライブミーホーム',gate:3,style:'追込',ability:.5,close:.72,stamina:.4,wet:.6,memo:'3歳。後方から上がり35.6〜37.8を連発、1400不良で3着。届くかは展開次第'},
@@ -437,7 +482,7 @@ REAL['9/4(金) 第5日|8']=[
  {no:5,name:'ヴァンビー',gate:5,style:'差し',ability:.45,close:.55,stamina:.45,wet:.5,memo:'B3の1400で4着（上がり37.8）、C1では6・12着。中団後ろから'},
  {no:6,name:'ビッティンキバラ',gate:6,style:'差し',ability:.35,close:.5,stamina:.45,wet:.4,memo:'近走8・8・7着。1400で1着歴はあるが後方のまま'},
 ];
-REAL['9/4(金) 第5日|7']=[
+REAL_OI['9/4(金) 第5日|7']=[
  {no:1,name:'カラーオブジアース',gate:1,style:'追込',ability:.35,close:.5,stamina:.55,wet:.5,memo:'前走内1600（不良）10-11-10-10から4着。それ以前は2桁着順'},
  {no:2,name:'ユーヒナタ',gate:2,style:'差し',ability:.5,close:.55,stamina:.5,wet:.55,memo:'6歳牝馬51kg。前走内1600（重）9-9-7-7から5着（0.5差）。内1600で勝ち鞍多数'},
  {no:3,name:'バズッチ',gate:3,style:'先行',ability:.35,close:.4,stamina:.45,wet:.4,memo:'前で運んで8・10着。内1600 3-3-3-3で失速'},
@@ -448,7 +493,7 @@ REAL['9/4(金) 第5日|7']=[
  {no:8,name:'グロワールスカイ',gate:8,style:'差し',ability:.6,close:.6,stamina:.5,wet:.5,memo:'内1600で1着（6-6-5-4）、3着（8-7-2-1）。前走重馬場は10着'},
  {no:9,name:'ヴィラスターリ',gate:8,style:'逃げ',ability:.72,close:.55,stamina:.55,wet:.6,memo:'内1600で5連勝中（1-1-1-1で逃げ切り含む）。6ヶ月半ぶり。楽天予想1番人気'},
 ];
-REAL['9/4(金) 第5日|6']=[
+REAL_OI['9/4(金) 第5日|6']=[
  {no:1,name:'フィールドアピール',gate:1,style:'逃げ',ability:.62,close:.5,stamina:.45,wet:.6,memo:'前走1200（不良）を1-1で2着（0.5差）。1400で2-1-1から4着、門別で2勝。楽天予想1番人気'},
  {no:2,name:'アリアケグレイト',gate:2,style:'追込',ability:.3,close:.45,stamina:.5,wet:.4,memo:'後方から11・4・8着。内1600で4着はあるが決め手不足'},
  {no:3,name:'ヴァルディ',gate:3,style:'差し',ability:.35,close:.45,stamina:.45,wet:.45,memo:'53kg減量騎手。1400で5・4着、前走1200は10-9から6着'},
@@ -462,14 +507,14 @@ REAL['9/4(金) 第5日|6']=[
  {no:11,name:'ボワヴェール',gate:8,style:'先行',ability:.38,close:.45,stamina:.5,wet:.45,memo:'内1600で3・4着あるが近走8・8・9着。3-3-3-3で運ぶ'},
  {no:12,name:'カンタベリータイム',gate:8,style:'先行',ability:.55,close:.55,stamina:.45,wet:.6,memo:'1400で2着（不良）、前走重1400を4-3-4で5着（0.9差）。1:27.6の持ち時計'},
 ];
-REAL['9/4(金) 第5日|5']=[
+REAL_OI['9/4(金) 第5日|5']=[
  {no:1,name:'ロワゾドゥフ',gate:1,style:'先行',ability:.55,close:.5,stamina:.55,wet:.55,memo:'2歳牝馬。新馬内1600（不良）を3-3-5-4で2着（1番人気・0.4差）'},
  {no:2,name:'ケテンパッション',gate:2,style:'先行',ability:.65,close:.58,stamina:.5,wet:.55,memo:'新馬1400を2-1-1で1着（2.0秒差の圧勝）、前走1200は3-1で2着（1番人気）。楽天予想1番人気'},
  {no:3,name:'タルガフローリオ',gate:3,style:'先行',ability:.55,close:.58,stamina:.5,wet:.5,memo:'新馬1400を2-2-2で2着（0.3差・上がり37.5）。キャリア1戦'},
  {no:4,name:'シンプウキセキ',gate:4,style:'差し',ability:.4,close:.5,stamina:.5,wet:.5,memo:'新馬1200を7-7から2着（3.0秒差）。前走は除外'},
  {no:5,name:'アウン',gate:5,style:'逃げ',ability:.4,close:.45,stamina:.5,wet:.4,memo:'キャリア5戦。1400を3-3-3で2着（0.0差）あるが、前走ハナ切って6着'},
 ];
-REAL['9/4(金) 第5日|4']=[
+REAL_OI['9/4(金) 第5日|4']=[
  {no:1,name:'サーブルエース',gate:1,style:'先行',ability:.5,close:.45,stamina:.4,wet:.5,memo:'2歳。前走重1200を1-2で2着（1.6差）、新馬4着'},
  {no:2,name:'モンサンマナオラナ',gate:2,style:'逃げ',ability:.6,close:.55,stamina:.4,wet:.62,memo:'2歳牝馬51kg。前走重1200を1-2で1着（0.6差）。414kgの小柄な馬。楽天予想1番人気'},
  {no:3,name:'ガブリン',gate:3,style:'差し',ability:.42,close:.5,stamina:.4,wet:.45,memo:'新馬1200で2着（3-3）、前走6-6から4着'},
@@ -478,7 +523,7 @@ REAL['9/4(金) 第5日|4']=[
  {no:6,name:'イントゥザライト',gate:6,style:'逃げ',ability:.5,close:.5,stamina:.45,wet:.5,memo:'新馬1400をハナで2着、1200で3着。前走1400は1-1-2で4着'},
  {no:7,name:'キングビー',gate:7,style:'逃げ',ability:.52,close:.5,stamina:.4,wet:.55,memo:'新馬1200（不良）を1-1で2着（0.8差・1番人気）。3ヶ月ぶり、キャリア1戦'},
 ];
-REAL['9/4(金) 第5日|3']=[
+REAL_OI['9/4(金) 第5日|3']=[
  {no:1,name:'ニジイロピカール',gate:1,style:'逃げ',ability:.42,close:.45,stamina:.35,wet:.4,memo:'3歳牝馬53kg。1200を1-1で1着歴。前走1400をハナで10着（1番人気）'},
  {no:2,name:'マインゴールド',gate:2,style:'差し',ability:.58,close:.68,stamina:.4,wet:.55,memo:'前走1200を12-11から上がり37.0で3着、1200で1着（6-7）。後方から鋭い'},
  {no:3,name:'ポルタロマーナ',gate:3,style:'逃げ',ability:.45,close:.4,stamina:.35,wet:.55,memo:'重1200を1-1で1着（3ヶ月ぶり）。逃げられなければ脆い'},
@@ -493,7 +538,7 @@ REAL['9/4(金) 第5日|3']=[
  {no:12,name:'サヴォア',gate:8,style:'差し',ability:.3,close:.5,stamina:.4,wet:.5,memo:'近走11・9・8着。不良1200で1着歴あり（1:13.9）'},
  {no:13,name:'オレンジマン',gate:8,style:'追込',ability:.55,close:.72,stamina:.4,wet:.55,memo:'前走1200を12-13から上がり37.0で4着、上がり36.4の実績。後方一気'},
 ];
-REAL['9/4(金) 第5日|2']=[
+REAL_OI['9/4(金) 第5日|2']=[
  {no:1,name:'コブラツイスト',gate:1,style:'差し',ability:.55,close:.55,stamina:.45,wet:.5,memo:'1200で1着（6-4）・2着・2着。前走2番人気8着'},
  {no:2,name:'タケゾウ',gate:2,style:'追込',ability:.35,close:.55,stamina:.45,wet:.55,memo:'毎回最後方から。不良1200で3着（上がり38.0）、前走1番人気10着'},
  {no:3,name:'サイカンサンユウ',gate:3,style:'差し',ability:.5,close:.55,stamina:.55,wet:.5,memo:'京浜盃5着・羽田盃10着の実績馬。1400で1着歴。4ヶ月ぶり'},
@@ -506,7 +551,7 @@ REAL['9/4(金) 第5日|2']=[
  {no:10,name:'レンソイス',gate:8,style:'逃げ',ability:.58,close:.55,stamina:.45,wet:.55,memo:'3ヶ月半ぶり。1400を3-1-1で1着、1-1-1で2着、2着。53kg減量騎手'},
  {no:11,name:'ピルゴスアイトス',gate:8,style:'追込',ability:.5,close:.65,stamina:.45,wet:.6,memo:'前走重1400を11-11-11から上がり37.6で3着（1:27.4）。後方一気'},
 ];
-REAL['9/4(金) 第5日|1']=[
+REAL_OI['9/4(金) 第5日|1']=[
  {no:1,name:'キャリアラダー',gate:1,style:'差し',ability:.45,close:.5,stamina:.5,wet:.5,memo:'内1600で5・4・4・3着と掲示板常連だが勝ち切れず。前走取消'},
  {no:2,name:'ミエノワイルド',gate:2,style:'先行',ability:.58,close:.55,stamina:.5,wet:.55,memo:'前走内1600（重）を3-2-1-1で3着、内1600で2着（0.0差）。楽天予想1番人気'},
  {no:3,name:'エドノスターウッド',gate:3,style:'先行',ability:.5,close:.45,stamina:.45,wet:.45,memo:'1400で2連勝（1-1-1、5-1-1）。前走6-6-6から9着、内1600は初'},
@@ -519,13 +564,131 @@ REAL['9/4(金) 第5日|1']=[
  {no:10,name:'フラワーキングエス',gate:8,style:'差し',ability:.35,close:.45,stamina:.5,wet:.4,memo:'内1600で3着あるが前走重馬場で殿（1番人気）'},
 ];
 
+// --- 実出走馬（楽天競馬 出馬表 9/7、前5走の通過順・着順・上がり3F・馬場から推定）---
+const REAL_KW={};
+REAL_KW['9/7(月) 第1日|11']=[
+ {no:1,name:'レグノ',gate:1,style:'先行',ability:.45,close:.45,stamina:.45,wet:.55,memo:'3走前の1400稍重を4-3-3-4で1着。近2走は1500で9着・9着'},
+ {no:2,name:'エレファントラン',gate:2,style:'先行',ability:.62,close:.58,stamina:.5,wet:.62,memo:'1400で1着・2着（稍重0.1差）、1600では1・2番人気で4着止まり。前で運んで堅実'},
+ {no:3,name:'ナガタエース',gate:3,style:'追込',ability:.2,close:.4,stamina:.5,wet:.3,memo:'半年ぶり。近走後方から2桁着順、不良で12着'},
+ {no:4,name:'オールフラッグ',gate:4,style:'追込',ability:.35,close:.55,stamina:.35,wet:.45,memo:'船橋1200で後方から4着・4着（上がり38.0）。半年ぶり、川崎1400は初'},
+ {no:6,name:'デアシュトゥルム',gate:5,style:'逃げ',ability:.5,close:.4,stamina:.5,wet:.6,memo:'毎回ハナを切る。1600稍重で3着、1500重で3着と湿った馬場で粘る'},
+ {no:7,name:'ラジエーション',gate:6,style:'逃げ',ability:.58,close:.5,stamina:.45,wet:.55,memo:'8ヶ月ぶり。川崎1400をハナで1着・2着、浦和1400で2着・4着。53kg'},
+ {no:8,name:'オーウェル',gate:6,style:'先行',ability:.6,close:.5,stamina:.45,wet:.5,memo:'浦和1400を3-3-1-1で1着、川崎1500は先頭に立って7着。57kg'},
+ {no:9,name:'ラブアンドハピネス',gate:7,style:'差し',ability:.42,close:.55,stamina:.55,wet:.45,memo:'A2B1で5・5・7着。上がり38.1の脚はあるが2200からの距離短縮'},
+ {no:10,name:'スマトラフレイバー',gate:7,style:'逃げ',ability:.55,close:.45,stamina:.5,wet:.45,memo:'2歳時に平和賞（S2）を逃げ切り。8ヶ月ぶり、古馬B1初対戦'},
+ {no:11,name:'スターグリップ',gate:8,style:'先行',ability:.66,close:.55,stamina:.5,wet:.6,memo:'B1B2で3着が続く堅実派、1400重で4着（1番人気）。楽天予想1番人気'},
+ {no:12,name:'スノーシュー',gate:8,style:'先行',ability:.6,close:.55,stamina:.55,wet:.55,memo:'1500で1着・1着、重馬場で4着（1番人気）。3ヶ月ぶり'},
+];
+REAL_KW['9/7(月) 第1日|10']=[
+ {no:1,name:'ハーイバービー',gate:1,style:'先行',ability:.5,close:.55,stamina:.35,wet:.5,memo:'900mで1着・2着・2着、1400は先行して8着。距離は短いほど良い'},
+ {no:2,name:'ミスターベラミー',gate:2,style:'逃げ',ability:.35,close:.4,stamina:.45,wet:.5,memo:'3歳。1400を1-1-1-1で逃げ切った実績も、前走は殿負け'},
+ {no:3,name:'シエルラビクトア',gate:3,style:'追込',ability:.32,close:.5,stamina:.4,wet:.4,memo:'52kg減量騎手。最後方から上がり39.5で7着、届いていない'},
+ {no:4,name:'コルネットロッソ',gate:4,style:'差し',ability:.58,close:.55,stamina:.5,wet:.55,memo:'1500を3-3-2-2で3着（1番人気・0.1差）、1400稍重を後方から4着。人気になるが勝ち切れない'},
+ {no:5,name:'ベリーク',gate:5,style:'差し',ability:.45,close:.5,stamina:.5,wet:.55,memo:'中団後ろから3・4・5・6着。重馬場1500で3着'},
+ {no:6,name:'ラウレア',gate:5,style:'追込',ability:.5,close:.62,stamina:.55,wet:.6,memo:'重1500で最後方から2着、稍重1400で3着、船橋1800で2着（上がり38.1）。湿った馬場で追い込む'},
+ {no:7,name:'チンプンカンプン',gate:6,style:'差し',ability:.3,close:.45,stamina:.35,wet:.5,memo:'船橋・浦和で9・9・5着。川崎は初'},
+ {no:8,name:'タツノスペシャル',gate:6,style:'差し',ability:.52,close:.5,stamina:.5,wet:.5,memo:'3歳。1600・1500で2着・2着、古馬C1初戦は3番人気9着'},
+ {no:9,name:'グァンバーレ',gate:7,style:'差し',ability:.38,close:.5,stamina:.4,wet:.45,memo:'稍重1400で4着・3着あり、900mでは凡走'},
+ {no:10,name:'ヒマワリシャワー',gate:7,style:'追込',ability:.45,close:.55,stamina:.45,wet:.35,memo:'3歳。良1400を最後方から差し切り1着、重馬場では9・6着と苦戦。前走除外'},
+ {no:11,name:'スマートラスター',gate:8,style:'先行',ability:.55,close:.55,stamina:.5,wet:.55,memo:'3歳牝馬53kg。1400で1着・2着（ともに1番人気）、重1500で2着'},
+ {no:12,name:'ユウユウスプレマン',gate:8,style:'差し',ability:.45,close:.5,stamina:.55,wet:.55,memo:'稍重1500で3着（0.2差）、1600・2000は凡走'},
+];
+REAL_KW['9/7(月) 第1日|12']=[
+ {no:1,name:'ファイアトーチ',gate:1,style:'先行',ability:.45,close:.45,stamina:.3,wet:.55,memo:'園田820mで2着3回（逃げ・先行）、川崎900初戦は3-2-2で7着。53kg'},
+ {no:2,name:'モズアンドモズ',gate:2,style:'逃げ',ability:.62,close:.5,stamina:.3,wet:.72,memo:'不良900mで連勝（3-1-1、2-1-1）。近2走は10・8着だが今日の馬場は合う。楽天予想1番人気'},
+ {no:3,name:'ミスフォルテ',gate:3,style:'先行',ability:.55,close:.55,stamina:.35,wet:.68,memo:'重900で1着・1着（1-1-1、2-4-3）、良馬場では後方から5・6着'},
+ {no:4,name:'サラサエンペラー',gate:4,style:'差し',ability:.6,close:.65,stamina:.35,wet:.68,memo:'重900で1着・2着、上がり36.7〜36.9。前走3着。楽天予想2番人気'},
+ {no:5,name:'タイセイフランク',gate:5,style:'追込',ability:.38,close:.55,stamina:.35,wet:.6,memo:'重900で2着・4着、良では8・9着。後方から'},
+ {no:6,name:'アイアンピッチ',gate:5,style:'先行',ability:.42,close:.45,stamina:.3,wet:.55,memo:'重900で逃げて3着、近走は9・5着'},
+ {no:7,name:'クリノウィリアム',gate:6,style:'先行',ability:.7,close:.68,stamina:.35,wet:.62,memo:'浦和800・川崎900で連勝中（上がり36.1〜37.3）、稍重900も1着。B3昇級初戦'},
+ {no:8,name:'エルガー',gate:6,style:'先行',ability:.42,close:.45,stamina:.5,wet:.55,memo:'1400〜1500を使われ900は初。重1500で2着（1番人気）'},
+ {no:9,name:'アイビーヒメチャン',gate:7,style:'差し',ability:.52,close:.55,stamina:.35,wet:.62,memo:'重900で1着・2着、良では8着。中団から差す'},
+ {no:10,name:'スプリンガフォート',gate:7,style:'先行',ability:.45,close:.5,stamina:.4,wet:.5,memo:'3歳53kg。900初戦は8-1-3で4着'},
+ {no:11,name:'ユウノワンワン',gate:8,style:'先行',ability:.45,close:.5,stamina:.3,wet:.35,memo:'52kg減量騎手。浦和800で3・5・5着、重馬場では最後方で10着。川崎900は初'},
+ {no:12,name:'アイルプロテクト',gate:8,style:'逃げ',ability:.5,close:.5,stamina:.35,wet:.4,memo:'900を1-1-1で逃げ切り勝ち、船橋1200も逃げて2着。重馬場は1番人気で9着'},
+];
+REAL_KW['9/7(月) 第1日|9']=[
+ {no:1,name:'キョウエイハゴロモ',gate:1,style:'先行',ability:.42,close:.5,stamina:.4,wet:.55,memo:'3歳牝馬51kg。900で3着（2-1-1）、重1400を逃げ切り1着。前走稍重900は9着'},
+ {no:2,name:'ミスサン',gate:2,style:'先行',ability:.3,close:.4,stamina:.35,wet:.35,memo:'900で7着・7着、不良の船橋1000で9着。湿った馬場は苦戦'},
+ {no:3,name:'ハーバーショー',gate:3,style:'逃げ',ability:.55,close:.5,stamina:.3,wet:.35,memo:'3歳。900で1着・2着（1-1-1、2-2-2）。重1400では12・11着と大敗、古馬C1初戦'},
+ {no:4,name:'サウンドプリモ',gate:4,style:'差し',ability:.6,close:.65,stamina:.35,wet:.65,memo:'3歳53kg。重900で1着（6-3-3）・3着、上がり36.7。4戦連続1〜2番人気'},
+ {no:5,name:'イソエヴィクラント',gate:5,style:'差し',ability:.28,close:.45,stamina:.35,wet:.4,memo:'900で8・7・8・6着。中団から伸びない'},
+ {no:6,name:'ラックナシェード',gate:5,style:'先行',ability:.4,close:.5,stamina:.35,wet:.5,memo:'前走稍重900を4-1-2で1着（C2）。C1では10着、昇級初戦'},
+ {no:7,name:'シルヴァーリップ',gate:6,style:'先行',ability:.22,close:.4,stamina:.35,wet:.35,memo:'近走12・8・12着、不良900で12着'},
+ {no:8,name:'ケイツーユーロ',gate:6,style:'差し',ability:.25,close:.45,stamina:.35,wet:.35,memo:'900で8・8・10・11着。決め手不足'},
+ {no:9,name:'グランドマーメイド',gate:7,style:'先行',ability:.68,close:.62,stamina:.35,wet:.62,memo:'3歳53kg。900で1着・1着・1着・3着、重900も逃げ切り。上がり36.5の実績'},
+ {no:10,name:'クレイスアバンティ',gate:7,style:'逃げ',ability:.52,close:.5,stamina:.35,wet:.55,memo:'3歳51kg。前走稍重900を1-1-2で2着（0.0差）、重900で3着。ハナを主張'},
+ {no:11,name:'ブラックエンパイア',gate:8,style:'先行',ability:.55,close:.6,stamina:.35,wet:.62,memo:'前走不良の浦和800で2着（上がり34.8）、浦和800で1着。川崎900は初'},
+ {no:12,name:'ハワイアンジュエル',gate:8,style:'差し',ability:.35,close:.5,stamina:.35,wet:.4,memo:'浦和800で3着あるが、不良800で8着、川崎900で10・7着'},
+];
+REAL_KW['9/7(月) 第1日|8']=[
+ {no:1,name:'サラサチャレンジ',gate:1,style:'先行',ability:.55,close:.5,stamina:.5,wet:.55,memo:'B3で2-2-2-2から5着（稍重）、佐賀で逃げて4着。2歳時に川崎1600で6着。楽天予想1番人気'},
+ {no:2,name:'ヴァルヴァラ',gate:2,style:'先行',ability:.4,close:.5,stamina:.4,wet:.55,memo:'不良の浦和800で4着、浦和1400で3着。船橋1200を逃げて8着'},
+ {no:3,name:'エゴンウレア',gate:3,style:'先行',ability:.62,close:.58,stamina:.45,wet:.4,memo:'浦和1400で1着（3-3-2-1）・3着（B3）。不良の船橋1500は逃げて6着'},
+ {no:4,name:'ジーカンピオーネ',gate:4,style:'差し',ability:.58,close:.55,stamina:.55,wet:.45,memo:'前走川崎1500を6-6-4-4から差し切り1着。稍重では7着・7着'},
+ {no:5,name:'ルトネール',gate:5,style:'差し',ability:.5,close:.6,stamina:.5,wet:.45,memo:'川崎1400で後方から3着（上がり38.6）、1500で2着。中団後ろから'},
+ {no:6,name:'ノリノリソックス',gate:6,style:'逃げ',ability:.6,close:.55,stamina:.5,wet:.6,memo:'52kg減量騎手。船橋1200で1着（1番人気）、稍重の浦和1400を逃げ切り1着。JRA出走歴あり'},
+];
+REAL_KW['9/7(月) 第1日|7']=[
+ {no:1,name:'エイシンジンジャー',gate:1,style:'先行',ability:.5,close:.5,stamina:.4,wet:.6,memo:'不良の船橋1200で2着（3-3-2）、前走船橋1200で3着。1500は浦和で11着。楽天予想2番人気'},
+ {no:2,name:'シンキングレーヴ',gate:2,style:'先行',ability:.42,close:.45,stamina:.45,wet:.6,memo:'重の浦和1400を3-3-3-3で1着。前走浦和1400は4-4-4-5で5着'},
+ {no:3,name:'グローバルサウス',gate:3,style:'差し',ability:.2,close:.4,stamina:.45,wet:.3,memo:'川崎1500で11・5・10・12着。稍重で12着'},
+ {no:4,name:'テセラグラディウス',gate:4,style:'逃げ',ability:.6,close:.5,stamina:.45,wet:.55,memo:'毎回ハナ。1500で3着（1番人気）・2着、重1400で1着と7着。楽天予想2番人気'},
+ {no:5,name:'ソウモウクッキ',gate:5,style:'先行',ability:.55,close:.5,stamina:.5,wet:.62,memo:'1500で2着・2着（重0.1差）、前走2-2-1-2で6着。前々で運ぶ'},
+ {no:6,name:'フルミネビアンコ',gate:6,style:'先行',ability:.55,close:.55,stamina:.45,wet:.62,memo:'稍重・重の1400で連勝（逃げ切り）、前走1500は6-5-6-6で3着'},
+ {no:7,name:'ウォールローゼ',gate:6,style:'差し',ability:.5,close:.6,stamina:.5,wet:.6,memo:'不良の船橋1500で3着（0.1差）、浦和1500で上がり38.0の4着。前走船橋は12着'},
+ {no:8,name:'マイボンド',gate:7,style:'差し',ability:.35,close:.5,stamina:.45,wet:.55,memo:'重1400で最後方から2着あるが、近2走12・9着'},
+ {no:9,name:'ビップルーク',gate:7,style:'差し',ability:.42,close:.5,stamina:.45,wet:.5,memo:'稍重の浦和1400で差し切り1着、近走4・4着。1500は初'},
+ {no:10,name:'ポッドシャンク',gate:8,style:'逃げ',ability:.72,close:.6,stamina:.5,wet:.7,memo:'南関転入後4連勝（船橋1500・1200、名古屋1400稍・1500不良）。不良で勝ち鞍あり。楽天予想1番人気'},
+ {no:11,name:'ブルーオーシャン',gate:8,style:'差し',ability:.55,close:.55,stamina:.5,wet:.45,memo:'川崎1500で2着（3-3-3-4）、1400で2着。重馬場は5・6着'},
+];
+
+
+/* ============================================================
+   1b. 開催場の設定（?track=oi / ?track=kawasaki）
+   ============================================================ */
+const TRACKS={
+  oi:{name:'大井',sub:'第8回大井 ナイター開催 9/3・9/4',
+    geo:{S:440,R:115,W:25,goal:386,mirror:false,turn:'右回り'},cp:[800,386],lanePh:[700,390],
+    ref:REF_TIME_OI,trendRef:TREND_REF_OI,meet:MEET_OI,days:DAYS_OI,real:REAL_OI,
+    styleAdj:{},defaults:{dayIdx:1,raceIdx:10,baba:'良',weather:'曇',out:0.45},
+    scene:{poles:[[-280,-172],[0,-182],[280,-172],[-350,50],[350,50],[0,182]],stand:{w:420,off:40,win:28,x0:-202},
+      orbitLand:{tx:0,ty:0,tz:-30,theta:Math.PI,phi:0.8,r:950},orbitPort:{tx:0,ty:0,tz:-45,theta:Math.PI*1.5,phi:0.78,r:920},goalTheta:0.55},
+    text:{
+      babaInfo:'<span>コース</span><span>右回り・外回り1周1,600m・直線386m・幅25m</span><span>砂厚</span><span>10cm（2023年10月〜、西オーストラリア産砂に変更）</span><span>含水率</span><span>大井（南関4場）は非公表。JRAのみ公表</span>',
+      meetShort:'今開催',meetStyleLabel:'今開催 8/31〜9/3（前方/後方の実測比を按分）',meetGateLabel:'今開催（ベスト3枠の回数から）',
+      point1:(M,ct)=>`今開催は3角で前方集団にいた馬が3着内の <b>${(M.frontShare*100).toFixed(0)}%</b>（8/31〜9/3 集計）。近1年参考値 ${(ct.ref.year.front3*100).toFixed(0)}% より明確に前残り。`,
+      point2:(c,g)=>`今開催の3着内回数ベスト3枠は 5・6・2 → 6・8・4 → 4・5・6 → 8・6 と中〜外枠が並ぶ。${g}。`,
+      babaNote:(c)=>c.weather==='雨'?'雨で悪化すれば時計が速くなり前がさらに止まりにくい。':c.weather==='雨上がり'?'乾き際は外から差す馬に注意。':'',
+      src:'出走馬：9/3 8R〜12R と 9/4 全12R は楽天競馬の出馬表（前5走の通過順・上がり・馬場）から取り込んだ実データ。9/3 1R〜7R は番組のみ実データで出走馬はサンプル。今開催（8/31〜9/3）の傾向は nankankeiba.com「レース傾向」の実測。近1年・直近2ヶ月の脚質別・枠別は参考値。'}},
+  kawasaki:{name:'川崎',sub:'第7回川崎 9/7〜9/11',
+    geo:{S:330,R:86,W:25,goal:300,mirror:true,turn:'左回り'},cp:[570,300],lanePh:[570,300],
+    ref:REF_TIME_KW,trendRef:TREND_REF_KW,meet:MEET_KW,days:DAYS_KW,real:REAL_KW,
+    styleAdj:{'逃げ':{ke:0.050,kl:-0.038},'先行':{ke:0.028,kl:-0.014},'差し':{ke:-0.010,kl:0.034},'追込':{ke:-0.026,kl:0.054}},
+    defaults:{dayIdx:0,raceIdx:10,baba:'不良',weather:'雨',out:0.3},
+    scene:{poles:[[-190,-140],[0,-150],[190,-140],[-260,30],[260,30],[0,150]],stand:{w:330,off:34,win:22,x0:-157},
+      orbitLand:{tx:0,ty:0,tz:-25,theta:Math.PI,phi:0.8,r:700},orbitPort:{tx:0,ty:0,tz:-35,theta:Math.PI*1.5,phi:0.78,r:680},goalTheta:-0.55},
+    text:{
+      babaInfo:'<span>コース</span><span>左回り・1周1,200m・直線300m・幅25m</span><span>砂厚</span><span>10cm（2022年6月〜。それ以前は8.5cm）</span><span>本日</span><span>9/7 天候 雨・ダート不良（12:06時点）</span><span>含水率</span><span>川崎（南関4場）は非公表。JRAのみ公表</span>',
+      meetShort:'直近3開催',meetStyleLabel:'直近3開催 7/6〜8/21（前方/後方の実測比を按分）',meetGateLabel:'直近3開催（3着内ベスト3枠の出現回数から）',
+      point1:(M,ct)=>`直近3開催（7/6〜8/21・14日間）は3角で前方集団にいた馬が3着内の <b>${(M.frontShare*100).toFixed(0)}%</b>。開催が進むほど前が残る傾向（第4回 69%→第5回 73%→第6回 78%）。直線300mの小回りで、4角の位置がそのまま結果になりやすい。`,
+      point2:(c,g)=>`直近14日間の3着内ベスト3枠は 5枠8回・8枠8回・7枠7回・6枠6回に対し1〜3枠は計11回。川崎は内枠有利のイメージに反して中〜外枠が好走している。${g}。`,
+      babaNote:(c)=>`砂厚10cmの川崎は湿ると時計が大きく速くなる。${c.weather==='雨'?'本日は雨・不良発表。不良巧者（過去に不良・重で好走）の評価を上げ、良馬場専用の差し馬は割り引く。':c.weather==='雨上がり'?'乾き際は外から差す馬に注意。':''}`,
+      src:'出走馬：9/7 7R〜12R は楽天競馬の出馬表（前5走の通過順・上がり・馬場）から取り込んだ実データ（11R 5番は出走取消）。1R〜6R は番組のみ実データで出走馬はサンプル。直近3開催（第4回 7/6〜7/10、第5回 7/27〜7/31、第6回 8/18〜8/21）の3角位置・好走枠は nankankeiba.com「レース傾向」の実測。近1年の脚質別・枠別は参考値。砂厚は川崎競馬公式の告知（2022年12月）に基づく。'}},
+};
+const TRACK_KEY=(()=>{const k=new URLSearchParams(location.search).get('track')||'oi';return k in TRACKS?k:'oi';})();
+const TK=TRACKS[TRACK_KEY];
+const REF_TIME=TK.ref,TREND_REF=TK.trendRef,MEET=TK.meet,DAYS=TK.days,REAL=TK.real;
+Object.entries(TK.styleAdj).forEach(([k,v])=>Object.assign(STYLE[k],v));
+
 /* ============================================================
    2. コース幾何（大井 外回り：1周約1600m・右回り・直線386m・幅25m）
    ============================================================ */
-const TRACK={S:440,R:115,W:25};
+const TRACK={S:TK.geo.S,R:TK.geo.R,W:TK.geo.W};
 TRACK.T=Math.PI*TRACK.R; TRACK.L=2*TRACK.S+2*TRACK.T;      // ≈1605m
 // s: ラチ沿い距離（0=直線入口, S=ゴール）, d: ラチからの外側オフセット(m)
-function trackPos(s,d){
+function trackPos(s,d){const p=trackPos0(s,d);if(TK.geo.mirror)p.x=-p.x;return p;}
+function trackPos0(s,d){
   s=mod(s,TRACK.L);const {S,R,T}=TRACK;
   if(s<S) return {x:-S/2+s, z:-(R+d)};
   s-=S; if(s<T){const th=s/R;return {x:S/2+(R+d)*Math.sin(th), z:-(R+d)*Math.cos(th)};}
@@ -533,7 +696,7 @@ function trackPos(s,d){
   s-=S; const th=s/R; return {x:-S/2-(R+d)*Math.sin(th), z:(R+d)*Math.cos(th)};
 }
 function inTurn(s){s=mod(s,TRACK.L);const {S,T}=TRACK;return (s>=S&&s<S+T)||(s>=2*S+T);}
-const GOAL_S=386; // 4角出口から386mがゴール、ゴール後1角まで約50m
+const GOAL_S=TK.geo.goal;
 
 /* ============================================================
    3. 出走馬（サンプル生成）
@@ -578,7 +741,7 @@ function simRace(race,cond,seed,record){
     const base=st.laneT+rng()*1.4+0.12*(h.gate-1);
     return {i,h,st,front,ke,kl,mult,rail:0,s:s0,lane:startLane,startLane,base,done:false,time:null,t600:null,tLast:null,v:0};
   });
-  const frames=[],dt=record?0.1:0.2;let t=0,fin=0;const snaps={800:null,400:null};
+  const frames=[],dt=record?0.1:0.2;let t=0,fin=0;const snaps={};
   while(fin<n&&t<260){
     for(const x of H){
       if(x.done)continue;
@@ -595,13 +758,13 @@ function simRace(race,cond,seed,record){
       if(x.rail>=D){x.done=true;x.time=t+dt-(x.rail-D)/Math.max(v,1);fin++;}
       let target;
       if(x.rail<160)target=lerp(x.startLane,x.base,x.rail/160);
-      else if(rem>700)target=x.base;
-      else if(rem>390)target=x.base+(x.front?0.3:2.0)+1.6*Math.max(0,ob);
+      else if(rem>TK.lanePh[0])target=x.base;
+      else if(rem>TK.lanePh[1])target=x.base+(x.front?0.3:2.0)+1.6*Math.max(0,ob);
       else target=x.front?x.base+0.6*Math.max(0,ob):x.base+3.5+2.2*Math.max(0,ob)+(x.h.style==='追込'?1.5:0);
       const lr=x.rail<300?2.6:1.4;x.lane+=clamp(target-x.lane,-lr*dt,lr*dt);
     }
     const lead=Math.max(...H.map(x=>x.rail));
-    for(const k of [800,400]){if(!snaps[k]&&D-lead<=k){snaps[k]=H.slice().sort((a,b)=>b.rail-a.rail).map(x=>x.i);}}
+    for(const k of TK.cp){if(!snaps[k]&&D-lead<=k){snaps[k]=H.slice().sort((a,b)=>b.rail-a.rail).map(x=>x.i);}}
     t+=dt;
     if(record)frames.push({t,p:H.map(x=>[x.s,x.lane,x.done?1:0])});
   }
@@ -615,8 +778,8 @@ function monteCarlo(race,cond,N){
   for(let k=0;k<N;k++){
     const r=simRace(race,cond,1000+k*7919,false);
     r.order.forEach((i,p)=>{pos[i]+=p+1;if(p===0)win[i]++;if(p<3)top3[i]++;});
-    if(r.snaps[800])r.snaps[800].forEach((i,p)=>c3[i]+=p+1);else r.order.forEach((i,p)=>c3[i]+=p+1);
-    if(r.snaps[400])r.snaps[400].forEach((i,p)=>c4[i]+=p+1);else r.order.forEach((i,p)=>c4[i]+=p+1);
+    if(r.snaps[TK.cp[0]])r.snaps[TK.cp[0]].forEach((i,p)=>c3[i]+=p+1);else r.order.forEach((i,p)=>c3[i]+=p+1);
+    if(r.snaps[TK.cp[1]])r.snaps[TK.cp[1]].forEach((i,p)=>c4[i]+=p+1);else r.order.forEach((i,p)=>c4[i]+=p+1);
     sumT+=r.winTime;sum600+=r.lead600;sumLast+=r.winLast;
   }
   return {N,win:win.map(v=>v/N),top3:top3.map(v=>v/N),pos:pos.map(v=>v/N),c3:c3.map(v=>v/N),c4:c4.map(v=>v/N),
@@ -626,7 +789,7 @@ function monteCarlo(race,cond,N){
 /* ============================================================
    5. 状態
    ============================================================ */
-const state={dayKey:Object.keys(DAYS)[1],raceIdx:10,race:null,cond:{baba:'良',weather:'曇',wind:0,front:0.45,out:0.45,recent:0.6},
+const state={dayKey:Object.keys(DAYS)[TK.defaults.dayIdx],raceIdx:TK.defaults.raceIdx,race:null,cond:{baba:TK.defaults.baba,weather:TK.defaults.weather,wind:0,front:0.45,out:TK.defaults.out,recent:0.6},
   mc:null,rec:null,playing:false,playT:0,speed:1,cam:'俯瞰',seedAlt:0,manualBias:false};
 
 function combinedTrend(dist){
@@ -641,7 +804,7 @@ function autoBias(){
   state.cond.front=+clamp((c.front3-0.60)/0.25,-1,1).toFixed(2);
   const gd=(c.gate[1]+c.gate[2])/2-c.gate[0];state.cond.out=+clamp(gd/0.2,-1,1).toFixed(2);
   $('front').value=state.cond.front;$('out').value=state.cond.out;syncVals();
-  $('autoHint').textContent=`総合の前方集団3着内率 ${(c.front3*100).toFixed(0)}%（今開催 実測 ${(MEET.frontShare*100).toFixed(0)}%）→ 前残り度 ${state.cond.front>0?'+':''}${state.cond.front}／中〜外−内 ${(gd*100).toFixed(0)}pt → 内外 ${state.cond.out>0?'+':''}${state.cond.out}`;
+  $('autoHint').textContent=`総合の前方集団3着内率 ${(c.front3*100).toFixed(0)}%（${TK.text.meetShort} 実測 ${(MEET.frontShare*100).toFixed(0)}%）→ 前残り度 ${state.cond.front>0?'+':''}${state.cond.front}／中〜外−内 ${(gd*100).toFixed(0)}pt → 内外 ${state.cond.out>0?'+':''}${state.cond.out}`;
 }
 function loadRace(dayKey,idx,seedBump){
   const r=DAYS[dayKey][idx];
@@ -697,9 +860,9 @@ const scene3=(()=>{
   }
   function strokeRing(ring,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();let pen=false;
     for(let i=0;i<=SEG;i++){const p=proj(ring[i][0],0.9,ring[i][1]);if(!p){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);pen=true;}ctx.stroke();}
-  const MARKS=[['ゴール',GOAL_S,TRACK.W+12],['1角',TRACK.S+TRACK.T*0.25,TRACK.W+14],['2角',TRACK.S+TRACK.T*0.75,TRACK.W+14],['向正面',TRACK.S+TRACK.T+TRACK.S/2,TRACK.W+12],['3角',2*TRACK.S+TRACK.T+TRACK.T*0.25,TRACK.W+14],['4角',2*TRACK.S+TRACK.T+TRACK.T*0.75,TRACK.W+14],['残400',GOAL_S-400,TRACK.W+8],['残200',GOAL_S-200,TRACK.W+8]].map(([t,s,d])=>{const p=trackPos(s,d);return {t,x:p.x,z:p.z};});
-  const POLES=[[-280,-172],[0,-182],[280,-172],[-350,50],[350,50],[0,182]];
-  const STAND={x:0,z:-(TRACK.R+TRACK.W+40),w:420,h:22,dep:40};
+  const MARKS=[['ゴール',GOAL_S,TRACK.W+12],['1角',TRACK.S+TRACK.T*0.25,TRACK.W+14],['2角',TRACK.S+TRACK.T*0.75,TRACK.W+14],['向正面',TRACK.S+TRACK.T+TRACK.S/2,TRACK.W+12],['3角',2*TRACK.S+TRACK.T+TRACK.T*0.25,TRACK.W+14],['4角',2*TRACK.S+TRACK.T+TRACK.T*0.75,TRACK.W+14],...(GOAL_S>=400?[['残400',GOAL_S-400,TRACK.W+8]]:[]),['残200',GOAL_S-200,TRACK.W+8]].map(([t,s,d])=>{const p=trackPos(s,d);return {t,x:p.x,z:p.z};});
+  const POLES=TK.scene.poles;
+  const STAND={x:0,z:-(TRACK.R+TRACK.W+TK.scene.stand.off),w:TK.scene.stand.w,h:22,dep:40};
   const COATS=['#5a3a22','#3b2a1e','#7b4a2a','#2a2320','#8a5a33','#a4784a','#6b4426','#4a3a35'];
 
   // --- 状態 ---
@@ -712,11 +875,11 @@ const scene3=(()=>{
   function setPose(i,s,lane,done){horsePose[i]={s,lane,done};}
 
   // --- カメラ操作 ---
-  const orbit={tx:0,ty:0,tz:-30,theta:Math.PI,phi:0.8,r:950};
+  const orbit={...TK.scene.orbitLand};
   function setCam(mode){
     state.cam=mode;
-    if(mode==='俯瞰'){const portrait=H>W*1.05;Object.assign(orbit,portrait?{tx:0,ty:0,tz:-45,theta:Math.PI*1.5,phi:0.78,r:920}:{tx:0,ty:0,tz:-30,theta:Math.PI,phi:0.8,r:950});}
-    if(mode==='ゴール前'){const g=trackPos(GOAL_S-30,12);Object.assign(orbit,{tx:g.x,ty:1.5,tz:g.z,theta:Math.PI+0.55,phi:0.18,r:95});}
+    if(mode==='俯瞰'){const portrait=H>W*1.05;Object.assign(orbit,portrait?TK.scene.orbitPort:TK.scene.orbitLand);}
+    if(mode==='ゴール前'){const g=trackPos(GOAL_S-30,12);Object.assign(orbit,{tx:g.x,ty:1.5,tz:g.z,theta:Math.PI+TK.scene.goalTheta,phi:0.18,r:95});}
     if(mode==='スタート'&&race){const s0=mod(GOAL_S-race.dist,TRACK.L);const p=trackPos(s0+40,10);const q=trackPos(s0,TRACK.W+40);
       Object.assign(orbit,{tx:p.x,ty:1,tz:p.z,theta:Math.atan2(q.x-p.x,q.z-p.z),phi:0.25,r:90});}
     document.querySelectorAll('#cams button').forEach(b=>b.classList.toggle('on',b.dataset.c===mode));
@@ -807,7 +970,7 @@ const scene3=(()=>{
     // 3Dオブジェクト（奥から順に）
     const objs=[];
     const sp=proj(STAND.x,STAND.h/2,STAND.z);if(sp)objs.push({d:sp.d,draw:()=>{drawBox(STAND.x,STAND.z,STAND.w,STAND.h,STAND.dep,'#2a3a55','#3c4f70');
-      const z=STAND.z+STAND.dep/2+0.1;for(let i=0;i<28;i++){const x=-202+i*15;const a=proj(x-5,11,z),b=proj(x+5,17,z);if(a&&b){ctx.fillStyle='#ffe7a8';ctx.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}}}});
+      const z=STAND.z+STAND.dep/2+0.1;for(let i=0;i<TK.scene.stand.win;i++){const x=TK.scene.stand.x0+i*15;const a=proj(x-5,11,z),b=proj(x+5,17,z);if(a&&b){ctx.fillStyle='#ffe7a8';ctx.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}}}});
     POLES.forEach(([x,z])=>{const a=proj(x,0,z),b=proj(x,60,z);if(!a||!b)return;objs.push({d:a.d,draw:()=>{ctx.strokeStyle='#8b93a1';ctx.lineWidth=Math.max(1,1.4*scl/a.d);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
       const r=Math.max(3,4*scl/a.d);const gr=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,r*4);gr.addColorStop(0,'rgba(255,246,221,0.95)');gr.addColorStop(0.3,'rgba(255,240,200,0.35)');gr.addColorStop(1,'rgba(255,240,200,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(b.x,b.y,r*4,0,Math.PI*2);ctx.fill();}});});
     MARKS.forEach(m=>{const p=proj(m.x,3,m.z);if(p)objs.push({d:p.d,draw:()=>label(p.x,p.y,m.t,{size:11,alpha:fogA(p.d)})});});
@@ -828,7 +991,7 @@ const scene3=(()=>{
    ============================================================ */
 function buildBar(){
   const D=state.race.dist;const bar=$('bar');bar.innerHTML='';
-  const pts=[[0,'スタート'],[D-800,'3角'],[D-388,'4角'],[D-200,'残200'],[D,'ゴール']];
+  const pts=[[0,'スタート'],[D-TK.cp[0],'3角'],[D-TK.cp[1],'4角'],[D-200,'残200'],[D,'ゴール']];
   pts.forEach(([x,l])=>{if(x<0)return;const m=document.createElement('div');m.className='mk';m.style.left=(x/D*100)+'%';m.innerHTML=`<span>${l}</span>`;bar.appendChild(m);});
   const pin=document.createElement('div');pin.className='pin';pin.id='pin';pin.style.left='0%';bar.appendChild(pin);
   const pin2=document.createElement('div');pin2.className='pin p2';pin2.id='pin2';pin2.style.left='0%';bar.appendChild(pin2);
@@ -862,7 +1025,7 @@ function predMarks(mc){const m={};if(!mc)return m;const ord=mc.win.map((w,i)=>[w
    ============================================================ */
 function renderPred(){
   const race=state.race,mc=state.mc,c=state.cond;
-  $('predHead').innerHTML=`<span>レース</span><span>${race.title}${race.real?'':'<span style="color:var(--dim)">（出走馬はサンプル）</span>'}</span><span>条件</span><span>${race.dist}m ${race.n}頭　馬場 ${c.baba}／${c.weather}</span>`
+  $('predHead').innerHTML=`<span>レース</span><span>${TK.name} ${race.title}${race.real?'':'<span style="color:var(--dim)">（出走馬はサンプル）</span>'}</span><span>条件</span><span>${race.dist}m ${race.n}頭　馬場 ${c.baba}／${c.weather}</span>`
     +(mc?`<span>想定タイム</span><span>${fmtT(mc.winTime)}（前半3F ${mc.lead600.toFixed(1)}・上がり3F ${mc.winLast.toFixed(1)}）</span>`:'');
   const pace=paceOf(race.horses);const pc={H:'#e4572e',M:'#f2b134',S:'#3fa7b8'}[pace.label];
   $('paceBox').innerHTML=`想定ペース <span class="pace" style="background:${pc}">${pace.label}</span>　逃げ${pace.nN}頭・先行${pace.nS}頭${mc?`　試行 ${mc.N}回`:''}`;
@@ -879,14 +1042,14 @@ function renderPred(){
 function renderPoints(){
   const race=state.race,mc=state.mc,c=state.cond,b=BABA[c.baba];const li=[];
   const ct=combinedTrend(race.dist);
-  li.push(`今開催は3角で前方集団にいた馬が3着内の <b>${(MEET.frontShare*100).toFixed(0)}%</b>（8/31〜9/3 集計）。近1年参考値 ${(ct.ref.year.front3*100).toFixed(0)}% より明確に前残り。`);
+  li.push(TK.text.point1(MEET,ct));
   const gateTxt=c.out>0.15?`外目をスムーズに回った馬が届く外伸び傾向（内外バイアス +${c.out}）`:c.out<-0.15?`ただしこの距離は内枠優勢の参考値が強く、経済コースを通る馬が有利（内外バイアス ${c.out}）`:`この距離では枠の有利不利は小さい設定（内外バイアス ${c.out>0?'+':''}${c.out}）`;
-  li.push(`今開催の3着内回数ベスト3枠は 5・6・2 → 6・8・4 → 4・5・6 → 8・6 と中〜外枠が並ぶ。${gateTxt}。`);
+  li.push(TK.text.point2(c,gateTxt));
   const pace=paceOf(race.horses);
   if(pace.label==='H')li.push(`逃げ${pace.nN}頭でHペース想定。前が競り合えば差し馬の台頭余地があり、前残り度だけで押し切りを決め打ちしない。`);
   else if(pace.label==='S')li.push(`逃げ馬が少なくSペース想定。前残り傾向と重なるため、先行勢の押し切り確率が高い。`);
   else li.push(`平均ペース想定。馬場バイアス（前残り度 ${c.front>0?'+':''}${c.front}）がそのまま結果に出やすい。`);
-  li.push(`馬場 ${c.baba}：${b.label}。${c.weather==='雨'?'雨で悪化すれば時計が速くなり前がさらに止まりにくい。':c.weather==='雨上がり'?'乾き際は外から差す馬に注意。':''}`);
+  li.push(`馬場 ${c.baba}：${b.label}。${TK.text.babaNote(c)}`);
   if(Math.abs(c.wind)>=0.3)li.push(`直線${c.wind>0?'追い風':'向かい風'}：${c.wind>0?'先行馬が最後まで脚を残しやすい':'逃げ・先行馬の失速が早まり差しが決まりやすい'}。`);
   if(mc){const top=mc.win.map((w,i)=>[w,i]).sort((a,b)=>b[0]-a[0]);const h=race.horses[top[0][1]],h2=race.horses[top[1][1]];
     li.push(`本線は <b>${h.no} ${h.name}</b>（${h.style}・${h.gate}枠、勝率 ${(top[0][0]*100).toFixed(1)}%）。3角平均 ${mc.c3[top[0][1]].toFixed(1)}番手→4角 ${mc.c4[top[0][1]].toFixed(1)}番手の位置取りが今の馬場に合う。${h.memo?'根拠：'+h.memo+'。':''}`);
@@ -899,8 +1062,8 @@ function stackRow(label,vals,colors,note){
 function renderTrend(){
   const ref=TREND_REF[state.race.dist]||TREND_REF[1600];const sc=STYLES.map(s=>STYLE[s].color);const gc=['#c9d3e0','#7f93ad','#4e6180'];
   const f=MEET.frontShare;const ms=[f*0.3,f*0.7,(1-f)*0.75,(1-f)*0.25];
-  $('trendStyle').innerHTML=stackRow('近1年（参考値）',ref.year.style,sc,`前方 ${(ref.year.front3*100).toFixed(0)}%`)+stackRow('直近2ヶ月（参考値）',ref.recent.style,sc,`前方 ${(ref.recent.front3*100).toFixed(0)}%`)+stackRow('今開催 8/31〜9/3（前方/後方の実測比を按分）',ms,sc,`前方集団 ${(f*100).toFixed(0)}%`);
-  $('trendGate').innerHTML=stackRow('近1年（参考値）',ref.year.gate,gc)+stackRow('直近2ヶ月（参考値）',ref.recent.gate,gc)+stackRow('今開催（ベスト3枠の回数から）',MEET.gateShare,gc);
+  $('trendStyle').innerHTML=stackRow('近1年（参考値）',ref.year.style,sc,`前方 ${(ref.year.front3*100).toFixed(0)}%`)+stackRow('直近2ヶ月（参考値）',ref.recent.style,sc,`前方 ${(ref.recent.front3*100).toFixed(0)}%`)+stackRow(TK.text.meetStyleLabel,ms,sc,`前方集団 ${(f*100).toFixed(0)}%`);
+  $('trendGate').innerHTML=stackRow('近1年（参考値）',ref.year.gate,gc)+stackRow('直近2ヶ月（参考値）',ref.recent.gate,gc)+stackRow(TK.text.meetGateLabel,MEET.gateShare,gc);
   $('meetFacts').innerHTML=MEET.days.map(d=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:2px 0"><span>${d.d}${d.partial?' <span style="color:var(--mute)">'+d.partial+'</span>':''}</span><span>前方 ${d.front} / 後方 ${d.back}　枠 ${d.best.map(b=>b[0]).join('・')}</span></div>`).join('');
 }
 
@@ -924,6 +1087,11 @@ function condChanged(){state.mc=null;state.rec=null;state.playing=false;$('playB
 const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
 function setTab(t){document.body.dataset.tab=t;document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
 function init(){
+  document.title=`${TK.name}競馬 予想シミュレーション 3Dデモ — ${TK.sub}`;
+  $('h1title').innerHTML=`${TK.name}競馬 予想シミュレーション <small>${TK.sub} — 3Dデモ</small>`;
+  $('trackTabs').innerHTML=Object.entries(TRACKS).map(([k,t])=>`<button class="tab ${k===TRACK_KEY?'on':''}" data-k="${k}" title="${t.sub}">${t.name}</button>`).join('');
+  document.querySelectorAll('#trackTabs .tab').forEach(b=>b.onclick=()=>{if(b.dataset.k!==TRACK_KEY)location.search='?track='+b.dataset.k;});
+  $('babaInfo').innerHTML=TK.text.babaInfo;$('srcNote').textContent=TK.text.src;
   document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab('3d');
   seg('babaSeg',Object.keys(BABA),state.cond.baba,k=>{state.cond.baba=k;condChanged();});
   seg('wxSeg',Object.keys(WEATHER),state.cond.weather,k=>{state.cond.weather=k;$('wxHint').textContent=WEATHER[k].hint;condChanged();});
