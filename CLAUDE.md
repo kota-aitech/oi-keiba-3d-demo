@@ -35,9 +35,9 @@
 
 ## ファイル構成
 ```
-index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）
-race.html               出馬表と各馬のデータ（3Dなし・軽い。?track=… ）
-data.html               データブラウザ（騎手・調教師・コンビ・馬主・種牡馬の一覧）
+index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）※ダーク配色
+race.html               出馬表（競馬新聞の馬柱レイアウト。?track=… ）※新聞配色
+data.html               データブラウザ（騎手・調教師・コンビ・馬主・種牡馬の一覧）※新聞配色
 boat.html               ボートレース版（別モデル。下の専用節を参照）
 render.yaml             Render Blueprint（SPA用の catch-all rewrite は置かないこと）
 
@@ -56,12 +56,14 @@ data/
 tools/
   lib/nk.mjs            取得共通（Shift_JIS デコード・キャッシュ・レート制限・テーブル読み）
   lib/card.mjs          出馬表パーサ（壊れた HTML を <tr> 分割で読む）
+  lib/embed.mjs         HTML のマーカー間に JSON を流し込む inject()
   fetch_leading.mjs     リーディング取得 → leading.raw.json
   fetch_cards.mjs       出馬表取得 → cards.jsonl
   fetch_trend.mjs       レース傾向取得 → meet.*.json
   build_db.mjs          指数の算出 → index.json
   build_trend.mjs       距離別傾向・バイアス基準値の算出 → trend.*.json
-  build_races.mjs       番組・出走馬の生成 → races.*.json
+  build_races.mjs       番組・出走馬の生成 → races.*.json / entries.*.json
+  build_marks.mjs       index.html のモデルを VM で回して予想印を作る → entries.*.json 更新＋race.html
   build_browse.mjs      data.html 用に全データをたたむ → browse.json
   embed_db.mjs          index.html(NKDB) / race.html(NKRACE) / data.html(NKBROWSE) に埋め込む
   sim_check.mjs         シミュレーションの妥当性チェック（ブラウザ不要）
@@ -87,13 +89,23 @@ node tools/fetch_trend.mjs
 # 4. 指数と傾向を作り直す
 node tools/build_db.mjs && node tools/build_trend.mjs
 
-# 5. 番組・出走馬とブラウザ用データを生成して index.html / data.html に埋め込む
+# 5. 番組・出走馬とブラウザ用データを生成して各ページに埋め込む
 node tools/build_races.mjs && node tools/build_browse.mjs && node tools/embed_db.mjs
 
-# 6. 検証
+# 6. 予想印を打つ（embed_db のあと。index.html のモデルを読むので順番を守る）
+node tools/build_marks.mjs
+
+# 7. 検証
 node tools/sim_check.mjs oi && node tools/sim_check.mjs kawasaki
 node tools/ui_check.mjs  oi && node tools/ui_check.mjs  kawasaki
 node tools/data_check.mjs && node tools/race_check.mjs oi && node tools/race_check.mjs kawasaki
+
+# 見た目の確認（playwright は入っていない。Chrome のヘッドレスで十分）
+CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+"$CH" --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=4000 \
+  --screenshot=/tmp/pc.png --window-size=1400,1200 "file://$PWD/race.html?track=oi"
+"$CH" --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=4000 \
+  --screenshot=/tmp/sp.png --window-size=390,1400 "file://$PWD/race.html?track=kawasaki"
 python3 -c "import re;open('/tmp/c.js','w').write(re.findall(r'<script>(.*?)</script>',open('index.html',encoding='utf-8').read(),re.S)[-1])" && node --check /tmp/c.js
 ```
 
@@ -107,6 +119,7 @@ python3 -c "import re;open('/tmp/c.js','w').write(re.findall(r'<script>(.*?)</sc
 | `NK_RACE_TRACKS` | `大井:oi,川崎:kawasaki` | 生成する場 |
 | `NK_MEET_DAYS` | 14 | レース傾向を取る直近の開催日数 |
 | `NK_SIRE_DIST` | `1200,1400,1500,1600,1800,2000` | 種牡馬の距離別を取る距離 |
+| `NK_MARK_TRIALS` | 600 | 予想印を出すモンテカルロの試行回数 |
 | `NK_TODAY` | 今日 | 「今日を含む開催」の基準日。過去日を再現したいとき |
 
 ### データ元（nankankeiba.com）
@@ -191,9 +204,19 @@ hx   = clamp(hIdx, -1.6, 2.6) × cond.human      // cond.human は左パネル�
 
 | ページ | マーカー | 埋め込むもの | 重さ |
 |---|---|---|---|
-| `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約520KB |
-| `race.html` | `NKRACE` | `entries.*.json`（前5走こみ） | 約1.0MB |
+| `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約525KB |
+| `race.html` | `NKRACE` | `entries.*.json`（前5走・予想印こみ） | 約1.0MB |
 | `data.html` | `NKBROWSE` | `browse.json` | 約840KB |
+
+### 見た目の方針
+`race.html` と `data.html` は**競馬新聞の紙面**に寄せてある。共通の決めごと：
+
+- 配色は紙（`--paper #fbf8f1`）に黒インク。赤 `--red #c0102a` と青 `--blue #1b4f9c` だけをアクセントに使う
+- 馬名・見出し・着順は**明朝**（`--mincho`）、数値と細字はゴシック（`--gothic`）
+- 枠色は競馬の標準（1白 2黒 3赤 4青 5黄 6緑 7橙 8桃）。`race.html` の `WAKU` に背景と文字色の組で持つ
+- 罫線は細く多く。題字と表頭は黒帯に白抜き
+- 実在紙（ダービーニュース等）の名前・ロゴ・紙面画像は使わない。**様式だけを真似る**
+- `index.html` は3Dの舞台が暗くないと成立しないのでダーク配色のまま
 
 **公開後のデータの場所**：`data/nankan/*.json` はリポジトリ直下から静的配信されるので、
 `https://<サイト>/data/nankan/index.json` のように直接ダウンロードできる。
@@ -202,17 +225,30 @@ HTML も index.html に書き換わりうる）。
 
 ---
 
-## 出馬表ページ（`race.html`）
-3Dを積まない軽いページ。開催日 → レースを選ぶと出走表が出る。
+## 出馬表ページ（`race.html`）— 競馬新聞の馬柱
+1頭＝1行の馬柱。左から **印／枠・馬番／馬名ブロック／本紙指数／前5走×5コマ**。
 
-- 列は 基本（枠・馬番・馬名・性齢・斤量・脚質・騎手・調教師・馬主・父/母父）／
-  推定値（能力・上がり・距離・道悪・3角平均）／人・血統（各指数）の3グループで、
-  上の「全部・基本・推定値・人・血統」で切り替える
-- 行をクリックすると**前5走**（着順・場・日付・馬場・距離・レース名・頭数・馬番・人気・
-  騎手・上がり3F・コーナー通過順）が開く。「前5走をすべて開く」で一括表示
-- 出走取消馬も薄く表示する（頭数には数えない）
-- 列や表示項目を足すときは `tools/build_races.mjs` の `_full` に項目を足してから
-  `race.html` の `render()` を直す
+- 馬名ブロックは新聞と同じ積み方：父 → 馬名（性齢・斤量）→ 母（母の父）→ 脚質・騎手・厩舎 → 馬主
+- 前5走の1コマは 着順・場・日付／馬場・距離／レース名／頭数・馬番・人気／騎手・馬体重／
+  上がり3F（順位は丸数字）／コーナー通過順。1着は赤、2〜3着は青
+- 上の「前5走・指数・寸評」で列ごと出し入れできる（`body.no-runs` などのクラスで CSS が列幅を切り替える）
+- 出走取消馬は薄く表示する（頭数には数えない）
+
+**レイアウトの注意**
+- `.thead` と `.uma` は**同じ `grid-template-columns`** を使う。片方だけ直すと前走欄がずれる
+- 前走の5コマは親グリッドの最終列（`minmax(720px,1.5fr)`）の中で `repeat(5,1fr)`。
+  `auto` にすると見出しと行で幅が変わる
+- `.thead` に `position:sticky` は付けない。`#board` が横スクロールするため効かない
+- スマホ（840px以下）では `.uma` を block にし、`.m-top` を
+  「印／枠馬番／プロフィール」の3列グリッド、**指数は `grid-column:1/-1` で次の行に全幅**で置く。
+  指数を上の段に混ぜると馬名の列が潰れて1文字ずつ縦に折り返す
+- 前5走はスマホでは横スクロール（`scroll-snap`）にする
+
+### 予想印
+印と勝率は**別式で作らない**。`tools/build_marks.mjs` が `index.html` のセクション0〜5を
+そのまま VM に読み込み、`monteCarlo` を既定の馬場・天候＋傾向からの自動バイアスで回した結果を
+`entries.*.json` に書き戻している。**`embed_db.mjs` のあとに実行する**（index.html の傾向データを使うため）。
+`autoBias` の式だけは `build_marks.mjs` にも書いてあるので、片方を変えたら両方直す。
 
 ---
 

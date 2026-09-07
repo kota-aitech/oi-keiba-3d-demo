@@ -108,6 +108,7 @@ export function parsePast(cellHtml) {
   if (!m) return null;
   const tail = s.slice(m[0].length - 1).split('|').filter(Boolean);
   const last3 = /3F\s*([\d.]+)\s*\((\d+)\)/.exec(s);
+  const wt = /(\d{3})kg/.exec(s);
   const corners = tail.filter(x => /^\d{1,2}$/.test(x)).map(Number).slice(-4);
   const jk = (m[13] || '').replace(/^[▲△☆★◇◎]\s*/, '').replace(/\s*[\d.]+\s*$/, '').trim();
   return {
@@ -115,6 +116,7 @@ export function parsePast(cellHtml) {
     baba: { '良': '良', '稍': '稍重', '重': '重', '不': '不良' }[m[6]], dist: Number(m[8]), race: m[9].trim(),
     field: Number(m[10]), no: Number(m[11]), pop: Number(m[12]), jockey: jk,
     last3f: last3 ? Number(last3[1]) : null, last3fRank: last3 ? Number(last3[2]) : null,
+    kg: wt ? Number(wt[1]) : null,
     corners,
   };
 }

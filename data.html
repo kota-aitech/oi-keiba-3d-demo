@@ -6,72 +6,89 @@
 <title>南関東競馬 データブラウザ（騎手・調教師・厩舎×騎手・馬主・種牡馬）</title>
 <style>
 :root{
-  --night:#0b1626; --panel:#0f1c2f; --line:rgba(255,255,255,.10);
-  --amber:#f2b134; --ink:#eef2f7; --mute:#9fb0c6; --dim:#6d7d94;
-  --up:#e4572e; --down:#4f83c4;
+  --paper:#fbf8f1; --paper2:#f1ebdc; --band:#1a1512;
+  --ink:#14100c; --sub:#6a6055; --faint:#9a9083;
+  --rule:#2a2420; --rule2:#cfc6b4; --rule3:#e6dfd0;
+  --red:#c0102a; --blue:#1b4f9c;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
+  --gothic:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--night);color:var(--ink);
-  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
-  font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);
+  font-size:13px;line-height:1.45;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 #app{display:grid;grid-template-rows:auto auto auto 1fr auto;height:100vh;height:100dvh;overflow:hidden}
-header{display:flex;align-items:center;gap:14px;padding:8px 14px;border-bottom:1px solid var(--line);background:#0e1b2e;flex-wrap:wrap}
-header h1{font-size:15px;font-weight:700;margin:0}
-header h1 small{font-weight:400;color:var(--mute);margin-left:10px;font-size:12px}
-header .links{margin-left:auto;display:flex;gap:8px}
-header .links a{color:var(--amber);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12px}
-nav{display:flex;gap:4px;padding:8px 14px 0;flex-wrap:wrap;background:var(--panel)}
-nav button{padding:6px 13px;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:#132339;color:var(--mute);font-size:13px}
-nav button.on{background:var(--night);color:var(--amber);font-weight:700;border-color:var(--line)}
-.bar{display:flex;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
-.bar label{color:var(--mute);font-size:12px}
-.bar input[type=search],.bar select{background:#132339;border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+
+header{display:flex;align-items:center;gap:12px;padding:7px 12px;background:var(--band);color:#fdf9f0;flex-wrap:wrap}
+header h1{font-family:var(--mincho);font-size:19px;font-weight:700;letter-spacing:.12em;margin:0;line-height:1.1}
+header h1 small{font-family:var(--gothic);font-weight:400;color:#c8bfae;margin-left:10px;font-size:11px;letter-spacing:.02em}
+header .links{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+header .links a{color:#fdf9f0;text-decoration:none;border:1px solid #4a423a;border-radius:2px;padding:2px 9px;font-size:11px;white-space:nowrap}
+header .links a:hover{background:#2e2721}
+
+nav{display:flex;gap:0;padding:0 12px;flex-wrap:wrap;background:var(--paper2);border-bottom:2px solid var(--rule)}
+nav button{padding:7px 15px;border:0;background:transparent;color:var(--sub);font-size:13px;font-family:var(--mincho);
+  font-weight:700;border-bottom:3px solid transparent;margin-bottom:-2px}
+nav button.on{color:var(--red);border-bottom-color:var(--red)}
+
+.bar{display:flex;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--rule2);
+  background:var(--paper);flex-wrap:wrap}
+.bar label{color:var(--sub);font-size:12px}
+.bar input[type=search],.bar select{background:#fff;border:1px solid var(--rule2);border-radius:2px;padding:3px 7px}
 .bar input[type=search]{width:200px}
-.bar .count{margin-left:auto;color:var(--mute);font-size:12px}
-.bar .btn{background:#132339;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px}
-#wrap{overflow:auto;padding:0 0 40px}
+.bar .count{margin-left:auto;color:var(--sub);font-size:12px}
+.bar .btn{background:#fff;border:1px solid var(--rule2);border-radius:2px;padding:3px 10px;font-size:12px;color:var(--sub)}
+
+#wrap{overflow:auto;padding:0 0 40px;background:var(--paper)}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
-thead th{position:sticky;top:0;z-index:2;background:#122238;border-bottom:1px solid var(--line);
-  padding:7px 8px;text-align:right;white-space:nowrap;cursor:pointer;color:var(--mute);font-weight:600}
+thead th{position:sticky;top:0;z-index:2;background:var(--band);color:#efe7d8;
+  padding:6px 8px;text-align:right;white-space:nowrap;cursor:pointer;font-weight:600;font-size:10.5px;letter-spacing:.06em;
+  border-right:1px solid #453d34}
+thead th:last-child{border-right:0}
 thead th:first-child,thead th.l{text-align:left}
-thead th.on{color:var(--amber)}
-thead th .ar{opacity:.5;font-size:10px;margin-left:3px}
-tbody td{padding:5px 8px;text-align:right;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap}
+thead th.on{color:#f0c24a}
+thead th .ar{opacity:.7;font-size:10px;margin-left:3px}
+tbody td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--rule3);white-space:nowrap}
+tbody tr:nth-child(even){background:#f7f2e6}
 tbody td.l{text-align:left;white-space:normal}
-tbody tr:hover{background:rgba(242,177,52,.06)}
-.rank{color:var(--dim);font-size:11px}
-.nm{font-weight:600}
-.sub{color:var(--mute);font-size:11px}
-.pos{color:var(--up)}.neg{color:var(--down)}
-.bar2{display:inline-block;vertical-align:middle;width:52px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-left:6px;overflow:hidden;position:relative}
-.bar2 i{position:absolute;top:0;bottom:0;left:50%;background:var(--up)}
-.bar2 i.n{background:var(--down)}
-footer{padding:7px 14px;border-top:1px solid var(--line);background:#0e1b2e;color:var(--dim);font-size:11px}
-.pane{padding:14px}
-.pane h2{font-size:13px;color:var(--amber);margin:18px 0 6px}
+tbody tr:hover{background:#fff6e8}
+.rank{color:var(--faint);font-size:11px}
+.nm{font-family:var(--mincho);font-size:13px;font-weight:700}
+.sub{color:var(--sub);font-size:11px}
+.pos{color:var(--red)}.neg{color:var(--blue)}
+.bar2{display:inline-block;vertical-align:middle;width:52px;height:6px;background:#e6dfd0;border:1px solid var(--rule3);
+  border-radius:0;margin-left:6px;overflow:hidden;position:relative}
+.bar2 i{position:absolute;top:0;bottom:0;left:50%;background:var(--red)}
+.bar2 i.n{background:var(--blue)}
+footer{padding:7px 12px;border-top:2px solid var(--rule);background:var(--paper2);color:var(--sub);font-size:11px}
+
+.pane{padding:14px;background:var(--paper)}
+.pane h2{font-family:var(--mincho);font-size:15px;color:var(--ink);margin:20px 0 6px;
+  border-left:5px solid var(--red);padding-left:8px}
 .pane h2:first-child{margin-top:0}
-.pane table{width:auto;min-width:min(100%,720px);margin-bottom:6px}
-.pane p{color:var(--mute);font-size:12px;margin:4px 0 10px;max-width:70ch}
+.pane table{width:auto;min-width:min(100%,720px);margin-bottom:6px;border:1px solid var(--rule2)}
+.pane p{color:var(--sub);font-size:12px;margin:4px 0 10px;max-width:70ch}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;margin:6px 0 12px}
-.kv span:nth-child(odd){color:var(--mute)}
-.more{display:block;margin:12px auto;padding:6px 18px;background:#132339;border:1px solid var(--line);border-radius:8px}
+.kv span:nth-child(odd){color:var(--sub)}
+.more{display:block;margin:12px auto;padding:6px 18px;background:#fff;border:1px solid var(--rule2);border-radius:2px;color:var(--sub)}
 @media (max-width:700px){
   .bar input[type=search]{width:130px}
   header h1 small{display:none}
+  header h1{font-size:16px}
+  nav button{padding:6px 10px;font-size:12px}
 }
 </style>
 </head>
 <body>
 <div id="app">
 <header>
-  <h1>南関東競馬 データブラウザ<small id="sub"></small></h1>
+  <h1>南関東<span style="color:#f0c24a">データ</span><small id="sub"></small></h1>
   <div class="links">
-    <a href="race.html?track=oi">出馬表</a>
-    <a href="index.html?track=oi">大井シミュレーション</a>
-    <a href="index.html?track=kawasaki">川崎</a>
+    <a href="race.html?track=oi">大井の馬柱</a>
+    <a href="race.html?track=kawasaki">川崎の馬柱</a>
+    <a href="index.html?track=oi">3D予想</a>
   </div>
 </header>
 <nav id="nav"></nav>

@@ -23,17 +23,16 @@ const sandbox = { document, console, Math, JSON, Date, Intl, URLSearchParams, na
   location: { search: '?track=' + track } };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
-vm.runInContext(js + '\nglobalThis.__X={D,render,setRace:(d,i)=>{day=d;ridx=i;},setOpenAll:v=>{openAll=v;},NKR};', sandbox);
+vm.runInContext(js + '\nglobalThis.__X={D,render,setRace:(d,i)=>{day=d;ridx=i;},NKR};', sandbox);
 const X = sandbox.__X;
 
 let bad = 0, races = 0, horses = 0, withPast = 0, scratched = 0;
 for (const [dk, list] of Object.entries(X.D.days)) {
   for (let i = 0; i < list.length; i++) {
     X.setRace(dk, i);
-    X.setOpenAll(true);                    // 前5走まで開いた状態で描画する
-    store.get('wrap').innerHTML = '';
+    store.get('board').innerHTML = '';
     X.render();
-    const h = store.get('wrap').innerHTML;
+    const h = store.get('board').innerHTML;
     const r = list[i];
     const hs = X.D.entries[`${dk}|${r.r}`] || [];
     const live = hs.filter(x => !x.scratch);
@@ -41,14 +40,19 @@ for (const [dk, list] of Object.entries(X.D.days)) {
     scratched += hs.length - live.length;
     withPast += live.filter(x => x.past && x.past.length).length;
     if (h.length < 500) { console.log(`  ! ${dk} ${r.r}R の描画が空`); bad++; continue; }
+    const marks = live.filter(x => x.mark).length;
+    if (marks < Math.min(5, live.length)) { console.log(`  ! ${dk} ${r.r}R 印が ${marks} 個しかない`); bad++; }
+    if (!/class="uma/.test(h) || !/class="run"/.test(h)) { console.log(`  ! ${dk} ${r.r}R 馬柱/前走の描画が欠けている`); bad++; }
     if (live.length !== r.n) { console.log(`  ! ${dk} ${r.r}R 頭数 ${r.n} ≠ 出走馬 ${live.length}`); bad++; }
     for (const x of live) {
       if (!x.jockey || !x.trainer) { console.log(`  ! ${dk} ${r.r}R ${x.name} 騎手/調教師が空`); bad++; }
       if (x.hIdx == null || x.ability == null) { console.log(`  ! ${dk} ${r.r}R ${x.name} 指数が欠落`); bad++; }
+      if (x.win == null || x.top3 == null) { console.log(`  ! ${dk} ${r.r}R ${x.name} 勝率が欠落（build_marks 未実行）`); bad++; }
     }
   }
 }
 console.log(`${track}: ${races} レース / 出走 ${horses} 頭（うち前5走あり ${withPast}）/ 取消 ${scratched} 頭、問題 ${bad} 件`);
-const sample = Object.values(X.D.entries)[0][0];
-console.log(`例: ${sample.no} ${sample.name} ${sample.sexAge} ${sample.kg}kg ${sample.jockey}(${sample.jockeyBase}) × ${sample.trainer} / ${sample.owner} / 父 ${sample.sire}`);
+const rk = Object.keys(X.D.entries)[9];
+const top = X.D.entries[rk].filter(h => h.mark).sort((a, b) => b.win - a.win);
+console.log(`例 ${rk}: ` + top.map(h => `${h.mark}${h.no} ${h.name}(${(h.win * 100).toFixed(1)}%)`).join(' '));
 process.exit(bad ? 1 : 0);

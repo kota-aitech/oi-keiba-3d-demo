@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON } from './lib/nk.mjs';
+import { inject } from './lib/embed.mjs';
 
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const out = {};
@@ -19,18 +20,6 @@ out.meta = {
   pop: idx.pop, fit: idx.fit, window: idx.window,
   counts: { jockey: Object.keys(idx.jockey).length, trainer: Object.keys(idx.trainer).length, combo: Object.keys(idx.combo).length, owner: Object.keys(idx.owner).length },
 };
-
-function inject(file, marker, varName, data) {
-  const p = path.join(ROOT, file);
-  const html = fs.readFileSync(p, 'utf8');
-  const B = `/* ${marker}:BEGIN`, E = `/* ${marker}:END */`;
-  const i = html.indexOf(B), j = html.indexOf(E);
-  if (i < 0 || j < 0) throw new Error(`${file} に ${marker} マーカーがありません`);
-  const head = html.slice(i, html.indexOf('\n', i) + 1);
-  const body = `const ${varName}=${JSON.stringify(data)};\n`;
-  fs.writeFileSync(p, html.slice(0, i) + head + body + html.slice(j));
-  console.error(`埋め込み ${(body.length / 1024).toFixed(0)} KB → ${file} (${(fs.statSync(p).size / 1024).toFixed(0)} KB)`);
-}
 
 inject('index.html', 'NKDB', 'NKDATA', out);
 
