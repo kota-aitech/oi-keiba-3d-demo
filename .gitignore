@@ -1,0 +1,5 @@
+# 取得した生ページのキャッシュ（再取得すれば作れる。数百MB になる）
+data/cache/
+# 生データと中間ファイル（index.json / races.*.json から再生成できる）
+data/nankan/leading.raw.json
+data/nankan/cards.jsonl
