@@ -131,20 +131,36 @@ for (const [jaName, key] of WANT) {
   if (i < 0) i = 0;
   let dates = all.slice(i, i + NDAYS);
   if (dates.length < NDAYS) dates = all.slice(Math.max(0, all.length - NDAYS));
-  const days = {}, real = {};
+  const days = {}, real = {}, full = {};
   for (const date of dates) {
     const rs = mine.filter(c => c.date === date).sort((a, b) => a.R - b.R);
     const d = new Date(date + 'T00:00:00');
     const dk = `${d.getMonth() + 1}/${d.getDate()}(${'日月火水木金土'[d.getDay()]}) 第${Number(rs[0].raceId.slice(12, 14))}日`;
-    days[dk] = rs.map(c => ({ r: c.R, time: c.time, dist: c.dist, n: c.horses.filter(h => !h.scratch).length, cls: c.cls }));
+    days[dk] = rs.map(c => ({ r: c.R, time: c.time, dist: c.dist, n: c.horses.filter(h => !h.scratch).length, cls: c.cls,
+      date: c.date, raceId: c.raceId, night: !!c.night }));
     for (const c of rs) {
-      real[`${dk}|${c.R}`] = c.horses.filter(h => !h.scratch).map(h => {
+      const hs = c.horses.filter(h => !h.scratch).map(h => {
         const d2 = derive(h, c.dist), hu = human(h, jaName), pd = pedigree(h, c.dist);
         return { no: h.no, name: h.name, gate: h.gate, style: d2.style, epos: d2.epos, ability: d2.ability,
-          close: d2.close, stamina: d2.stamina, wet: d2.wet, ...hu, ...pd, memo: memoOf(h, d2, hu, pd) };
+          close: d2.close, stamina: d2.stamina, wet: d2.wet, ...hu, ...pd, memo: memoOf(h, d2, hu, pd),
+          // ここから先は出馬表ページ（race.html）だけで使う
+          _full: { horseId: h.horseId, sexAge: h.sexAge, kg: h.kg, dam: h.dam, farm: h.farm, f3: d2.f3,
+            epR: d2.st.ratio, past: h.past },
+        };
       });
+      full[`${dk}|${c.R}`] = hs.map(h => ({ ...h, ...h._full, _full: undefined }));
+      real[`${dk}|${c.R}`] = hs.map(({ _full, ...rest }) => rest);
+    }
+    // 取消馬も出馬表には出す（頭数には数えない）
+    for (const c of rs) {
+      const sc = c.horses.filter(h => h.scratch);
+      if (sc.length) full[`${dk}|${c.R}`].push(...sc.map(h => ({ no: h.no, name: h.name, gate: h.gate, scratch: true,
+        jockey: h.jockey, jockeyBase: h.jockeyBase, trainer: h.trainer, trainerBase: h.trainerBase,
+        owner: h.owner, farm: h.farm, sire: h.sire, dam: h.dam, damSire: h.damSire,
+        sexAge: h.sexAge, kg: h.kg, horseId: h.horseId, past: h.past })));
     }
   }
   writeJSON(`data/nankan/races.${key}.json`, { track: jaName, meta, days, real });
+  writeJSON(`data/nankan/entries.${key}.json`, { track: jaName, meta, days, entries: full });
   console.error(`${jaName}: ${dates.join(', ')} → ${Object.keys(real).length} レース`);
 }

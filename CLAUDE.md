@@ -35,10 +35,11 @@
 
 ## ファイル構成
 ```
-index.html              予想シミュレーション本体（1ファイル・依存ゼロ。?track=oi / ?track=kawasaki）
-data.html               データブラウザ（1ファイル・依存ゼロ。数字だけを見たいとき）
+index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）
+race.html               出馬表と各馬のデータ（3Dなし・軽い。?track=… ）
+data.html               データブラウザ（騎手・調教師・コンビ・馬主・種牡馬の一覧）
 boat.html               ボートレース版（別モデル。下の専用節を参照）
-render.yaml             Render Blueprint
+render.yaml             Render Blueprint（SPA用の catch-all rewrite は置かないこと）
 
 data/
   cache/                取得した生ページ（Shift_JIS のまま）。.gitignore 済み・再取得で作り直せる
@@ -49,6 +50,7 @@ data/
     meet.<track>.json   ★開催日ごとのレース傾向（前方/後方の3着内回数・好走枠）— コミット対象
     trend.<track>.json  ★距離別の傾向とバイアス自動算出の基準値 — コミット対象
     races.<track>.json  ★番組＋出走馬（index.html 埋め込み用）— コミット対象
+    entries.<track>.json ★出馬表＋前5走の全項目（race.html 埋め込み用）— コミット対象
     browse.json         ★data.html 埋め込み用にたたんだ全データ — コミット対象
 
 tools/
@@ -61,10 +63,11 @@ tools/
   build_trend.mjs       距離別傾向・バイアス基準値の算出 → trend.*.json
   build_races.mjs       番組・出走馬の生成 → races.*.json
   build_browse.mjs      data.html 用に全データをたたむ → browse.json
-  embed_db.mjs          index.html の NKDB と data.html の NKBROWSE に埋め込む
+  embed_db.mjs          index.html(NKDB) / race.html(NKRACE) / data.html(NKBROWSE) に埋め込む
   sim_check.mjs         シミュレーションの妥当性チェック（ブラウザ不要）
   ui_check.mjs          DOM スタブで init() を通し、全レースをレンダリング（ブラウザ不要）
   data_check.mjs        data.html の全タブが描画できるかを確認（ブラウザ不要）
+  race_check.mjs        race.html の全開催日・全レースを描画して欠落を確認（ブラウザ不要）
 ```
 
 ---
@@ -90,7 +93,7 @@ node tools/build_races.mjs && node tools/build_browse.mjs && node tools/embed_db
 # 6. 検証
 node tools/sim_check.mjs oi && node tools/sim_check.mjs kawasaki
 node tools/ui_check.mjs  oi && node tools/ui_check.mjs  kawasaki
-node tools/data_check.mjs
+node tools/data_check.mjs && node tools/race_check.mjs oi && node tools/race_check.mjs kawasaki
 python3 -c "import re;open('/tmp/c.js','w').write(re.findall(r'<script>(.*?)</script>',open('index.html',encoding='utf-8').read(),re.S)[-1])" && node --check /tmp/c.js
 ```
 
@@ -179,6 +182,37 @@ hx   = clamp(hIdx, -1.6, 2.6) × cond.human      // cond.human は左パネル�
 `bIdx = (父の指数 + 0.45×父のこの距離での偏り + 0.35×母の父の指数) × max(0, 1 − 前走数/4)`
 **前5走がそろっている馬では 0 になる**（実績がすでに血統を織り込んでいるため）。
 2歳戦・新馬・転入初戦のように手がかりが少ないときだけ効く。`simRace` では `kl += bIdx*0.0040`。
+
+---
+
+## ページ構成
+4ページとも**それぞれ1ファイル・依存ゼロ**。共通のデータは `tools/embed_db.mjs` が各ファイルの
+マーカーに埋め込む。ページをまたぐ共通 JS ファイルは作らない（作ると依存ゼロが崩れる）。
+
+| ページ | マーカー | 埋め込むもの | 重さ |
+|---|---|---|---|
+| `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約520KB |
+| `race.html` | `NKRACE` | `entries.*.json`（前5走こみ） | 約1.0MB |
+| `data.html` | `NKBROWSE` | `browse.json` | 約840KB |
+
+**公開後のデータの場所**：`data/nankan/*.json` はリポジトリ直下から静的配信されるので、
+`https://<サイト>/data/nankan/index.json` のように直接ダウンロードできる。
+このために `render.yaml` から SPA 用の catch-all rewrite を外してある（戻すと JSON も
+HTML も index.html に書き換わりうる）。
+
+---
+
+## 出馬表ページ（`race.html`）
+3Dを積まない軽いページ。開催日 → レースを選ぶと出走表が出る。
+
+- 列は 基本（枠・馬番・馬名・性齢・斤量・脚質・騎手・調教師・馬主・父/母父）／
+  推定値（能力・上がり・距離・道悪・3角平均）／人・血統（各指数）の3グループで、
+  上の「全部・基本・推定値・人・血統」で切り替える
+- 行をクリックすると**前5走**（着順・場・日付・馬場・距離・レース名・頭数・馬番・人気・
+  騎手・上がり3F・コーナー通過順）が開く。「前5走をすべて開く」で一括表示
+- 出走取消馬も薄く表示する（頭数には数えない）
+- 列や表示項目を足すときは `tools/build_races.mjs` の `_full` に項目を足してから
+  `race.html` の `render()` を直す
 
 ---
 

@@ -33,5 +33,16 @@ function inject(file, marker, varName, data) {
 }
 
 inject('index.html', 'NKDB', 'NKDATA', out);
+
+/* 出馬表ページ（race.html）: 前5走まで入った詳しい方 */
+try {
+  const ent = { meta: out.meta };
+  for (const k of TRACKS) {
+    const d = readJSON(`data/nankan/entries.${k}.json`);
+    ent[k] = { track: d.track, days: d.days, entries: d.entries };
+  }
+  inject('race.html', 'NKRACE', 'NKR', ent);
+} catch (e) { console.error('  (race.html はスキップ: ' + e.message + ')'); }
+
 try { inject('data.html', 'NKBROWSE', 'NKB', readJSON('data/nankan/browse.json')); }
 catch (e) { console.error('  (data.html はスキップ: ' + e.message + ')'); }
