@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ボートレース 予想シミュレーション 3Dデモ — 桐生 9/7</title>
+<style>
+:root{
+  --night:#08131f; --panel:#0e1a2c; --line:rgba(255,255,255,.10);
+  --amber:#f2b134; --ink:#eef2f7; --mute:#9fb0c6; --dim:#6d7d94;
+  --nige:#e4572e; --senko:#f2b134; --sashi:#3fa7b8; --oikomi:#8e6cc2;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#app{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);height:100vh;height:100dvh;overflow:hidden}
+header,main{min-width:0}
+.hdr-row{display:flex;align-items:center;gap:16px}
+#tabbar{display:none;background:#0e1b2e;border-top:1px solid var(--line)}
+#tabbar button{flex:1;padding:11px 4px 12px;border:0;background:transparent;color:var(--mute);font-size:13px}
+#tabbar button.on{color:var(--amber);font-weight:700}
+header{display:flex;align-items:center;gap:16px;padding:8px 16px;border-bottom:1px solid var(--line);background:#0e1b2e;flex-wrap:wrap}
+header h1{font-size:15px;font-weight:700;margin:0}
+header h1 small{font-weight:400;color:var(--mute);margin-left:10px;font-size:12px}
+.tabs{display:flex;gap:4px}
+.tab{padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--mute);white-space:nowrap}
+.tab.on{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+#races{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.rbtn{min-width:40px;padding:3px 6px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px;line-height:1.25;text-align:center}
+.rbtn small{display:block;color:var(--mute);font-size:10px}
+.rbtn.on{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+main{display:grid;grid-template-columns:262px 1fr 356px;min-height:0}
+aside{overflow:auto;padding:12px 14px 24px;background:var(--panel);border-right:1px solid var(--line)}
+aside.right{border-right:0;border-left:1px solid var(--line)}
+h2{font-size:12px;color:var(--mute);font-weight:600;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+aside h2:first-child{margin-top:0}
+.seg{display:flex;gap:3px;flex-wrap:wrap}
+.seg button{flex:1;padding:5px 4px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px}
+.seg button.on{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.row label{flex:1;color:var(--mute)}
+.row .val{min-width:44px;text-align:right;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--amber);margin:2px 0 0}
+.ends{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:-2px}
+.btn{width:100%;padding:8px 10px;border:1px solid var(--line);background:#132339;border-radius:8px;margin-top:6px;font-size:13px}
+.btn.primary{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.hint{color:var(--mute);font-size:11px;margin:4px 0 0}
+select,textarea,input[type=number]{font:inherit;color:var(--ink);background:#132339;border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+textarea{width:100%;height:120px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+details summary{cursor:pointer;color:var(--mute);font-size:12px;margin:10px 0 4px}
+#stage{position:relative;min-width:0;background:#08111f}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.cams{position:absolute;top:10px;left:10px;display:flex;gap:4px}
+.cams button{padding:4px 10px;border:1px solid var(--line);background:rgba(13,24,40,.8);border-radius:6px;font-size:12px}
+.cams button.on{background:var(--amber);color:#1a1200;border-color:var(--amber)}
+.badge{position:absolute;top:10px;right:10px;background:rgba(13,24,40,.8);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--mute)}
+.badge b{color:var(--ink);font-size:14px}
+#bottom{position:absolute;left:10px;right:10px;bottom:10px;display:grid;grid-template-columns:1fr 220px;gap:8px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+.prog{background:rgba(13,24,40,.82);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.prog .ctl{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.prog .ctl button{padding:3px 10px;border:1px solid var(--line);background:#132339;border-radius:6px;font-size:12px}
+.prog .ctl button.on{background:var(--amber);color:#1a1200;border-color:var(--amber)}
+.prog .ctl .t{margin-left:auto;color:var(--mute);font-size:12px}
+.bar{position:relative;height:18px;border-radius:9px;background:#1a2c45;overflow:visible}
+.bar .mk{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35)}
+.bar .mk span{position:absolute;top:19px;left:0;transform:translateX(-50%);font-size:10px;color:var(--mute);white-space:nowrap}
+.bar .pin{position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:var(--amber);transform:translateX(-50%);box-shadow:0 0 6px var(--amber)}
+.bar .pin.p2{background:#fff;width:8px;height:8px;top:5px;box-shadow:none;opacity:.8}
+.live{background:rgba(13,24,40,.82);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px}
+.live .h{color:var(--mute);font-size:11px;margin-bottom:2px}
+.live div.r{display:flex;gap:6px;align-items:center;padding:1px 0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.num{display:inline-block;min-width:18px;text-align:center;border-radius:3px;font-weight:700;font-size:11px;color:#111;padding:0 2px}
+table.pred{width:100%;border-collapse:collapse;font-size:11.5px}
+table.pred th{font-weight:600;color:var(--mute);text-align:left;padding:3px 4px;border-bottom:1px solid var(--line);font-size:11px}
+table.pred td{padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;white-space:nowrap}
+table.pred td:nth-child(2){white-space:normal;line-height:1.25}
+table.pred th{white-space:nowrap}
+table.pred td.r{text-align:right}
+.mark{font-weight:700;font-size:14px;color:var(--amber)}
+.wbar{height:6px;background:#1a2c45;border-radius:3px;overflow:hidden}
+.wbar i{display:block;height:100%;background:var(--amber)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
+.kv span:nth-child(odd){color:var(--mute)}
+.pace{display:inline-block;padding:0 8px;border-radius:4px;font-weight:700;color:#111}
+ul.points{margin:4px 0 0;padding-left:18px}
+ul.points li{margin:3px 0}
+.tr{margin:6px 0}
+.tr .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute)}
+.tr .stack{display:flex;height:12px;border-radius:3px;overflow:hidden;margin-top:2px}
+.tr .stack i{display:block;height:100%}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--mute);margin:4px 0 8px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+.result{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(13,24,40,.92);border:1px solid var(--amber);border-radius:10px;padding:12px 18px;min-width:300px;display:none}
+.result h3{margin:0 0 6px;font-size:14px}
+.result .r{display:flex;gap:10px;padding:2px 0;font-size:13px}
+.src{color:var(--dim);font-size:10px;margin-top:8px}
+@media (max-width:900px){
+  header{padding:6px 10px;gap:6px;flex-direction:column;align-items:stretch;flex-wrap:nowrap}
+  .hdr-row{gap:6px;justify-content:space-between;flex-wrap:wrap}
+  #trackTabs .tab{font-weight:700}
+  header h1{font-size:13px;white-space:nowrap} header h1 small{display:none}
+  .tab{padding:4px 10px;font-size:12px}
+  #races{margin-left:0;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #races::-webkit-scrollbar{display:none}
+  .rbtn{flex:none;min-width:48px;padding:4px 7px}
+  main{display:block;position:relative;min-height:0}
+  #stage{position:absolute;inset:0}
+  aside{position:absolute;inset:0;z-index:5;display:none;border:0;padding:12px 14px 24px}
+  body[data-tab="cond"] aside.left{display:block}
+  body[data-tab="pred"] aside.right{display:block}
+  #tabbar{display:flex}
+  .badge{display:none}
+  .cams{gap:3px;left:6px;top:6px}.cams button{padding:5px 8px;font-size:11px}
+  #bottom{grid-template-columns:1fr;left:6px;right:6px;bottom:6px;gap:6px}
+  .prog{padding:6px 10px}
+  .prog .ctl button{padding:4px 9px}
+  .bar .mk span{font-size:9px}
+  .live{max-height:96px;overflow:hidden;font-size:11px;padding:5px 9px}
+  .live div.r:nth-child(n+4){display:none}
+  .result{min-width:0;width:92vw;top:12%;padding:10px 12px}
+  .result .r{font-size:12px;gap:6px}
+  .btn{padding:11px 10px;font-size:14px}
+  .seg button{padding:8px 4px}
+  input[type=range]{height:28px}
+}
+@media (prefers-reduced-motion:reduce){ .bar .pin{transition:none} }
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="hdr-row">
+    <h1 id="h1title">ボートレース 予想シミュレーション <small>桐生 9/7 ナイター — 3Dデモ　<a href="index.html" style="color:var(--amber)">競馬版へ</a></small></h1>
+    <div class="tabs" id="venueTabs"></div>
+  </div>
+  <div id="races"></div>
+</header>
+<main>
+  <aside class="left">
+    <h2>水面データ（公表値）</h2>
+    <div class="kv" id="venueInfo" style="margin-bottom:4px"></div>
+    <h2>風（スタート方向基準）</h2>
+    <div class="row"><label>風向・風速</label><span class="val" id="windV">無風</span></div>
+    <input type="range" id="wind" min="-6" max="6" step="0.5" value="0">
+    <div class="ends"><span>向かい風 6m</span><span>追い風 6m</span></div>
+    <p class="hint">一般的な傾向として、追い風はスロー勢（イン・差し）、向かい風はダッシュ勢（まくり）に有利とされる。強風は荒れやすい</p>
+    <div class="row"><label>波高</label><span class="val" id="waveV">2cm</span></div>
+    <input type="range" id="wave" min="0" max="15" step="1" value="2">
+    <div class="ends"><span>穏やか</span><span>荒れ水面</span></div>
+    <div class="row"><label>イン有利度（場の傾向）</label><span class="val" id="inV">+0.00</span></div>
+    <input type="range" id="inBias" min="-1" max="1" step="0.05" value="0">
+    <div class="ends"><span>センター・アウト</span><span>イン天国</span></div>
+    <p class="hint" id="inHint"></p>
+
+    <h2>進入予想</h2>
+    <div class="row"><label>コース順（内から艇番）</label><input type="text" id="entry" value="123456" maxlength="6" style="width:90px;text-align:center;font-weight:700;letter-spacing:.2em"></div>
+    <p class="hint" id="entryHint">枠なり進入が基本。今節で前づけ（枠より内のコース）が多い艇は自動で内に入れます</p>
+    <div class="seg"><button id="entryAuto">前づけ候補を確認</button><button id="entryWaku">枠なりに戻す</button></div>
+
+    <h2>シミュレーション</h2>
+    <div class="row"><label>試行回数</label>
+      <select id="trials"><option>500</option><option selected>1000</option><option>2000</option></select></div>
+    <button class="btn primary" id="runBtn">予想を計算する</button>
+    <button class="btn" id="playBtn" disabled>代表シナリオを3D再生</button>
+    <button class="btn" id="altBtn" disabled>別シナリオを再生（ばらつきを見る）</button>
+
+    <details><summary>出走データ（JSON） — 他のレースを貼り替え可</summary>
+      <textarea id="json"></textarea>
+      <div class="seg" style="margin-top:4px"><button id="jsonLoad">読み込む</button><button id="jsonDump">現在のレースを書き出す</button></div>
+      <p class="hint">w:枠, name, grade, st:平均ST, nat:[勝率,2連率,3連率], loc:[当地], m2:モーター2連率, courses/sts/res:今節の進入・ST・着順</p>
+    </details>
+  </aside>
+
+  <div id="stage">
+    <div class="cams" id="cams"></div>
+    <div class="badge" id="badge">レースを選択</div>
+    <div class="result" id="resultBox"></div>
+    <div id="bottom">
+      <div class="prog">
+        <div class="ctl">
+          <button id="ppBtn">▶ 再生</button>
+          <button class="spd on" data-s="1">×1</button><button class="spd" data-s="2">×2</button><button class="spd" data-s="4">×4</button>
+          <span class="t" id="clock">—</span>
+        </div>
+        <div class="bar" id="bar"></div>
+      </div>
+      <div class="live" id="live"><div class="h">通過順（先頭から）</div><div id="liveRows">—</div></div>
+    </div>
+  </div>
+
+  <aside class="right">
+    <h2>予想</h2>
+    <div id="predHead" class="kv"></div>
+    <div style="margin:8px 0 4px" id="kimariBox"></div>
+    <table class="pred"><thead><tr><th>印</th><th>艇</th><th>級</th><th class="r">勝率</th><th class="r">M2連</th><th class="r">予想ST</th><th class="r">1着</th><th class="r">2連</th><th class="r">3連</th></tr></thead><tbody id="predBody"><tr><td colspan="9" style="color:var(--mute)">「予想を計算する」で試行を開始</td></tr></tbody></table>
+    <h2>3連単 上位</h2>
+    <div id="trifecta" style="font-size:12px;color:var(--mute)">—</div>
+    <details><summary>選手・モーターの根拠（指数の内訳）</summary><div id="memoList" style="font-size:11px;color:var(--mute)"></div></details>
+    <h2>読みのポイント</h2>
+    <ul class="points" id="points"><li style="color:var(--mute)">—</li></ul>
+    <h2>1マークの入り（試行の分布）</h2>
+    <div class="legend"><span style="--c:#e4572e">逃げ</span><span style="--c:#f2b134">差し</span><span style="--c:#3fa7b8">まくり</span><span style="--c:#8e6cc2">まくり差し</span><span style="--c:#9fb0c6">抜き・恵まれ</span></div>
+    <div id="kimariStack"></div>
+    <p class="src" id="srcNote">出走表・選手成績・モーター2連率・今節成績は BOAT RACE オフィシャル（boatrace.jp）の 9/7 桐生 出走表から取り込み。展示タイム・展示ST・風は直前情報（各レース約30分前に公表）が出た時点で左の風スライダー等に反映する運用。場ごとのイン1着率・風の効き方は一般に言われる傾向を参考値として設定。</p>
+  </aside>
+</main>
+<nav id="tabbar"><button data-t="3d" class="on">3D</button><button data-t="pred">予想</button><button data-t="cond">条件</button></nav>
+</div>
+<script>
+/* ===== 0. util ===== */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,mod=(a,n)=>((a%n)+n)%n;
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const $=id=>document.getElementById(id);
+const fmtT=t=>{const m=Math.floor(t/60),s=t-m*60;return (m?m+':':'')+(m?s.toFixed(1).padStart(4,'0'):s.toFixed(1));};
+
+/* ===== 1. データ ===== */
+const KIRYU_0907={name:"桐生",jcd:"01",date:"2026-09-07",title:"バスケで群馬を熱くする群馬クレインサンダーズカップ 3日目（ナイター）",times:["15:18","15:46","16:13","16:33","17:01","17:28","17:55","18:23","18:54","19:25","19:58","20:30"],races:[
+ {r:1,cls:"予選",boats:[{"w":1,"reg":"5070","grade":"B1","name":"中島航","branch":"東京/千葉","age":32,"F":0,"L":0,"st":0.22,"nat":[4.21,20.83,38.89],"loc":[4.32,22.73,34.09],"mno":73,"m2":50.0,"m3":70.27,"bno":64,"b2":28.4,"b3":41.42,"courses":[5,5,2],"sts":[0.18,0.2,0.25],"res":["3","落","6"]},{"w":2,"reg":"4557","grade":"B1","name":"松尾光広","branch":"岡山/岡山","age":36,"F":0,"L":0,"st":0.21,"nat":[3.83,16.28,31.4],"loc":[4.31,26.92,34.62],"mno":64,"m2":33.33,"m3":51.32,"bno":52,"b2":41.81,"b3":61.02,"courses":[1,3,5],"sts":[0.13,0.33,0.17],"res":["4","5","5"]},{"w":3,"reg":"4562","grade":"B1","name":"阪本勇介","branch":"岡山/岡山","age":38,"F":0,"L":0,"st":0.19,"nat":[4.77,27.93,41.44],"loc":[3.61,5.56,16.67],"mno":34,"m2":37.13,"m3":56.93,"bno":12,"b2":30.34,"b3":45.51,"courses":[3,5,1],"sts":[0.22,0.06,0.21],"res":["6","4","6"]},{"w":4,"reg":"4195","grade":"B1","name":"前川守嗣","branch":"福岡/沖縄","age":44,"F":0,"L":0,"st":0.16,"nat":[5.19,32.88,50.68],"loc":[5.33,33.33,55.56],"mno":43,"m2":26.17,"m3":47.65,"bno":45,"b2":44.38,"b3":60.11,"courses":[3,1,5],"sts":[0.05,0.11,0.11],"res":["2","5","6"]},{"w":5,"reg":"3653","grade":"B2","name":"品川賢次","branch":"群馬/群馬","age":52,"F":1,"L":0,"st":0.2,"nat":[4.2,13.85,36.92],"loc":[4.35,19.12,41.18],"mno":71,"m2":32.73,"m3":47.88,"bno":38,"b2":36.0,"b3":59.43,"courses":[1,3,4],"sts":[0.24,0.32,0.13],"res":["4","3","5"]},{"w":6,"reg":"4025","grade":"A1","name":"山本隆幸","branch":"兵庫/兵庫","age":48,"F":0,"L":0,"st":0.18,"nat":[6.44,46.34,63.41],"loc":[6.92,53.06,71.43],"mno":41,"m2":32.22,"m3":45.56,"bno":27,"b2":43.1,"b3":59.77,"courses":[5,1,2],"sts":[0.16,0.17,0.07],"res":["6","2","2"]}]},
+ {r:2,cls:"予選",boats:[{"w":1,"reg":"5012","grade":"B1","name":"加倉侑征","branch":"福岡/福岡","age":29,"F":0,"L":0,"st":0.14,"nat":[4.52,23.29,41.1],"loc":[4.48,24.24,39.39],"mno":60,"m2":44.05,"m3":57.14,"bno":15,"b2":41.04,"b3":58.96,"courses":[6,2,3],"sts":[0.17,0.13,0.1],"res":["3","3","3"]},{"w":2,"reg":"4380","grade":"B1","name":"鈴木峻佑","branch":"静岡/静岡","age":42,"F":0,"L":0,"st":0.17,"nat":[5.0,30.93,44.33],"loc":[3.72,27.78,27.78],"mno":68,"m2":21.55,"m3":39.66,"bno":51,"b2":35.39,"b3":56.18,"courses":[3,4,6],"sts":[0.05,0.12,0.12],"res":["4","3","6"]},{"w":3,"reg":"5122","grade":"B1","name":"相馬翔","branch":"埼玉/埼玉","age":25,"F":1,"L":0,"st":0.17,"nat":[3.68,15.79,28.07],"loc":[5.04,25.93,40.74],"mno":57,"m2":29.05,"m3":45.81,"bno":42,"b2":34.76,"b3":50.27,"courses":[5,4,6],"sts":[0.2,0.17,0.09],"res":["5","6","4"]},{"w":4,"reg":"4943","grade":"B1","name":"八木治樹","branch":"愛知/愛知","age":35,"F":0,"L":0,"st":0.15,"nat":[4.48,23.29,38.36],"loc":[5.31,24.14,55.17],"mno":17,"m2":33.98,"m3":51.46,"bno":39,"b2":32.8,"b3":48.92,"courses":[2,3,6],"sts":[0.06,0.05,0.16],"res":["3","3","6"]},{"w":5,"reg":"3874","grade":"A2","name":"山本寛久","branch":"岡山/岡山","age":50,"F":0,"L":0,"st":0.17,"nat":[7.11,50.96,75.96],"loc":[6.3,40.0,70.0],"mno":62,"m2":41.58,"m3":59.47,"bno":35,"b2":36.41,"b3":55.43,"courses":[4,1,4],"sts":[0.16,0.16,0.17],"res":["1","1","4"]},{"w":6,"reg":"4019","grade":"A1","name":"笠原亮","branch":"静岡/静岡","age":46,"F":0,"L":0,"st":0.17,"nat":[6.98,54.29,67.62],"loc":[7.95,67.5,82.5],"mno":12,"m2":38.13,"m3":59.38,"bno":33,"b2":34.25,"b3":53.59,"courses":[3,4,1],"sts":[0.15,0.11,0.1],"res":["3","1","1"]}]},
+ {r:3,cls:"予選",boats:[{"w":1,"reg":"5107","grade":"B1","name":"松本真広","branch":"福岡/熊本","age":27,"F":1,"L":0,"st":0.16,"nat":[3.93,8.47,33.9],"loc":[4.0,5.56,27.78],"mno":25,"m2":27.54,"m3":39.13,"bno":44,"b2":40.91,"b3":59.09,"courses":[5,2,4],"sts":[0.28,0.21,0.14],"res":["1","1","6"]},{"w":2,"reg":"3852","grade":"B1","name":"澤大介","branch":"三重/三重","age":54,"F":0,"L":0,"st":0.21,"nat":[4.79,25.0,42.71],"loc":[4.38,31.25,31.25],"mno":69,"m2":34.52,"m3":52.98,"bno":62,"b2":32.58,"b3":47.19,"courses":[1,3,6],"sts":[0.06,0.19,0.2],"res":["1","5","4"]},{"w":3,"reg":"5181","grade":"B1","name":"森智哉","branch":"岡山/岡山","age":28,"F":1,"L":0,"st":0.16,"nat":[4.78,30.43,44.93],"loc":[4.8,10.0,60.0],"mno":63,"m2":23.66,"m3":38.93,"bno":24,"b2":34.12,"b3":54.71,"courses":[2,5,6],"sts":[0.14,0.12,0.26],"res":["5","5","5"]},{"w":4,"reg":"3686","grade":"A2","name":"鳥居塚孝博","branch":"群馬/群馬","age":51,"F":1,"L":0,"st":0.15,"nat":[6.21,37.8,62.2],"loc":[6.39,39.69,71.76],"mno":47,"m2":29.63,"m3":44.97,"bno":59,"b2":37.63,"b3":55.38,"courses":[5,3,1],"sts":[0.17,0.12,0.15],"res":["5","4","2"]},{"w":5,"reg":"5048","grade":"B1","name":"眞鳥康太","branch":"長崎/長崎","age":32,"F":0,"L":0,"st":0.21,"nat":[4.54,28.57,44.29],"loc":[2.27,0.0,0.0],"mno":74,"m2":38.54,"m3":59.38,"bno":55,"b2":30.64,"b3":45.09,"courses":[2,6,1],"sts":[0.2,0.17,0.12],"res":["4","4","4"]},{"w":6,"reg":"3743","grade":"A1","name":"林美憲","branch":"徳島/徳島","age":51,"F":0,"L":0,"st":0.15,"nat":[5.41,40.0,51.67],"loc":[6.33,11.11,55.56],"mno":70,"m2":33.16,"m3":46.52,"bno":40,"b2":30.68,"b3":46.02,"courses":[1,4,4],"sts":[0.26,0.15,0.13],"res":["2","4","2"]}]},
+ {r:4,cls:"予選",boats:[{"w":1,"reg":"4919","grade":"B1","name":"吉田翔悟","branch":"長崎/長崎","age":35,"F":1,"L":0,"st":0.18,"nat":[3.94,16.33,32.65],"loc":[0.0,0.0,0.0],"mno":72,"m2":30.86,"m3":50.29,"bno":50,"b2":33.33,"b3":48.89,"courses":[4,6,3],"sts":[0.03,0.18,0.14],"res":["6","5","4"]},{"w":2,"reg":"4161","grade":"B1","name":"黒柳浩孝","branch":"愛知/愛知","age":44,"F":0,"L":0,"st":0.16,"nat":[5.4,35.34,55.17],"loc":[5.64,30.56,61.11],"mno":46,"m2":36.9,"m3":51.87,"bno":56,"b2":38.71,"b3":50.54,"courses":[1,5,6],"sts":[0.09,0.09,0.22],"res":["1","5","3"]},{"w":3,"reg":"3202","grade":"B1","name":"三品隆浩","branch":"東京/東京","age":61,"F":0,"L":0,"st":0.2,"nat":[4.76,30.95,42.86],"loc":[2.96,8.0,20.0],"mno":48,"m2":33.16,"m3":54.21,"bno":18,"b2":30.0,"b3":44.12,"courses":[1,5,2],"sts":[0.24,0.31,0.16],"res":["6","3","3"]},{"w":4,"reg":"3946","grade":"A1","name":"赤岩善生","branch":"愛知/愛知","age":50,"F":1,"L":0,"st":0.15,"nat":[7.19,54.47,69.92],"loc":[6.97,62.07,75.86],"mno":51,"m2":32.52,"m3":43.56,"bno":74,"b2":34.86,"b3":56.0,"courses":[2,1,2],"sts":[0.18,0.11,0.15],"res":["2","1","1"]},{"w":5,"reg":"4232","grade":"B1","name":"笠雅雄","branch":"福岡/福岡","age":43,"F":0,"L":0,"st":0.17,"nat":[5.91,39.13,58.7],"loc":[3.38,17.65,26.47],"mno":42,"m2":25.3,"m3":37.95,"bno":68,"b2":32.61,"b3":48.37,"courses":[4,6,3],"sts":[0.15,0.13,0.09],"res":["2","6","1"]},{"w":6,"reg":"4513","grade":"A2","name":"河野真也","branch":"福岡/宮崎","age":37,"F":0,"L":0,"st":0.2,"nat":[6.0,42.99,63.55],"loc":[5.96,46.15,61.54],"mno":36,"m2":27.11,"m3":42.17,"bno":20,"b2":30.72,"b3":45.78,"courses":[5,4,3],"sts":[0.06,0.2,0.15],"res":["3","3","2"]}]},
+ {r:5,cls:"予選",boats:[{"w":1,"reg":"5344","grade":"B1","name":"谷口丞","branch":"滋賀/滋賀","age":23,"F":0,"L":0,"st":0.15,"nat":[5.46,32.93,52.44],"loc":[0.0,0.0,0.0],"mno":32,"m2":43.48,"m3":55.07,"bno":21,"b2":31.89,"b3":52.97,"courses":[6,3,6],"sts":[0.17,0.03,0.11],"res":["6","3","3"]},{"w":2,"reg":"3681","grade":"B1","name":"山谷央","branch":"東京/東京","age":53,"F":1,"L":0,"st":0.15,"nat":[4.82,28.79,42.42],"loc":[4.68,15.79,47.37],"mno":37,"m2":32.28,"m3":50.79,"bno":69,"b2":34.66,"b3":48.86,"courses":[4,1,5],"sts":[0.09,0.28,0.09],"res":["1","1","4"]},{"w":3,"reg":"3305","grade":"B1","name":"小野信樹","branch":"岡山/岡山","age":58,"F":0,"L":0,"st":0.17,"nat":[3.57,15.19,26.58],"loc":[3.94,25.0,34.38],"mno":11,"m2":33.33,"m3":54.3,"bno":71,"b2":41.36,"b3":54.45,"courses":[2,1,5],"sts":[0.32,0.1,0.06],"res":["4","4","6"]},{"w":4,"reg":"4044","grade":"A1","name":"湯川浩司","branch":"大阪/大阪","age":46,"F":0,"L":0,"st":0.14,"nat":[6.17,32.93,54.88],"loc":[6.77,45.71,54.29],"mno":29,"m2":27.4,"m3":45.89,"bno":60,"b2":38.1,"b3":52.91,"courses":[4,2,3],"sts":[0.09,0.14,0.18],"res":["4","2","4"]},{"w":5,"reg":"4118","grade":"A2","name":"宇佐見淳","branch":"愛知/愛知","age":45,"F":0,"L":0,"st":0.15,"nat":[5.87,39.29,63.39],"loc":[6.38,51.72,62.07],"mno":27,"m2":50.31,"m3":67.92,"bno":47,"b2":31.18,"b3":47.85,"courses":[2,1,3],"sts":[0.14,0.13,0.12],"res":["1","3","2"]},{"w":6,"reg":"4562","grade":"B1","name":"阪本勇介","branch":"岡山/岡山","age":38,"F":0,"L":0,"st":0.19,"nat":[4.77,27.93,41.44],"loc":[3.61,5.56,16.67],"mno":34,"m2":37.13,"m3":56.93,"bno":12,"b2":30.34,"b3":45.51,"courses":[3,5,1],"sts":[0.22,0.06,0.21],"res":["6","4","6"]}]},
+ {r:6,cls:"予選",boats:[{"w":1,"reg":"4538","grade":"A1","name":"笠置博之","branch":"大阪/大阪","age":36,"F":1,"L":0,"st":0.15,"nat":[5.23,39.58,52.08],"loc":[6.41,59.26,62.96],"mno":26,"m2":31.52,"m3":50.0,"bno":46,"b2":28.65,"b3":47.95,"courses":[6,2,4,5],"sts":[0.17,0.19,0.15,0.17],"res":["6","4","4","6"]},{"w":2,"reg":"4992","grade":"B1","name":"廣瀬篤哉","branch":"滋賀/京都","age":28,"F":0,"L":0,"st":0.16,"nat":[4.8,31.58,39.47],"loc":[2.56,0.0,11.11],"mno":53,"m2":35.91,"m3":53.04,"bno":73,"b2":38.07,"b3":53.41,"courses":[3,6,1],"sts":[0.19,0.13,0.16],"res":["2","6","4"]},{"w":3,"reg":"3867","grade":"B1","name":"松浦勝","branch":"愛知/愛知","age":51,"F":0,"L":0,"st":0.18,"nat":[2.85,8.0,18.67],"loc":[2.44,11.11,11.11],"mno":40,"m2":32.83,"m3":50.51,"bno":41,"b2":35.43,"b3":53.71,"courses":[6,1,5],"sts":[0.29,0.26,0.18],"res":["5","4","6"]},{"w":4,"reg":"5122","grade":"B1","name":"相馬翔","branch":"埼玉/埼玉","age":25,"F":1,"L":0,"st":0.17,"nat":[3.68,15.79,28.07],"loc":[5.04,25.93,40.74],"mno":57,"m2":29.05,"m3":45.81,"bno":42,"b2":34.76,"b3":50.27,"courses":[5,4,6],"sts":[0.2,0.17,0.09],"res":["5","6","4"]},{"w":5,"reg":"3475","grade":"B1","name":"橋本久和","branch":"群馬/群馬","age":56,"F":0,"L":0,"st":0.19,"nat":[5.22,35.44,43.04],"loc":[5.91,41.53,59.32],"mno":31,"m2":35.59,"m3":49.15,"bno":34,"b2":34.43,"b3":46.99,"courses":[1,2,5],"sts":[0.14,0.08,0.13],"res":["5","5","1"]},{"w":6,"reg":"5430","grade":"B2","name":"鳥本智史","branch":"三重/三重","age":22,"F":1,"L":0,"st":0.18,"nat":[1.39,0.0,2.63],"loc":[1.33,0.0,0.0],"mno":44,"m2":27.65,"m3":45.29,"bno":66,"b2":34.46,"b3":47.46,"courses":[6,6,6],"sts":[0.03,0.3,0.03],"res":["6","6","5"]}]},
+ {r:7,cls:"予選",boats:[{"w":1,"reg":"3319","grade":"A2","name":"山崎義明","branch":"埼玉/埼玉","age":59,"F":0,"L":0,"st":0.16,"nat":[5.73,38.6,62.28],"loc":[5.21,35.9,46.15],"mno":24,"m2":36.68,"m3":61.81,"bno":57,"b2":41.04,"b3":53.76,"courses":[5,3,2],"sts":[0.1,0.21,0.17],"res":["5","4","1"]},{"w":2,"reg":"3653","grade":"B2","name":"品川賢次","branch":"群馬/群馬","age":52,"F":1,"L":0,"st":0.2,"nat":[4.2,13.85,36.92],"loc":[4.35,19.12,41.18],"mno":71,"m2":32.73,"m3":47.88,"bno":38,"b2":36.0,"b3":59.43,"courses":[1,3,4],"sts":[0.24,0.32,0.13],"res":["4","3","5"]},{"w":3,"reg":"4877","grade":"A1","name":"鈴谷一平","branch":"兵庫/兵庫","age":31,"F":0,"L":0,"st":0.14,"nat":[6.2,44.25,60.18],"loc":[6.47,41.18,64.71],"mno":20,"m2":39.72,"m3":61.7,"bno":54,"b2":36.36,"b3":54.55,"courses":[4,6,2],"sts":[0.1,0.07,0.1],"res":["3","6","3"]},{"w":4,"reg":"3277","grade":"B1","name":"齋藤勇","branch":"東京/東京","age":60,"F":0,"L":0,"st":0.18,"nat":[4.56,22.22,38.27],"loc":[4.32,12.0,40.0],"mno":52,"m2":26.32,"m3":37.59,"bno":31,"b2":38.07,"b3":60.23,"courses":[2,2,1],"sts":[0.23,0.11,0.07],"res":["3","2","2"]},{"w":5,"reg":"5181","grade":"B1","name":"森智哉","branch":"岡山/岡山","age":28,"F":1,"L":0,"st":0.16,"nat":[4.78,30.43,44.93],"loc":[4.8,10.0,60.0],"mno":63,"m2":23.66,"m3":38.93,"bno":24,"b2":34.12,"b3":54.71,"courses":[2,5,6],"sts":[0.14,0.12,0.26],"res":["5","5","5"]},{"w":6,"reg":"4181","grade":"B1","name":"花本夏樹","branch":"三重/三重","age":43,"F":0,"L":0,"st":0.21,"nat":[3.44,6.82,23.86],"loc":[4.38,14.71,41.18],"mno":50,"m2":34.72,"m3":53.37,"bno":61,"b2":39.08,"b3":59.2,"courses":[4,2,4],"sts":[0.31,0.21,0.2],"res":["6","2","3"]}]},
+ {r:8,cls:"予選",boats:[{"w":1,"reg":"4027","grade":"A2","name":"松江秀徳","branch":"佐賀/佐賀","age":48,"F":1,"L":0,"st":0.16,"nat":[5.4,33.82,51.47],"loc":[5.85,45.0,60.0],"mno":75,"m2":27.91,"m3":44.19,"bno":48,"b2":39.34,"b3":54.64,"courses":[6,3,4],"sts":[0.15,0.16,0.15],"res":["6","2","3"]},{"w":2,"reg":"4440","grade":"B1","name":"萩原知哉","branch":"東京/茨城","age":40,"F":0,"L":0,"st":0.17,"nat":[4.6,28.57,39.29],"loc":[4.34,20.45,40.91],"mno":49,"m2":34.36,"m3":48.21,"bno":36,"b2":33.69,"b3":52.41,"courses":[4,5,3],"sts":[0.05,0.19,0.12],"res":["5","2","1"]},{"w":3,"reg":"5107","grade":"B1","name":"松本真広","branch":"福岡/熊本","age":27,"F":1,"L":0,"st":0.16,"nat":[3.93,8.47,33.9],"loc":[4.0,5.56,27.78],"mno":25,"m2":27.54,"m3":39.13,"bno":44,"b2":40.91,"b3":59.09,"courses":[5,2,4],"sts":[0.28,0.21,0.14],"res":["1","1","6"]},{"w":4,"reg":"4161","grade":"B1","name":"黒柳浩孝","branch":"愛知/愛知","age":44,"F":0,"L":0,"st":0.16,"nat":[5.4,35.34,55.17],"loc":[5.64,30.56,61.11],"mno":46,"m2":36.9,"m3":51.87,"bno":56,"b2":38.71,"b3":50.54,"courses":[1,5,6],"sts":[0.09,0.09,0.22],"res":["1","5","3"]},{"w":5,"reg":"4019","grade":"A1","name":"笠原亮","branch":"静岡/静岡","age":46,"F":0,"L":0,"st":0.17,"nat":[6.98,54.29,67.62],"loc":[7.95,67.5,82.5],"mno":12,"m2":38.13,"m3":59.38,"bno":33,"b2":34.25,"b3":53.59,"courses":[3,4,1],"sts":[0.15,0.11,0.1],"res":["3","1","1"]},{"w":6,"reg":"4195","grade":"B1","name":"前川守嗣","branch":"福岡/沖縄","age":44,"F":0,"L":0,"st":0.16,"nat":[5.19,32.88,50.68],"loc":[5.33,33.33,55.56],"mno":43,"m2":26.17,"m3":47.65,"bno":45,"b2":44.38,"b3":60.11,"courses":[3,1,5],"sts":[0.05,0.11,0.11],"res":["2","5","6"]}]},
+ {r:9,cls:"予選特賞",boats:[{"w":1,"reg":"4232","grade":"B1","name":"笠雅雄","branch":"福岡/福岡","age":43,"F":0,"L":0,"st":0.17,"nat":[5.91,39.13,58.7],"loc":[3.38,17.65,26.47],"mno":42,"m2":25.3,"m3":37.95,"bno":68,"b2":32.61,"b3":48.37,"courses":[4,6,3],"sts":[0.15,0.13,0.09],"res":["2","6","1"]},{"w":2,"reg":"3686","grade":"A2","name":"鳥居塚孝博","branch":"群馬/群馬","age":51,"F":1,"L":0,"st":0.15,"nat":[6.21,37.8,62.2],"loc":[6.39,39.69,71.76],"mno":47,"m2":29.63,"m3":44.97,"bno":59,"b2":37.63,"b3":55.38,"courses":[5,3,1],"sts":[0.17,0.12,0.15],"res":["5","4","2"]},{"w":3,"reg":"4025","grade":"A1","name":"山本隆幸","branch":"兵庫/兵庫","age":48,"F":0,"L":0,"st":0.18,"nat":[6.44,46.34,63.41],"loc":[6.92,53.06,71.43],"mno":41,"m2":32.22,"m3":45.56,"bno":27,"b2":43.1,"b3":59.77,"courses":[5,1,2],"sts":[0.16,0.17,0.07],"res":["6","2","2"]},{"w":4,"reg":"5012","grade":"B1","name":"加倉侑征","branch":"福岡/福岡","age":29,"F":0,"L":0,"st":0.14,"nat":[4.52,23.29,41.1],"loc":[4.48,24.24,39.39],"mno":60,"m2":44.05,"m3":57.14,"bno":15,"b2":41.04,"b3":58.96,"courses":[6,2,3],"sts":[0.17,0.13,0.1],"res":["3","3","3"]},{"w":5,"reg":"4033","grade":"A2","name":"伊藤将吉","branch":"静岡/静岡","age":47,"F":0,"L":0,"st":0.15,"nat":[5.82,42.57,56.44],"loc":[6.71,58.82,61.76],"mno":38,"m2":37.42,"m3":56.13,"bno":30,"b2":33.16,"b3":50.53,"courses":[1,3,5],"sts":[0.06,0.16,0.05],"res":["1","5","5"]},{"w":6,"reg":"3681","grade":"B1","name":"山谷央","branch":"東京/東京","age":53,"F":1,"L":0,"st":0.15,"nat":[4.82,28.79,42.42],"loc":[4.68,15.79,47.37],"mno":37,"m2":32.28,"m3":50.79,"bno":69,"b2":34.66,"b3":48.86,"courses":[4,1,5],"sts":[0.09,0.28,0.09],"res":["1","1","4"]}]},
+ {r:10,cls:"予選特賞",boats:[{"w":1,"reg":"5228","grade":"A2","name":"若林樹蘭","branch":"東京/山梨","age":23,"F":1,"L":0,"st":0.17,"nat":[5.72,35.56,54.44],"loc":[5.67,33.33,50.0],"mno":65,"m2":37.43,"m3":52.94,"bno":70,"b2":30.43,"b3":48.37,"courses":[6,3,2,5],"sts":[0.08,0.13,0.27,0.13],"res":["2","3","1","5"]},{"w":2,"reg":"3946","grade":"A1","name":"赤岩善生","branch":"愛知/愛知","age":50,"F":1,"L":0,"st":0.15,"nat":[7.19,54.47,69.92],"loc":[6.97,62.07,75.86],"mno":51,"m2":32.52,"m3":43.56,"bno":74,"b2":34.86,"b3":56.0,"courses":[2,1,2],"sts":[0.18,0.11,0.15],"res":["2","1","1"]},{"w":3,"reg":"4040","grade":"A2","name":"廣瀬将亨","branch":"兵庫/兵庫","age":47,"F":0,"L":0,"st":0.15,"nat":[5.83,39.45,54.13],"loc":[5.57,40.82,51.02],"mno":21,"m2":32.43,"m3":49.19,"bno":19,"b2":34.97,"b3":47.54,"courses":[1,4,2,6],"sts":[0.22,0.12,0.06,0.04],"res":["1","2","1","5"]},{"w":4,"reg":"3852","grade":"B1","name":"澤大介","branch":"三重/三重","age":54,"F":0,"L":0,"st":0.21,"nat":[4.79,25.0,42.71],"loc":[4.38,31.25,31.25],"mno":69,"m2":34.52,"m3":52.98,"bno":62,"b2":32.58,"b3":47.19,"courses":[1,3,6],"sts":[0.06,0.19,0.2],"res":["1","5","4"]},{"w":5,"reg":"4943","grade":"B1","name":"八木治樹","branch":"愛知/愛知","age":35,"F":0,"L":0,"st":0.15,"nat":[4.48,23.29,38.36],"loc":[5.31,24.14,55.17],"mno":17,"m2":33.98,"m3":51.46,"bno":39,"b2":32.8,"b3":48.92,"courses":[2,3,6],"sts":[0.06,0.05,0.16],"res":["3","3","6"]},{"w":6,"reg":"4531","grade":"A2","name":"武富智亮","branch":"佐賀/佐賀","age":37,"F":0,"L":0,"st":0.16,"nat":[6.31,42.98,68.6],"loc":[0.0,0.0,0.0],"mno":22,"m2":25.2,"m3":36.59,"bno":37,"b2":33.33,"b3":50.27,"courses":[3,5,4,1],"sts":[0.08,0.13,0.32,0.08],"res":["3","2","2","5"]}]},
+ {r:11,cls:"予選特選",boats:[{"w":1,"reg":"4028","grade":"A1","name":"田村隆信","branch":"徳島/徳島","age":48,"F":0,"L":0,"st":0.15,"nat":[5.54,34.74,50.53],"loc":[0.0,0.0,0.0],"mno":13,"m2":29.07,"m3":48.26,"bno":17,"b2":36.42,"b3":56.07,"courses":[2,6,4,3],"sts":[0.07,0.18,0.14,0.16],"res":["2","5","4","2"]},{"w":2,"reg":"3874","grade":"A2","name":"山本寛久","branch":"岡山/岡山","age":50,"F":0,"L":0,"st":0.17,"nat":[7.11,50.96,75.96],"loc":[6.3,40.0,70.0],"mno":62,"m2":41.58,"m3":59.47,"bno":35,"b2":36.41,"b3":55.43,"courses":[4,1,4],"sts":[0.16,0.16,0.17],"res":["1","1","4"]},{"w":3,"reg":"4342","grade":"A2","name":"谷野錬志","branch":"静岡/静岡","age":41,"F":0,"L":0,"st":0.15,"nat":[6.39,37.5,60.23],"loc":[7.0,57.89,68.42],"mno":67,"m2":36.09,"m3":57.4,"bno":29,"b2":32.42,"b3":47.25,"courses":[6,2,5,4],"sts":[0.23,0.16,0.09,0.09],"res":["1","1","2","1"]},{"w":4,"reg":"4118","grade":"A2","name":"宇佐見淳","branch":"愛知/愛知","age":45,"F":0,"L":0,"st":0.15,"nat":[5.87,39.29,63.39],"loc":[6.38,51.72,62.07],"mno":27,"m2":50.31,"m3":67.92,"bno":47,"b2":31.18,"b3":47.85,"courses":[2,1,3],"sts":[0.14,0.13,0.12],"res":["1","3","2"]},{"w":5,"reg":"3277","grade":"B1","name":"齋藤勇","branch":"東京/東京","age":60,"F":0,"L":0,"st":0.18,"nat":[4.56,22.22,38.27],"loc":[4.32,12.0,40.0],"mno":52,"m2":26.32,"m3":37.59,"bno":31,"b2":38.07,"b3":60.23,"courses":[2,2,1],"sts":[0.23,0.11,0.07],"res":["3","2","2"]},{"w":6,"reg":"5048","grade":"B1","name":"眞鳥康太","branch":"長崎/長崎","age":32,"F":0,"L":0,"st":0.21,"nat":[4.54,28.57,44.29],"loc":[2.27,0.0,0.0],"mno":74,"m2":38.54,"m3":59.38,"bno":55,"b2":30.64,"b3":45.09,"courses":[2,6,1],"sts":[0.2,0.17,0.12],"res":["4","4","4"]}]},
+ {r:12,cls:"特選",boats:[{"w":1,"reg":"4044","grade":"A1","name":"湯川浩司","branch":"大阪/大阪","age":46,"F":0,"L":0,"st":0.14,"nat":[6.17,32.93,54.88],"loc":[6.77,45.71,54.29],"mno":29,"m2":27.4,"m3":45.89,"bno":60,"b2":38.1,"b3":52.91,"courses":[4,2,3],"sts":[0.09,0.14,0.18],"res":["4","2","4"]},{"w":2,"reg":"3743","grade":"A1","name":"林美憲","branch":"徳島/徳島","age":51,"F":0,"L":0,"st":0.15,"nat":[5.41,40.0,51.67],"loc":[6.33,11.11,55.56],"mno":70,"m2":33.16,"m3":46.52,"bno":40,"b2":30.68,"b3":46.02,"courses":[1,4,4],"sts":[0.26,0.15,0.13],"res":["2","4","2"]},{"w":3,"reg":"4513","grade":"A2","name":"河野真也","branch":"福岡/宮崎","age":37,"F":0,"L":0,"st":0.2,"nat":[6.0,42.99,63.55],"loc":[5.96,46.15,61.54],"mno":36,"m2":27.11,"m3":42.17,"bno":20,"b2":30.72,"b3":45.78,"courses":[5,4,3],"sts":[0.06,0.2,0.15],"res":["3","3","2"]},{"w":4,"reg":"3319","grade":"A2","name":"山崎義明","branch":"埼玉/埼玉","age":59,"F":0,"L":0,"st":0.16,"nat":[5.73,38.6,62.28],"loc":[5.21,35.9,46.15],"mno":24,"m2":36.68,"m3":61.81,"bno":57,"b2":41.04,"b3":53.76,"courses":[5,3,2],"sts":[0.1,0.21,0.17],"res":["5","4","1"]},{"w":5,"reg":"4992","grade":"B1","name":"廣瀬篤哉","branch":"滋賀/京都","age":28,"F":0,"L":0,"st":0.16,"nat":[4.8,31.58,39.47],"loc":[2.56,0.0,11.11],"mno":53,"m2":35.91,"m3":53.04,"bno":73,"b2":38.07,"b3":53.41,"courses":[3,6,1],"sts":[0.19,0.13,0.16],"res":["2","6","4"]},{"w":6,"reg":"4440","grade":"B1","name":"萩原知哉","branch":"東京/茨城","age":40,"F":0,"L":0,"st":0.17,"nat":[4.6,28.57,39.29],"loc":[4.34,20.45,40.91],"mno":49,"m2":34.36,"m3":48.21,"bno":36,"b2":33.69,"b3":52.41,"courses":[4,5,3],"sts":[0.05,0.19,0.12],"res":["5","2","1"]}]},
+]};
+
+const VENUES={ // イン1着率の参考値（一般に言われる目安。年度データに差し替え可）と水質
+  '桐生':{inRate:.53,water:'淡水',note:'ナイター。標高が高く気圧の影響でモーター出力が落ちやすい。イン率は中位'},
+  '戸田':{inRate:.45,water:'淡水',note:'水面幅が狭くイン率は全国最低クラス。まくり・差しが決まる'},
+  '江戸川':{inRate:.47,water:'汽水',note:'河川で流れと風の影響が大きい。荒れやすい'},
+  '平和島':{inRate:.46,water:'海水',note:'1マークがスタンド側に寄りイン不利。差しが決まる'},
+  '多摩川':{inRate:.51,water:'淡水',note:'静水面で実力どおり。まくりも決まる'},
+  '浜名湖':{inRate:.52,water:'汽水',note:'広い水面。風の影響を受けやすい'},
+  '蒲郡':{inRate:.57,water:'汽水',note:'ナイター。イン有利寄り'},
+  '常滑':{inRate:.55,water:'海水',note:'風が強い日は荒れる'},
+  '津':{inRate:.53,water:'汽水',note:'風の影響大'},
+  '三国':{inRate:.55,water:'淡水',note:'1マークが広くまくりも決まる'},
+  'びわこ':{inRate:.50,water:'淡水',note:'標高と気圧、うねりでイン率低め'},
+  '住之江':{inRate:.58,water:'淡水',note:'静水面でイン・実力どおり'},
+  '尼崎':{inRate:.56,water:'淡水',note:'静水面でイン有利'},
+  '鳴門':{inRate:.52,water:'海水',note:'潮と風で荒れやすい'},
+  '丸亀':{inRate:.58,water:'海水',note:'ナイター。イン有利'},
+  '児島':{inRate:.57,water:'海水',note:'潮位差が大きい。満潮はイン不利に'},
+  '宮島':{inRate:.52,water:'海水',note:'潮位差が大きく荒れやすい'},
+  '徳山':{inRate:.63,water:'海水',note:'全国屈指のイン天国'},
+  '下関':{inRate:.60,water:'海水',note:'ナイター。イン有利'},
+  '若松':{inRate:.58,water:'海水',note:'ナイター。イン有利'},
+  '芦屋':{inRate:.62,water:'淡水',note:'イン有利。企画レースが多い'},
+  '福岡':{inRate:.52,water:'汽水',note:'河口でうねりが出る。荒れやすい'},
+  '唐津':{inRate:.55,water:'淡水',note:'風が強い日は荒れる'},
+  '大村':{inRate:.66,water:'海水',note:'全国一のイン率。イン天国'},
+};
+const COLORS=['','#ffffff','#222222','#e03a3a','#3b6cf0','#f4d23a','#3aa657'];
+const KIMARI=['逃げ','差し','まくり','まくり差し','抜き','恵まれ'];const KCOL={'逃げ':'#e4572e','差し':'#f2b134','まくり':'#3fa7b8','まくり差し':'#8e6cc2','抜き':'#9fb0c6','恵まれ':'#9fb0c6'};
+
+/* ===== 2. 指数化 ===== */
+function derive(b){
+  const nat=b.nat[0]||3.5,loc=b.loc&&b.loc[0]>0?b.loc[0]:nat;
+  const skill=clamp(((0.7*nat+0.3*loc)-3.0)/4.5,0.05,1);
+  const motor=clamp((b.m2-15)/45,0.05,1),boat=clamp((b.b2-20)/40,0.1,1);
+  const stIdx=clamp((0.26-b.st)/0.16,0.1,1);
+  const res=(b.res||[]).map(r=>/^\d$/.test(r)?(7-(+r))/6:0);
+  const formRes=res.length?res.reduce((a,v)=>a+v,0)/res.length:0.5;
+  const sts=(b.sts||[]);const formSt=sts.length?clamp((0.24-sts.reduce((a,v)=>a+v,0)/sts.length)/0.16,0.1,1):stIdx;
+  const form=0.55*formRes+0.45*formSt;
+  const maezuke=(b.courses||[]).length?((b.courses.reduce((a,v)=>a+v,0)/b.courses.length)<=b.w-1.2):false;
+  return {skill,motor,boat,stIdx,form,maezuke,fRisk:(b.F||0)>0};
+}
+
+/* ===== 3. シミュレーション ===== */
+const COURSE_BONUS=[0,0.22,0.08,0.02,0.00,-0.04,-0.08];
+function simRace(race,cond,seed,record){
+  const rng=mulberry32(seed);const boats=race.boats;const n=boats.length;
+  const entry=cond.entry.split('').map(x=>+x).filter(x=>x>=1&&x<=n);
+  const course={};entry.forEach((no,i)=>course[no]=i+1);
+  const D=boats.map(b=>({...derive(b),b}));
+  const inB=cond.inBias*0.10+(cond.venueIn-0.53)*0.9;   // 場のイン率と手動調整
+  const wind=cond.wind,wave=cond.wave;
+  const noise=0.10+0.012*wave+0.01*Math.abs(wind);
+  const S=D.map((d,i)=>{
+    const c=course[d.b.w]||d.b.w;const dash=c>=4;
+    // スタート
+    let stMean=d.b.st-(d.form-0.5)*0.03-(dash?0.005:0);if(d.fRisk)stMean+=0.015;
+    let st=stMean+gauss(rng)*0.045;const F=st<0||rng()<0.008;st=Math.max(st,0.01);
+    // 1マークまでの勢い（伸び）
+    const speed=1+0.06*d.motor+0.03*d.skill+(dash?0.03+0.012*(c-4):0)+(dash?-0.009*wind:0.009*wind);
+    // 1マーク評価：早いST・勢い・内側・腕
+    let P=-st*3.0+speed*1.2+COURSE_BONUS[c]+(c===1?inB:(c>=3?-inB*0.4:0))+d.skill*0.36+d.form*0.15+d.motor*0.10+gauss(rng)*noise;
+    if(F)P-=10;
+    return {i,no:d.b.w,c,st,F,P,d,speed};
+  });
+  // 攻めの閾値：外の艇は「差し切る/まくり切る」ために上回りが必要
+  const thr={1:0,2:0.10,3:0.12,4:0.10,5:0.16,6:0.20};
+  S.forEach(s=>{s.E=s.P-thr[s.c]});
+  const order=S.slice().sort((a,b)=>b.E-a.E);
+  const w=order[0];const one=S.find(s=>s.c===1);
+  let kimari;
+  if(w.c===1)kimari='逃げ';else if(w.c===2)kimari='差し';
+  else if(w.c===3)kimari=(w.st<=one.st+0.02&&w.speed>one.speed)?'まくり':'まくり差し';
+  else if(w.c===4)kimari=(w.st<=one.st+0.03)?'まくり':'まくり差し';
+  else kimari=(w.st<=one.st-0.02&&w.speed>one.speed+0.02)?'まくり':'まくり差し';
+  if(one.F&&w.c!==1)kimari='恵まれ';
+  // 2周目以降の抜き（隣接入替）
+  const ranks=order.map(s=>s);const events=[];
+  for(let lap=0;lap<4;lap++){for(let k=1;k<ranks.length;k++){const a=ranks[k-1],b=ranks[k];if(b.F||a.F)continue;
+    const Sa=0.6*a.d.skill+0.4*a.d.motor,Sb=0.6*b.d.skill+0.4*b.d.motor;const p=clamp(0.03+0.14*(Sb-Sa),0,0.25);
+    if(rng()<p){ranks[k-1]=b;ranks[k]=a;events.push({lap,at:k});if(k===1)kimari=lap===0?kimari:'抜き';}}}
+  const Fs=ranks.filter(s=>s.F);const ok=ranks.filter(s=>!s.F);const fin=ok.concat(Fs);
+  const res={order:fin.map(s=>s.i),kimari,st:S.map(s=>s.st),F:S.map(s=>s.F),after1M:order.map(s=>s.i),course:S.map(s=>s.c),events,win:fin[0].i};
+  if(record)res.frames=buildFrames(race,res,S);
+  return res;
+}
+function monteCarlo(race,cond,N){
+  const n=race.boats.length;const win=Array(n).fill(0),top2=Array(n).fill(0),top3=Array(n).fill(0),stSum=Array(n).fill(0),Fc=Array(n).fill(0);
+  const kim={};const tri=new Map();const m1=Array(n).fill(0);
+  for(let k=0;k<N;k++){const r=simRace(race,cond,1000+k*7919,false);
+    r.order.forEach((i,p)=>{if(p===0)win[i]++;if(p<2)top2[i]++;if(p<3)top3[i]++;});
+    m1[r.after1M[0]]++;kim[r.kimari]=(kim[r.kimari]||0)+1;
+    r.st.forEach((v,i)=>{stSum[i]+=v;if(r.F[i])Fc[i]++;});
+    const key=r.order.slice(0,3).map(i=>race.boats[i].w).join('-');tri.set(key,(tri.get(key)||0)+1);}
+  const trif=[...tri.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>({k,p:v/N}));
+  return {N,win:win.map(v=>v/N),top2:top2.map(v=>v/N),top3:top3.map(v=>v/N),st:stSum.map(v=>v/N),F:Fc.map(v=>v/N),kim:Object.fromEntries(Object.entries(kim).map(([k,v])=>[k,v/N])),trif,m1:m1.map(v=>v/N)};
+}
+
+/* ===== 4. コース幾何と走行フレーム ===== */
+const G={S:255,R:15,W:60,lapN:3};G.T=Math.PI*G.R;G.L=2*G.S+2*G.T;G.START=G.S-170; // ホーム直線 s∈[0,S]、1M は s=S、スタートラインは1Mの170m手前
+function pos(s,lane){s=mod(s,G.L);const {S,R}=G;
+  if(s<S)return {x:S/2-s,z:-(R+lane)};
+  s-=S;if(s<G.T){const th=s/R;return {x:-S/2-(R+lane)*Math.sin(th),z:-(R+lane)*Math.cos(th)};}
+  s-=G.T;if(s<S)return {x:-S/2+s,z:(R+lane)};
+  s-=S;const th=s/R;return {x:S/2+(R+lane)*Math.sin(th),z:(R+lane)*Math.cos(th)};}
+const inTurn=s=>{s=mod(s,G.L);return (s>=G.S&&s<G.S+G.T)||s>=2*G.S+G.T;};
+function buildFrames(race,res,S){
+  const n=race.boats.length,dt=0.1,frames=[];const total=G.lapN*G.L;
+  const st=S.map(s=>({s:G.START-s.st*17-(s.F?-4:0),lane:8+(s.c-1)*5,v:0,done:false,i:s.i,c:s.c,F:s.F,rail:0}));
+  const rankAt=(t)=>{ // 1Mまでは進入順、以後は結果順（抜きイベントは周回で反映）
+    let r=res.after1M.slice();res.events.forEach(e=>{if(t>=45+e.lap*18){const a=r[e.at-1];r[e.at-1]=r[e.at];r[e.at]=a;}});return r;};
+  let t=0,fin=0;
+  while(fin<n&&t<200){
+    const rk=rankAt(t);const lead=Math.max(...st.map(x=>x.s));
+    st.forEach((x)=>{if(x.done)return;
+      const turn=inTurn(x.s);const base=(turn?12.5:21.5)*(1+(0.04*(S[x.i].speed-1)));
+      const pass1M=x.s>=G.S;const r=rk.indexOf(x.i);
+      let target=pass1M?(lead-6*r-2*Math.max(0,r-1)):x.s;
+      let v=base;if(pass1M&&t>2){const gap=target-x.s;v=base*clamp(1+gap*0.02,0.85,1.12);}
+      if(x.F)v*=0.93;
+      const railF=turn?G.R/(G.R+x.lane):1;x.s+=v*dt*railF;x.v=v;
+      const tl=pass1M?(x.F?24:4+r*4.5):8+(x.c-1)*5;x.lane+=clamp(tl-x.lane,-6*dt,6*dt);
+      if(x.s-G.START>=total){x.done=true;fin++;}});
+    frames.push({t,p:st.map(x=>[x.s,x.lane,x.done?1:0])});t+=dt;}
+  return frames;
+}
+
+/* ===== 5. 状態 ===== */
+const DATA=KIRYU_0907;
+const state={raceIdx:11,race:null,cond:{wind:0,wave:2,inBias:0,venueIn:VENUES['桐生'].inRate,entry:'123456'},mc:null,rec:null,playing:false,playT:0,speed:1,cam:'俯瞰',alt:0};
+function autoEntry(){const cand=state.race.boats.filter(b=>b.w>=4&&(b.courses||[]).length&&(b.courses.reduce((a,v)=>a+v,0)/b.courses.length)<=2.2).map(b=>`${b.w}号艇（今節平均${(b.courses.reduce((a,v)=>a+v,0)/b.courses.length).toFixed(1)}コース）`);
+  state.cond.entry='123456';$('entry').value='123456';$('entryHint').textContent=cand.length?`前づけ候補：${cand.join('、')}。内に入るなら上の欄を書き換えて再計算`:'今節の進入データに前づけの兆候なし。枠なり想定';}
+function loadRace(idx){state.raceIdx=idx;const r=DATA.races[idx];state.race={...r,title:`${DATA.name} ${r.r}R ${r.cls}`,time:DATA.times[idx]||''};
+  state.mc=null;state.rec=null;state.playing=false;state.playT=0;$('playBtn').disabled=true;$('altBtn').disabled=true;$('resultBox').style.display='none';
+  autoEntry();renderRaces();renderPred();scene3.setRace(state.race);
+  $('badge').innerHTML=`${state.race.title}<br><b>1800m</b> 6艇 ${state.race.time?'締切 '+state.race.time:''}`;$('clock').textContent='—';$('liveRows').textContent='—';buildBar();}
+
+/* ===== 6. 3Dシーン（Canvas 2D 透視投影） ===== */
+const scene3=(()=>{
+  const el=$('stage');const cv=document.createElement('canvas');el.insertBefore(cv,el.firstChild);const ctx=cv.getContext('2d');
+  let W=1,H=1,dpr=1;function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1,el.clientWidth);H=Math.max(1,el.clientHeight);cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';}
+  window.addEventListener('resize',()=>{resize();if(state.cam==='俯瞰')setCam('俯瞰');});resize();
+  const cam={x:0,y:200,z:-300,tx:0,ty:0,tz:0,fov:46};let bR=[1,0,0],bU=[0,1,0],bF=[0,0,1],scl=1;
+  function setupView(){let fx=cam.tx-cam.x,fy=cam.ty-cam.y,fz=cam.tz-cam.z;let l=Math.hypot(fx,fy,fz)||1;fx/=l;fy/=l;fz/=l;let rx=-fz,rz=fx;l=Math.hypot(rx,rz)||1;rx/=l;rz/=l;bF=[fx,fy,fz];bR=[rx,0,rz];bU=[-rz*fy,rz*fx-rx*fz,rx*fy];scl=(H/2)/Math.tan(cam.fov*Math.PI/360);}
+  function proj(x,y,z){const dx=x-cam.x,dy=y-cam.y,dz=z-cam.z;const d=dx*bF[0]+dy*bF[1]+dz*bF[2];if(d<1.5)return null;return {x:W/2+(dx*bR[0]+dy*bR[1]+dz*bR[2])/d*scl,y:H/2-(dx*bU[0]+dy*bU[1]+dz*bU[2])/d*scl,d};}
+  const orbit={tx:0,ty:0,tz:-10,theta:Math.PI,phi:0.75,r:390};
+  function setCam(mode){state.cam=mode;const portrait=H>W*1.05;
+    if(mode==='俯瞰')Object.assign(orbit,portrait?{tx:0,ty:0,tz:-20,theta:Math.PI*1.5,phi:0.75,r:430}:{tx:0,ty:0,tz:-10,theta:Math.PI,phi:0.75,r:390});
+    if(mode==='1マーク'){const p=pos(G.S-55,12);Object.assign(orbit,{tx:p.x,ty:0.5,tz:p.z,theta:Math.PI*1.5+0.35,phi:0.16,r:120});}
+    if(mode==='スタート'){const p=pos(G.START+40,20);Object.assign(orbit,{tx:p.x,ty:1,tz:p.z,theta:Math.PI+0.35,phi:0.2,r:110});}
+    document.querySelectorAll('#cams button').forEach(b=>b.classList.toggle('on',b.dataset.c===mode));}
+  function applyOrbit(){cam.x=orbit.tx+orbit.r*Math.cos(orbit.phi)*Math.sin(orbit.theta);cam.y=orbit.ty+orbit.r*Math.sin(orbit.phi);cam.z=orbit.tz+orbit.r*Math.cos(orbit.phi)*Math.cos(orbit.theta);cam.tx=orbit.tx;cam.ty=orbit.ty;cam.tz=orbit.tz;}
+  let drag=null;const pts=new Map();let pinch0=0,r0=0;const pd=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);if(pts.size===2){pinch0=pd();r0=orbit.r;drag=null;}else drag={x:e.clientX,y:e.clientY};});
+  cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const d=pd();if(pinch0>0)orbit.r=clamp(r0*pinch0/d,20,1500);return;}if(!drag)return;orbit.theta-=(e.clientX-drag.x)*0.005;orbit.phi=clamp(orbit.phi+(e.clientY-drag.y)*0.004,0.06,1.45);drag={x:e.clientX,y:e.clientY};if(state.cam!=='自由'){state.cam='自由';document.querySelectorAll('#cams button').forEach(b=>b.classList.toggle('on',b.dataset.c==='自由'));}});
+  const up=e=>{pts.delete(e.pointerId);drag=null;pinch0=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();orbit.r=clamp(orbit.r*(1+e.deltaY*0.001),20,1500);},{passive:false});
+  let race=null,poseArr=[];function setRace(r){race=r;poseArr=r.boats.map((b,i)=>({s:G.START-3,lane:8+i*5,done:false}));setCam(state.cam);}
+  function label(x,y,text,opts){const size=opts.size||11;ctx.font=(opts.bold?'700 ':'')+size+'px "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif';const w=ctx.measureText(text).width+12,h=size+8;ctx.globalAlpha=opts.alpha===undefined?1:opts.alpha;ctx.fillStyle=opts.bg||'rgba(13,24,40,0.85)';ctx.beginPath();ctx.roundRect(x-w/2,y-h,w,h,4);ctx.fill();if(opts.bar){ctx.fillStyle=opts.bar;ctx.beginPath();ctx.roundRect(x-w/2,y-h,5,h,2);ctx.fill();}ctx.fillStyle=opts.fg||'#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x+(opts.bar?2:0),y-h/2+1);ctx.globalAlpha=1;}
+  const wakes=[];let lastT=performance.now();
+  function frame(now){const dt=Math.min(0.05,(now-lastT)/1000);lastT=now;ctx.setTransform(dpr,0,0,dpr,0,0);
+    let leadS=-1e9,leadI=0,fr0=null;
+    if(state.rec&&state.playing){state.playT+=dt*state.speed;const end=state.rec.frames[state.rec.frames.length-1].t;if(state.playT>=end){state.playT=end;state.playing=false;$('ppBtn').textContent='▶ 再生';showResult();}}
+    if(state.rec){const fr=state.rec.frames,fi=Math.min(fr.length-1,state.playT/0.1),i0=Math.floor(fi),i1=Math.min(fr.length-1,i0+1),f=fi-i0;fr0=fr[i0];
+      poseArr.forEach((_,i)=>{const a=fr[i0].p[i],b=fr[i1].p[i];const s=lerp(a[0],b[0],f);poseArr[i]={s,lane:lerp(a[1],b[1],f),done:!!a[2]};if(s>leadS){leadS=s;leadI=i;}});}
+    if(state.cam==='追走'&&state.rec){const s=leadS-8;const p=pos(s-30,G.W+10),q=pos(s+4,10);cam.x=p.x;cam.y=7;cam.z=p.z;cam.tx=q.x;cam.ty=0.5;cam.tz=q.z;}else applyOrbit();
+    setupView();
+    // 空・水面
+    const hx=bF[0],hz=bF[2],hl=Math.hypot(hx,hz)||1;const hu=(hx/hl)*bU[0]+(hz/hl)*bU[2],hf=(hx/hl)*bF[0]+(hz/hl)*bF[2];const horizon=hf>0.01?clamp(H/2-hu/hf*scl,-H,2*H):-H;
+    const sky=ctx.createLinearGradient(0,0,0,Math.max(1,horizon));sky.addColorStop(0,'#061020');sky.addColorStop(1,'#1c3358');ctx.fillStyle=sky;ctx.fillRect(0,0,W,Math.max(0,horizon));
+    const wat=ctx.createLinearGradient(0,Math.max(0,horizon),0,H);wat.addColorStop(0,'#123a63');wat.addColorStop(1,'#0b2a4a');ctx.fillStyle=wat;ctx.fillRect(0,Math.max(0,horizon),W,H);
+    // 水面のさざ波（波高で強く）
+    ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;for(let i=0;i<14;i++){const z=-120+i*20;const a=proj(-260,0,z),b=proj(260,0,z);if(a&&b){ctx.globalAlpha=0.05+state.cond.wave*0.01;ctx.beginPath();ctx.moveTo(a.x,a.y+Math.sin(now*0.002+i)*2);ctx.lineTo(b.x,b.y+Math.cos(now*0.002+i)*2);ctx.stroke();}}ctx.globalAlpha=1;
+    // コースの外郭（ロープ）と対岸
+    const objs=[];
+    const drawPoly=(ptsArr,y,color,w)=>{ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();let pen=false;for(const [x,z] of ptsArr){const p=proj(x,y,z);if(!p){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);pen=true;}ctx.stroke();};
+    const ring=[];for(let i=0;i<=160;i++){const p=pos(i/160*G.L,G.W);ring.push([p.x,p.z]);}drawPoly(ring,0.2,'rgba(255,255,255,0.25)',1);
+    // スタートライン・大時計・スタンド・ピット
+    const sl0=pos(G.START,0),sl1=pos(G.START,G.W+8);const A=proj(sl0.x,0.15,sl0.z),B=proj(sl1.x,0.15,sl1.z);if(A&&B){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();ctx.setLineDash([]);}
+    const clk=pos(G.START,-16);objs.push({d:(proj(clk.x,5,clk.z)||{d:1e9}).d,draw:()=>{const a=proj(clk.x,0,clk.z),b=proj(clk.x,14,clk.z);if(!a||!b)return;ctx.strokeStyle='#8b93a1';ctx.lineWidth=Math.max(1,scl/a.d*0.6);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();const r=Math.max(4,scl/a.d*4);ctx.fillStyle='#f4f4f4';ctx.beginPath();ctx.arc(b.x,b.y-r,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c33';ctx.lineWidth=Math.max(1,r*0.12);const ang=state.rec?(-Math.PI/2+((state.playT%60)/60)*Math.PI*2):-Math.PI/2;ctx.beginPath();ctx.moveTo(b.x,b.y-r);ctx.lineTo(b.x+Math.cos(ang)*r*0.8,b.y-r+Math.sin(ang)*r*0.8);ctx.stroke();}});
+    const standZ=-(G.R+G.W+30);objs.push({d:(proj(0,8,standZ)||{d:1e9}).d,draw:()=>{const cs=[[-150,standZ-20],[150,standZ-20],[150,standZ+20],[-150,standZ+20]];const lo=cs.map(([x,z])=>proj(x,0,z)),hi=cs.map(([x,z])=>proj(x,16,z));if(lo.some(p=>!p)||hi.some(p=>!p))return;const face=(a,b,c,d,col)=>{ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill();};face(hi[0],hi[1],hi[2],hi[3],'#3c4f70');face(lo[2],lo[3],hi[3],hi[2],'#2a3a55');for(let i=0;i<20;i++){const x=-142+i*15;const a=proj(x-5,5,standZ+20.1),b=proj(x+5,11,standZ+20.1);if(a&&b){ctx.fillStyle='#ffe7a8';ctx.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}}}});
+    // ターンマーク（1M / 2M）
+    [[G.S,'1M'],[2*G.S+G.T,'2M']].forEach(([s,t])=>{const p=pos(s,-2.5);const a=proj(p.x,0,p.z);if(!a)return;objs.push({d:a.d,draw:()=>{const k=scl/a.d;ctx.fillStyle='#e03a3a';ctx.beginPath();ctx.ellipse(a.x,a.y,1.4*k,0.6*k,0,0,Math.PI*2);ctx.fill();const b=proj(p.x,2.2,p.z);if(b){ctx.fillStyle='#fff';ctx.fillRect(a.x-0.6*k,b.y,1.2*k,a.y-b.y);ctx.fillStyle='#e03a3a';ctx.fillRect(a.x-0.6*k,b.y,1.2*k,(a.y-b.y)*0.4);}label(a.x,a.y-2.4*k-8,t,{size:11,bold:true,bg:'rgba(224,58,58,0.9)'});}});});
+    // 艇
+    if(race)poseArr.forEach((hp,i)=>{const b=race.boats[i];const w=pos(hp.s,hp.lane),q=pos(hp.s+2,hp.lane);const p=proj(w.x,0,w.z);if(!p)return;const ah=proj(q.x,0,q.z);const dir=ah?Math.atan2(ah.y-p.y,ah.x-p.x):0;
+      if(state.playing&&!hp.done){wakes.push({x:w.x,z:w.z,t:now});}
+      objs.push({d:p.d,draw:()=>{const k=scl/p.d;const col=COLORS[b.w];ctx.save();ctx.translate(p.x,p.y);ctx.rotate(dir);
+        const fore=Math.max(0.15,-bF[1]);ctx.fillStyle='rgba(255,255,255,0.35)';ctx.beginPath();ctx.ellipse(-1.2*k,0,2.6*k,0.9*k*fore,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=col;ctx.strokeStyle='#111';ctx.lineWidth=Math.max(1,0.12*k);ctx.beginPath();ctx.moveTo(1.6*k,0);ctx.lineTo(0.2*k,-0.65*k);ctx.lineTo(-1.5*k,-0.55*k);ctx.lineTo(-1.5*k,0.55*k);ctx.lineTo(0.2*k,0.65*k);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle='#333';ctx.fillRect(-1.55*k,-0.35*k,0.5*k,0.7*k);ctx.fillStyle=col;ctx.beginPath();ctx.arc(-0.3*k,0,0.32*k,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+        if(k>2.5)label(p.x,p.y-Math.max(1.2*k+8,18),b.w+'  '+b.name,{bar:col,bold:true});else{ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y-10,7,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#111';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=b.w===1||b.w===5?'#111':'#fff';ctx.font='700 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.w,p.x,p.y-9.5);}
+      }});});
+    // 航跡
+    while(wakes.length&&now-wakes[0].t>2500)wakes.shift();
+    ctx.lineWidth=1.5;wakes.forEach(wk=>{const p=proj(wk.x,0.05,wk.z);if(!p)return;const a=1-(now-wk.t)/2500;ctx.fillStyle=`rgba(255,255,255,${0.35*a})`;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(1,scl/p.d*0.5),0,Math.PI*2);ctx.fill();});
+    objs.sort((a,b)=>b.d-a.d).forEach(o=>o.draw());
+    if(fr0)updateHud(leadS,leadI,fr0);
+    requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);return {setRace,setCam};
+})();
+
+/* ===== 7. HUD ===== */
+function buildBar(){const bar=$('bar');bar.innerHTML='';const total=G.lapN*G.L;const pts=[[0,'スタート'],[170,'1M'],[G.L/2+170,'2M'],[G.L+170,'1M'],[2*G.L+170,'1M(最終)'],[total,'ゴール']];
+  pts.forEach(([x,l])=>{const m=document.createElement('div');m.className='mk';m.style.left=(x/total*100)+'%';m.innerHTML=`<span>${l}</span>`;bar.appendChild(m);});
+  const pin=document.createElement('div');pin.className='pin';pin.id='pin';bar.appendChild(pin);}
+let hudTick=0;
+function updateHud(leadS,leadI,frame){const total=G.lapN*G.L;const cov=i=>frame.p[i][0]-G.START;const lead=clamp(cov(leadI),0,total);$('pin').style.left=(lead/total*100)+'%';
+  const lap=Math.min(G.lapN,Math.floor(lead/G.L)+1);$('clock').textContent=`${fmtT(state.playT)}　${lap}周目 残り ${Math.max(0,Math.round(total-lead))}m`;
+  if((hudTick++%6)===0){const ord=frame.p.map((p,i)=>i).sort((a,b)=>cov(b)-cov(a));$('liveRows').innerHTML=ord.map((i,p)=>{const b=state.race.boats[i];const gap=p===0?'':((cov(ord[0])-cov(i))/3).toFixed(1)+'艇身';
+    return `<div class="r"><span class="num" style="background:${COLORS[b.w]};color:${b.w===1||b.w===5?'#111':'#fff'}">${b.w}</span><span>${b.name}</span><span style="margin-left:auto;color:var(--mute)">${state.rec.F[i]?'F':gap}</span></div>`;}).join('');}}
+function showResult(){const r=state.rec,box=$('resultBox');const marks=predMarks(state.mc);
+  box.innerHTML=`<h3>着順（このシナリオ）　決まり手：<span style="color:${KCOL[r.kimari]}">${r.kimari}</span></h3>`+r.order.slice(0,6).map((i,p)=>{const b=state.race.boats[i];
+    return `<div class="r"><b style="width:18px">${p+1}</b><span class="num" style="background:${COLORS[b.w]};color:${b.w===1||b.w===5?'#111':'#fff'}">${b.w}</span><span style="min-width:110px">${b.name}</span><span style="color:var(--mute)">${r.course[i]}コース ST ${r.F[i]?'F':r.st[i].toFixed(2)}</span><span class="mark">${marks[i]||''}</span></div>`;}).join('');box.style.display='block';}
+function predMarks(mc){const m={};if(!mc)return m;const ord=mc.win.map((w,i)=>[w,i]).sort((a,b)=>b[0]-a[0]);['◎','○','▲','△','△'].forEach((k,p)=>{if(ord[p])m[ord[p][1]]=k;});return m;}
+
+/* ===== 8. 右パネル ===== */
+function renderPred(){const race=state.race,mc=state.mc,c=state.cond;const v=VENUES[DATA.name];
+  $('predHead').innerHTML=`<span>レース</span><span>${race.title}</span><span>条件</span><span>${DATA.name}（${v.water}・イン${(c.venueIn*100).toFixed(0)}%）／風 ${c.wind===0?'無風':(c.wind>0?'追い風':'向かい風')+Math.abs(c.wind)+'m'}／波 ${c.wave}cm</span><span>進入</span><span>${c.entry.split('').join(' ')}</span>`;
+  $('kimariBox').innerHTML=mc?`1マーク先頭：${mc.m1.map((p,i)=>[p,i]).sort((a,b)=>b[0]-a[0]).slice(0,3).map(([p,i])=>`<b>${race.boats[i].w}</b> ${(p*100).toFixed(0)}%`).join('　')}　試行 ${mc.N}回`:'';
+  const marks=predMarks(mc);const rows=race.boats.map((b,i)=>({b,i,d:derive(b),w:mc?mc.win[i]:0})).sort((a,b)=>b.w-a.w||a.i-b.i);
+  $('predBody').innerHTML=rows.map(({b,i,d,w})=>`<tr><td class="mark">${marks[i]||''}</td><td><span class="num" style="background:${COLORS[b.w]};color:${b.w===1||b.w===5?'#111':'#fff'}">${b.w}</span> ${b.name}</td><td>${b.grade}</td><td class="r">${b.nat[0].toFixed(2)}</td><td class="r">${b.m2.toFixed(0)}%</td><td class="r">${mc?mc.st[i].toFixed(2):b.st.toFixed(2)}</td><td class="r">${mc?(w*100).toFixed(1)+'%':'—'}<div class="wbar"><i style="width:${mc?Math.min(100,w*100*1.6):0}%"></i></div></td><td class="r">${mc?(mc.top2[i]*100).toFixed(0)+'%':'—'}</td><td class="r">${mc?(mc.top3[i]*100).toFixed(0)+'%':'—'}</td></tr>`).join('');
+  $('trifecta').innerHTML=mc?mc.trif.map(t=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:2px 0"><span style="color:var(--ink);font-weight:700">${t.k}</span><span>${(t.p*100).toFixed(1)}%</span></div>`).join(''):'—';
+  $('memoList').innerHTML=race.boats.map(b=>{const d=derive(b);return `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)"><b style="color:var(--ink)">${b.w} ${b.name}</b>（${b.grade}・${b.branch}・${b.age}歳）｜勝率 ${b.nat[0]} 当地 ${b.loc[0]||'-'}｜平均ST ${b.st} F${b.F}｜M${b.mno} 2連${b.m2}%｜今節 ${(b.res||[]).map((r,k)=>`${b.courses[k]||'?'}ｺｰｽ ST${(b.sts[k]||0).toFixed(2)}→${r}着`).join(' / ')}｜指数 腕${(d.skill*100).toFixed(0)} 機${(d.motor*100).toFixed(0)} ST${(d.stIdx*100).toFixed(0)} 調子${(d.form*100).toFixed(0)}${d.maezuke?'・前づけ傾向':''}</div>`;}).join('');
+  const kd=mc?mc.kim:{};const total=Object.values(kd).reduce((a,v)=>a+v,0)||1;
+  $('kimariStack').innerHTML=`<div class="tr"><div class="stack">${KIMARI.map(k=>`<i style="width:${(kd[k]||0)/total*100}%;background:${KCOL[k]}" title="${k} ${((kd[k]||0)*100).toFixed(0)}%"></i>`).join('')}</div><div class="lab" style="margin-top:3px">${KIMARI.filter(k=>kd[k]).map(k=>`<span>${k} ${((kd[k])*100).toFixed(0)}%</span>`).join('')}</div></div>`;
+  renderPoints();}
+function renderPoints(){const race=state.race,mc=state.mc,c=state.cond;const li=[];const ds=race.boats.map(derive);
+  const one=race.boats.find(b=>c.entry[0]==String(b.w))||race.boats[0];const d1=derive(one);
+  li.push(`${DATA.name}のイン1着率は${(c.venueIn*100).toFixed(0)}%前後（参考値）。${VENUES[DATA.name].note}。`);
+  li.push(`1コース <b>${one.w} ${one.name}</b>：勝率 ${one.nat[0]}・平均ST ${one.st}・モーター2連率 ${one.m2}%。${d1.stIdx>0.6?'スタートが安定しており逃げの信頼度は高め':'STが遅めで、外の艇に握られると差し・まくりを食う'}。`);
+  const fast=race.boats.map((b,i)=>({b,i,d:ds[i]})).filter(x=>x.b.w!==one.w).sort((a,b)=>(b.d.stIdx+b.d.motor)-(a.d.stIdx+a.d.motor))[0];
+  if(fast)li.push(`攻め手の筆頭は <b>${fast.b.w} ${fast.b.name}</b>（平均ST ${fast.b.st}・モーター2連率 ${fast.b.m2}%）。${c.entry.indexOf(String(fast.b.w))>=3?'ダッシュからの勢いでまくり・まくり差し':'スロー勢からの差し'}が主な入り方。`);
+  const best=race.boats.map((b,i)=>({b,d:ds[i]})).sort((a,b)=>b.d.motor-a.d.motor)[0];li.push(`モーターは <b>${best.b.w} ${best.b.name}</b> の${best.b.mno}号機（2連率 ${best.b.m2}%）が最上位。${best.d.form>0.6?'今節の成績も良く気配は上向き':'今節は結果が出ておらず調整待ち'}。`);
+  if(c.wind!==0)li.push(`${c.wind>0?'追い風':'向かい風'}${Math.abs(c.wind)}m：${c.wind>0?'スロー勢の出足が良くなりイン・差し寄り':'ダッシュ勢の助走が生き、まくりが決まりやすい'}。${Math.abs(c.wind)>=5?'強風で1マークが乱れ、波乱含み':''}`);
+  if(c.wave>=8)li.push(`波高${c.wave}cm：荒れ水面。ターンの乱れで抜きや恵まれが増える。`);
+  if(mc){const top=mc.win.map((w,i)=>[w,i]).sort((a,b)=>b[0]-a[0]);const k=Object.entries(mc.kim).sort((a,b)=>b[1]-a[1])[0];
+    li.push(`本線は <b>${race.boats[top[0][1]].w} ${race.boats[top[0][1]].name}</b>（1着率 ${(top[0][0]*100).toFixed(1)}%）、対抗 <b>${race.boats[top[1][1]].w} ${race.boats[top[1][1]].name}</b>。決まり手は「${k[0]}」が最多（${(k[1]*100).toFixed(0)}%）。3連単の本線は ${mc.trif[0].k}（${(mc.trif[0].p*100).toFixed(1)}%）。`);}
+  $('points').innerHTML=li.map(x=>`<li>${x}</li>`).join('');}
+function renderRaces(){$('races').innerHTML=DATA.races.map((r,i)=>`<button class="rbtn ${i===state.raceIdx?'on':''}" data-i="${i}" title="${r.cls}">${r.r}R<small>${DATA.times[i]||''} ${r.cls.slice(0,4)}</small></button>`).join('');document.querySelectorAll('#races .rbtn').forEach(b=>b.onclick=()=>loadRace(+b.dataset.i));}
+
+/* ===== 9. UI ===== */
+const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
+function setTab(t){document.body.dataset.tab=t;document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
+function syncVals(){const c=state.cond;$('windV').textContent=c.wind===0?'無風':(c.wind>0?'追い風 ':'向かい風 ')+Math.abs(c.wind)+'m';$('waveV').textContent=c.wave+'cm';$('inV').textContent=(c.inBias>0?'+':'')+c.inBias.toFixed(2);}
+function condChanged(){state.mc=null;state.rec=null;state.playing=false;$('playBtn').disabled=true;$('altBtn').disabled=true;$('resultBox').style.display='none';syncVals();renderPred();}
+function init(){
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));setTab('3d');
+  const v=VENUES[DATA.name];$('venueTabs').innerHTML=`<button class="tab on">${DATA.name}</button>`;
+  $('venueInfo').innerHTML=`<span>コース</span><span>1周600m×3周＝1800m、マーク間300m、左回り</span><span>水質</span><span>${v.water}</span><span>イン1着率</span><span>${(v.inRate*100).toFixed(0)}%前後（参考値）</span><span>本日</span><span>${DATA.title}</span>`;
+  $('inHint').textContent=v.note;
+  $('wind').oninput=e=>{state.cond.wind=+e.target.value;condChanged();};$('wave').oninput=e=>{state.cond.wave=+e.target.value;condChanged();};
+  $('inBias').oninput=e=>{state.cond.inBias=+e.target.value;condChanged();};
+  $('entry').oninput=e=>{const v=e.target.value.replace(/[^1-6]/g,'');if(new Set(v).size===6){state.cond.entry=v;condChanged();}};
+  $('entryAuto').onclick=()=>{autoEntry();condChanged();};$('entryWaku').onclick=()=>{state.cond.entry='123456';$('entry').value='123456';condChanged();};
+  $('runBtn').onclick=()=>{$('runBtn').textContent='計算中…';$('runBtn').disabled=true;setTimeout(()=>{const N=+$('trials').value;state.mc=monteCarlo(state.race,state.cond,N);
+    let best=null,bs=-1;for(let k=0;k<20;k++){const r=simRace(state.race,state.cond,50000+k*104729,true);const sc=r.order.slice(0,3).reduce((a,i,p)=>a+state.mc.win[i]*(3-p),0)+(r.kimari===Object.entries(state.mc.kim).sort((a,b)=>b[1]-a[1])[0][0]?0.3:0);if(sc>bs){bs=sc;best=r;}}
+    state.rec=best;state.playT=0;state.playing=false;state.alt=0;renderPred();$('runBtn').textContent='予想を計算する';$('runBtn').disabled=false;$('playBtn').disabled=false;$('altBtn').disabled=false;if(isMobile())setTab('pred');},30);};
+  const startPlay=()=>{if(isMobile())setTab('3d');state.playT=0;state.playing=true;$('ppBtn').textContent='❚❚ 停止';$('resultBox').style.display='none';if(state.cam==='俯瞰'||state.cam==='自由')scene3.setCam('1マーク');};
+  $('playBtn').onclick=startPlay;$('altBtn').onclick=()=>{state.alt++;state.rec=simRace(state.race,state.cond,777+state.alt*31337,true);startPlay();};
+  $('ppBtn').onclick=()=>{if(!state.rec)return;if(state.playing){state.playing=false;$('ppBtn').textContent='▶ 再生';}else{if(state.playT>=state.rec.frames[state.rec.frames.length-1].t-0.05)state.playT=0;state.playing=true;$('ppBtn').textContent='❚❚ 停止';$('resultBox').style.display='none';}};
+  document.querySelectorAll('.spd').forEach(b=>b.onclick=()=>{state.speed=+b.dataset.s;document.querySelectorAll('.spd').forEach(x=>x.classList.toggle('on',x===b));});
+  $('cams').innerHTML=['俯瞰','1マーク','スタート','追走','自由'].map(c=>`<button data-c="${c}">${c}</button>`).join('');document.querySelectorAll('#cams button').forEach(b=>b.onclick=()=>scene3.setCam(b.dataset.c));
+  $('jsonDump').onclick=()=>{$('json').value=JSON.stringify({r:state.race.r,cls:state.race.cls,boats:state.race.boats},null,1);};
+  $('jsonLoad').onclick=()=>{try{const o=JSON.parse($('json').value);if(!Array.isArray(o.boats)||o.boats.length!==6)throw new Error('boats は6艇');const bs=o.boats.map((b,i)=>({w:b.w||i+1,reg:b.reg||'',grade:b.grade||'B1',name:b.name||('選手'+(i+1)),branch:b.branch||'',age:b.age||30,F:b.F||0,L:b.L||0,st:+b.st||0.17,nat:b.nat||[4.5,25,40],loc:b.loc||[0,0,0],mno:b.mno||0,m2:+b.m2||33,m3:b.m3||50,bno:b.bno||0,b2:+b.b2||33,b3:b.b3||50,courses:b.courses||[],sts:b.sts||[],res:b.res||[]}));
+    DATA.races.push({r:o.r||'J',cls:o.cls||'読込',boats:bs});DATA.times.push('');loadRace(DATA.races.length-1);}catch(e){alert('JSONを読み込めません: '+e.message);}};
+  loadRace(state.raceIdx);syncVals();}
+init();
+</script>
+
+</body>
+</html>

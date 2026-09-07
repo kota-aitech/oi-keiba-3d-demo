@@ -1088,7 +1088,7 @@ const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
 function setTab(t){document.body.dataset.tab=t;document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
 function init(){
   document.title=`${TK.name}競馬 予想シミュレーション 3Dデモ — ${TK.sub}`;
-  $('h1title').innerHTML=`${TK.name}競馬 予想シミュレーション <small>${TK.sub} — 3Dデモ</small>`;
+  $('h1title').innerHTML=`${TK.name}競馬 予想シミュレーション <small>${TK.sub} — 3Dデモ　<a href="boat.html" style="color:var(--amber)">ボートレース版へ</a></small>`;
   $('trackTabs').innerHTML=Object.entries(TRACKS).map(([k,t])=>`<button class="tab ${k===TRACK_KEY?'on':''}" data-k="${k}" title="${t.sub}">${t.name}</button>`).join('');
   document.querySelectorAll('#trackTabs .tab').forEach(b=>b.onclick=()=>{if(b.dataset.k!==TRACK_KEY)location.search='?track='+b.dataset.k;});
   $('babaInfo').innerHTML=TK.text.babaInfo;$('srcNote').textContent=TK.text.src;

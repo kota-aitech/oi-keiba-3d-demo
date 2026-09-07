@@ -12,6 +12,7 @@
 ## ファイル構成
 ```
 index.html   … アプリ本体（大井・川崎の両方を内蔵。ヘッダーの開催場タブで切替、URL は ?track=oi / ?track=kawasaki）
+boat.html    … ボートレース版（桐生 9/7）。1マークの入りをST・勢い・コース・腕で評価するモデル。データは `KIRYU_0907`（boatrace.jp 出走表から抽出）
 render.yaml  … Render Blueprint（手動で Static Site を作った場合は不要）
 CLAUDE.md    … このファイル
 README.md
@@ -86,3 +87,10 @@ python3 -c "import re;open('/tmp/c.js','w').write(re.findall(r'<script>(.*?)</sc
 - 実データとサンプルを混ぜたら UI 上で区別できるようにする（`race.real` フラグ → バッジ表示）
 - 馬名・成績は公開情報のみ。推定値（ability 等）は「根拠」memo と一緒に入れる
 - `.md` の成果物は文字化けするので、こた向けの資料は PDF か HTML で出す
+
+## ボートレース版（boat.html）の更新
+- データは `KIRYU_0907` 1オブジェクト。`races[].boats[]` に 枠w／級grade／名前／平均ST st／全国 nat[勝率,2連率,3連率]／当地 loc／モーター m2／今節の courses・sts・res
+- 取り込み元は boatrace.jp の出走表（`racelist?rno=R&jcd=場コード&hd=YYYYMMDD`）。tbody を innerText で読むと1艇1行になるので、そのまま `derive()` の入力形式に変換する
+- 展示タイム・展示ST・風・波高は「直前情報」（各レース約30分前公表）。取れたら左パネルの風・波高スライダーに反映、展示タイムは `speed` に加点する拡張ポイント
+- 場を変えるときは `VENUES` のイン1着率参考値を使い、`DATA.name` を変える。イン率は年度データに差し替えるのが望ましい
+- 1マークの判定は `simRace()`：`P = -ST×3 + 勢い×1.2 + コース補正 + イン有利度 + 腕×0.36 + 調子×0.15 + 機×0.10 + ノイズ`、外の艇は閾値 `thr` を上回ると差し・まくりが決まる
