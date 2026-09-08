@@ -65,6 +65,9 @@ export function parseCard(html, raceId) {
       horseId: uma[1], name: text(uma[2]),
       sexAge: (text(c[ui + 1]) || '').split(/\s+/)[0],
       kg: num(text(c[ui + 4]).replace(/[^\d.]/g, '')),
+      // 馬体重（発表前は空）。増減は ＋/− の全角があるので正規化する
+      bw: num((/(\d{3})/.exec(text(c[ui + 3])) || [])[1]),
+      bwDiff: (() => { const m = /([＋+\-−▲])\s*(\d+)/.exec(text(c[ui + 3])); return m ? (/[＋+]/.test(m[1]) ? 1 : -1) * Number(m[2]) : null; })(),
       jockeyId: kis ? kis[1] : '', jockey: text(kis ? kis[2] : ''), jockeyBase: kis ? kis[3].trim() : '',
       trainerId: cho ? cho[1] : '', trainer: text(cho ? cho[2] : ''), trainerBase: cho ? cho[3].trim() : '',
       owner: own ? own[1].trim() : '', farm: own ? own[2].trim() : '',

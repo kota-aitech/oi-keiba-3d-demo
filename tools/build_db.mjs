@@ -15,7 +15,11 @@ import path from 'node:path';
 import { ROOT } from './lib/nk.mjs';
 
 const raw = readJSON('data/nankan/leading.raw.json');
-const YEARS = ['2023', '2024', '2025', '2026'];   // 過去3年＋今年
+// 検証用に「その時点までの情報だけ」の指数を作りたいときは NK_DB_YEARS で年を絞る
+const YEARS = (process.env.NK_DB_YEARS || '2023,2024,2025,2026').split(',');
+const OUTFILE = process.env.NK_DB_OUT || 'data/nankan/index.json';
+// 馬主の集計に使う出馬表の上限日。検証で先読みを避けたいときに切る
+const CARD_TO = process.env.NK_DB_CARD_TO || '9999-12-31';
 const R1 = '0003', R3M = '0004';
 const TRACKS = { '18': '浦和', '19': '船橋', '20': '大井', '21': '川崎' };
 
@@ -213,6 +217,7 @@ if (fs.existsSync(cardsPath)) {
   for (const line of fs.readFileSync(cardsPath, 'utf8').split('\n')) {
     if (!line) continue;
     let c; try { c = JSON.parse(line); } catch { continue; }
+    if (c.date > CARD_TO) continue;
     cards++;
     for (const h of c.horses) {
       if (!h.owner) continue;
@@ -271,7 +276,7 @@ const db = {
   jockey: JOCKEY, trainer: TRAINER, combo: COMBO, owner: OWNER, sire: SIRE, bms: BMS,
   sireDist: raw.sireDist || [],
 };
-writeJSON('data/nankan/index.json', db);
+writeJSON(OUTFILE, db);
 
 const top = (o, f, n = 10) => Object.values(o).filter(x => x.n >= 200).sort((a, b) => b[f] - a[f]).slice(0, n);
 console.error(`母集団 ${pop.runs} 走 / 勝率 ${(P0 * 100).toFixed(1)}% / 3着内率 ${(P3 * 100).toFixed(1)}%`);

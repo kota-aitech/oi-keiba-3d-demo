@@ -35,5 +35,14 @@ try {
 
 try { inject('data.html', 'NKBROWSE', 'NKB', readJSON('data/nankan/browse.json')); }
 catch (e) { console.error('  (data.html はスキップ: ' + e.message + ')'); }
-try { inject('data.html', 'NKBT', 'NKBT', readJSON('data/nankan/backtest.json')); }
-catch (e) { console.error('  (バックテストはスキップ: ' + e.message + ')'); }
+try {
+  const bt = readJSON('data/nankan/backtest.json');
+  // レース明細は全部載せると重い。集計はそのまま、明細は直近ぶんだけ埋め込む
+  const N = Number(process.env.NK_BT_DETAIL || 80);
+  for (const t of Object.values(bt.tracks || {})) {
+    if (t.detail) { t.detailAll = t.detail.length; t.detail = t.detail.slice(-N); }
+    // 日別テーブルが使うのは model/pop だけ。予想手法ごとの日別は重いので落とす
+    for (const d of t.days || []) for (const k of Object.keys(d)) if (!['date', 'races', 'model', 'pop'].includes(k)) delete d[k];
+  }
+  inject('data.html', 'NKBT', 'NKBT', bt);
+} catch (e) { console.error('  (バックテストはスキップ: ' + e.message + ')'); }
