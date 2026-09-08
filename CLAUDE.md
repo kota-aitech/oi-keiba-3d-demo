@@ -55,7 +55,8 @@ data/
     results.jsonl       ★競走成績（天候・馬場・着順）— コミット対象
     payouts.jsonl       ★払戻金（全券種の組番と配当）— コミット対象
     backtest.json       ★的中率・回収率の検証結果 — コミット対象
-    odds.jsonl          ★単勝・複勝オッズ — コミット対象
+    odds.jsonl          ★単勝・複勝オッズ（最終）— コミット対象
+    odds_live.jsonl     ★締切前スナップショットと最終の対 — コミット対象
     model.json          ★条件付きロジットの係数と検証結果 — コミット対象
     index.train.json    ★先読みを避けた学習用の指数（2023〜2025のみ）— コミット対象
 
@@ -72,6 +73,9 @@ tools/
   fetch_results.mjs     競走成績取得（天候・馬場・着順）→ results.jsonl
   fetch_payouts.mjs     払戻金一覧取得（1日1リクエストで全券種）→ payouts.jsonl
   fetch_odds.mjs        単勝・複勝オッズ取得（/oddsJS の軽い JS）→ odds.jsonl
+  watch_odds.mjs        締切前のオッズを自動で拾う → odds_live.jsonl
+  odds_drift.mjs        締切前と最終オッズのズレを測る
+  launchd/              締切前オッズ取得を macOS に登録する plist と install.sh
   fit_model.mjs         条件付きロジットの当てはめ → model.json
   backtest.mjs          予想の当て方ごとに的中率・回収率を検証 → backtest.json
   build_db.mjs          指数の算出 → index.json
@@ -373,8 +377,27 @@ node tools/embed_db.mjs
 ### オッズの取得
 `/oddsJS/{raceId}.do` が1KB弱の JS で全頭ぶんの単勝・複勝と人気順を返す。
 HTML のオッズページ（100KB）は使わない。発売前は `0.0` が並ぶので `update_time` と合わせて判別する。
-**実戦では締切1〜2分前の値しか使えない**（地方は締切間際にオッズが動く）ので、
-最終オッズを使ったバックテストは実戦よりやや有利に出ている点に注意。
+オッズは発売中およそ1〜2分おきに更新される。
+
+**締切前の自動取得（`tools/watch_odds.mjs`）**
+南関（SPAT4）の発売締切は発走のおよそ1分前なので、`NK_ODDS_LEAD=8`（締切8分前）は
+**発走の9分前**に取りに行く設定になる。同じレースについて締切前と最終の両方を残すので、
+`odds_drift.mjs` で「8分前の数字で判断して間に合うか」を後から測れる。
+
+```bash
+node tools/watch_odds.mjs                  # その日を見張り続ける（開催終了で自動終了）
+NK_ODDS_ONCE=1 node tools/watch_odds.mjs   # いま取り時のものだけ拾って終了（cron/launchd 向き）
+sh tools/launchd/install.sh                # macOS に1分おきの自動実行を登録
+node tools/odds_drift.mjs                  # 締切前と最終のズレを見る
+```
+
+`build_marks.mjs` はオッズがあれば自動で第2段（人気との合成）まで使う。
+締切前スナップショットを最優先し、無ければ最終オッズを使う。どちらを使ったかは
+`entries.*.json` の `oddsSrc` と meta に残る。
+
+**まだ検証していないこと**：締切8分前の値と最終オッズでどれだけ結果が変わるかは、
+スナップショットが貯まるまで測れない。バックテストは最終オッズで回しているので、
+実戦よりやや有利に出ている可能性がある。
 
 ### 買い方
 BOX の均等買いは期待値に関係なく全組み合わせを同じ額で買うので構造的に不利。

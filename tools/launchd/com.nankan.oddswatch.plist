@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  締切8分前のオッズを自動で拾う launchd 設定。1分おきに「いま取り時のものだけ」を見る。
+  常駐プロセスを持たないので、再起動しても勝手に復活する。
+
+  導入
+    1) このファイルの __REPO__ と __NODE__ を実際のパスに置き換える
+       __REPO__ = /Users/kotaro/kota/公営競技/oi-keiba-3d-demo
+       __NODE__ = $(which node)
+    2) cp tools/launchd/com.nankan.oddswatch.plist ~/Library/LaunchAgents/
+    3) launchctl load ~/Library/LaunchAgents/com.nankan.oddswatch.plist
+  止めるとき
+       launchctl unload ~/Library/LaunchAgents/com.nankan.oddswatch.plist
+  ログ
+       tail -f __REPO__/data/nankan/oddswatch.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nankan.oddswatch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/tools/watch_odds.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NK_ODDS_ONCE</key><string>1</string>
+    <key>NK_ODDS_LEAD</key><string>8</string>
+  </dict>
+  <key>StartInterval</key><integer>60</integer>
+  <key>StandardOutPath</key><string>__REPO__/data/nankan/oddswatch.log</string>
+  <key>StandardErrorPath</key><string>__REPO__/data/nankan/oddswatch.log</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

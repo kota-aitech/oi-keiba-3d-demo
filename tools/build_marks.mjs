@@ -29,6 +29,11 @@ const featurize = makeFeaturizer(DB);
 const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n')
   .filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 const cards = new Map(jl('cards.jsonl').map(c => [c.raceId, c]));
+/* オッズがあれば第2段（人気との合成）まで使う。
+   締切前スナップショット（watch_odds.mjs）を最優先、無ければ最終オッズ。 */
+const oddsMap = new Map();
+for (const o of jl('odds.jsonl')) oddsMap.set(o.raceId, { src: '最終', tan: o.tan });
+for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
 const LAP = buildLapIndex(jl('results.jsonl'), [...cards.values()]);
 if (!MDL) console.error('!! model.json がない。印はシミュレータの勝率で出す');
 
@@ -87,6 +92,23 @@ for (const key of TRACKS) {
         }
       }
       if (!p) { p = mc.win.slice(); noModel++; }
+
+      /* 単勝オッズがあれば第2段で合成する（検証では人気と互角まで来る） */
+      let blended = null;
+      const od = oddsMap.get(r.raceId);
+      if (MDL && MDL.beta2 && od) {
+        const o = live.map(h => (od.tan[h.no] || {}).odds);
+        if (o.every(x => x > 0)) {
+          const inv = o.map(x => 1 / x), z = inv.reduce((a, b) => a + b, 0);
+          const pp = inv.map(x => x / z);
+          const u = p.map((x, i) => MDL.beta2[0] * Math.log(Math.max(x, 1e-9)) + MDL.beta2[1] * Math.log(pp[i]));
+          const mx = Math.max(...u), ex = u.map(x => Math.exp(x - mx)), sz = ex.reduce((a, b) => a + b, 0);
+          blended = ex.map(x => x / sz);
+          live.forEach((h, i) => { h.pubOdds = o[i]; h.pFund = r3(p[i]); });
+          r.oddsSrc = od.src;
+          p = blended;
+        }
+      }
       const t3 = top3Of(p);
 
       const order = p.map((w, i) => [w, t3[i], i]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
@@ -105,12 +127,13 @@ for (const key of TRACKS) {
       done++;
     }
   }
-  d.meta = { ...d.meta, marks: { trials: N, model: MDL ? MODELFILE : null,
-    note: MDL ? '印と勝率は条件付きロジット。3角/4角の位置とペースはシミュレータ' : 'モデル未生成のためシミュレータの勝率' } };
+  const blendN = Object.values(d.days).flat().filter(r => r.oddsSrc).length;
+  d.meta = { ...d.meta, marks: { trials: N, model: MDL ? MODELFILE : null, blended: blendN,
+    note: MDL ? `印と勝率は条件付きロジット${blendN ? `（${blendN}レースは単勝オッズと合成）` : '（オッズなし）'}。3角/4角の位置とペースはシミュレータ` : 'モデル未生成のためシミュレータの勝率' } };
   writeJSON(`data/nankan/entries.${key}.json`, d);
   ent[key] = { track: d.track, days: d.days, entries: d.entries };
   ent.meta = d.meta;
-  console.error(`${JA[key] || key}: ${done} レースに印（ロジット${done - noModel} / シミュレータ${noModel}）`);
+  console.error(`${JA[key] || key}: ${done} レースに印（ロジット${done - noModel} / シミュレータ${noModel} / うちオッズ合成 ${blendN}）`);
 }
 inject('race.html', 'NKRACE', 'NKR', ent);
 

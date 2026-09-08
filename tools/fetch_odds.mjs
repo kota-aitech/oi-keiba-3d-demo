@@ -8,35 +8,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { get, ROOT } from './lib/nk.mjs';
+import { parseOdds } from './lib/odds.mjs';
 
 const BASE = 'https://www.nankankeiba.com';
 const OUT = path.join(ROOT, 'data', 'nankan', 'odds.jsonl');
 const TRACKS = (process.env.NK_BT_TRACKS || '大井,川崎,船橋,浦和').split(',');
 const FROM = process.env.NK_BT_FROM || '2000-01-01';
 const TO = process.env.NK_BT_TO || new Date().toISOString().slice(0, 10);
-
-export function parseOdds(js) {
-  const grab = name => {
-    const m = new RegExp(`var ${name}\\s*=\\s*\\{([\\s\\S]*?)\\};`).exec(js);
-    if (!m) return {};
-    const o = {};
-    for (const r of m[1].matchAll(/"(\d+)"\s*:\s*\[\s*"([^"]*)"\s*,\s*(true|false)\s*,\s*(-?\d+)\s*,\s*(-?\d+)/g))
-      o[r[1]] = { v: r[2], sale: r[3] === 'true', pop: Number(r[5]) };
-    return o;
-  };
-  const tan = grab('odds_tan'), fuku = grab('odds_fuku');
-  const t = /var update_time\s*=\s*"([^"]*)"/.exec(js);
-  const live = Object.values(tan).some(x => Number(x.v) > 0);
-  return {
-    updated: t ? t[1] : '',
-    live,
-    tan: Object.fromEntries(Object.entries(tan).map(([k, v]) => [k, { odds: Number(v.v) || null, pop: v.pop || null }])),
-    fuku: Object.fromEntries(Object.entries(fuku).map(([k, v]) => {
-      const [lo, hi] = v.v.split('-').map(Number);
-      return [k, { lo: lo || null, hi: hi || null, pop: v.pop || null }];
-    })),
-  };
-}
 
 const races = [];
 for (const line of fs.readFileSync(path.join(ROOT, 'data/nankan/cards.jsonl'), 'utf8').split('\n')) {
