@@ -337,7 +337,12 @@ HTML も index.html に書き換わりうる）。
 やってはいけない。左にはみ出した柱がスクロールで拾えず、**14頭立てで1頭が画面外に消えた**。
 正しくは `hs.slice().reverse()` で配列を逆順にして通常の LTR で並べ、
 描画後に `board.scrollLeft = board.scrollWidth` で右端（1番）へ寄せる。
-`.pillars` は `width:max-content`（`min-width:min-content` だと縮む）。
+
+`.pillars` は **`min-width:100%` ＋ `justify-content:flex-end`** だけにする。
+- `width:max-content` を足すと、柱の `max-width` まで container が伸びて**左端の柱が切れる**
+- 柱は `flex:1 0 118px; max-width:210px`。少頭数なら広がって画面を埋め、多頭数なら
+  118px のまま横スクロールになる。`flex:0 0` だと少頭数のとき左に大きな余白が残る
+
 `race_check.mjs` が柱の本数と出走頭数の一致を見ているので、崩すと検出される。
 - 柱の中身は上から 印／枠・馬番／父・母父／**馬名（縦書き）**／性齢・斤量・脚質・騎手・厩舎／
   本紙の勝率・3着内率／指数チップ／前5走／寸評

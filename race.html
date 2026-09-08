@@ -21,7 +21,7 @@ button{cursor:pointer}
 button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
 /* ---- 題字・ナビ ---- */
-.masthead{background:var(--band);color:#fdf9f0;padding:7px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.masthead{background:var(--band);color:#fdf9f0;padding:5px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .masthead .logo{font-family:var(--mincho);font-size:19px;font-weight:700;letter-spacing:.14em;line-height:1.1}
 .masthead .logo em{font-style:normal;color:#f0c24a}
 .masthead .tag{font-size:11px;color:#c8bfae;letter-spacing:.04em}
@@ -34,8 +34,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset
 .jo button.on{background:#f0c24a;color:#1a1512}
 
 /* ---- 開催日・R ---- */
-.pick{background:var(--paper2);border-bottom:2px solid var(--rule);padding:7px 12px}
-.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.pick{background:var(--paper2);border-bottom:2px solid var(--rule);padding:5px 12px}
+.days{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
 .days button{background:transparent;border:1px solid var(--rule2);border-radius:2px;padding:3px 12px;font-size:12px;color:var(--sub)}
 .days button.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
 .rs{display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
@@ -47,18 +47,18 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset
 .rs button.on b{color:var(--red)}
 
 /* ---- レース見出し ---- */
-.rhead{padding:10px 12px 6px;border-bottom:1px solid var(--rule2)}
+.rhead{padding:6px 12px 4px;border-bottom:1px solid var(--rule2)}
 .rhead .n{display:inline-block;background:var(--red);color:#fff;font-family:var(--mincho);font-weight:700;
   font-size:16px;padding:1px 10px;margin-right:8px;vertical-align:2px}
 .rhead .t{font-family:var(--mincho);font-size:19px;font-weight:700;letter-spacing:.02em}
 .rhead .m{color:var(--sub);font-size:12px;margin-top:2px}
 .rhead .m b{color:var(--ink)}
-.honshi{margin-top:6px;padding:5px 9px;background:var(--paper2);border-left:4px solid var(--red);font-size:13px}
+.honshi{margin-top:4px;padding:4px 9px;background:var(--paper2);border-left:4px solid var(--red);font-size:13px}
 .honshi span{margin-right:12px;white-space:nowrap}
 .honshi i{font-style:normal;font-weight:700;font-size:14px;margin-right:2px}
 
 /* ---- 表示切替 ---- */
-.opts{display:flex;gap:6px;align-items:center;padding:7px 12px;border-bottom:2px solid var(--rule);flex-wrap:wrap}
+.opts{display:flex;gap:6px;align-items:center;padding:5px 12px;border-bottom:2px solid var(--rule);flex-wrap:wrap}
 .opts button{background:#fff;border:1px solid var(--rule2);border-radius:2px;padding:3px 11px;font-size:12px;color:var(--sub)}
 .opts button.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
 .opts .sp{margin-left:auto;color:var(--faint);font-size:11px}
@@ -138,20 +138,22 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset
    web は左→右のほうが読み違えが少ないので左から並べる。
    馬名は縦書き（writing-mode）。前5走は柱の中に上から積む。        */
 #board.tate{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 0 6px}
-.tate .pillars{display:flex;gap:0;align-items:stretch;width:max-content}
-.tate .pil{flex:0 0 118px;border-right:1px solid var(--rule);background:var(--paper);
+/* width:max-content を付けると柱の max-width まで container が伸びて左端が切れる。
+   min-width:100% だけにして、余ればflex-growで広がり、足りなければ横スクロールになる。 */
+.tate .pillars{display:flex;gap:0;align-items:stretch;min-width:100%;justify-content:flex-end}
+.tate .pil{flex:1 0 118px;max-width:210px;border-right:1px solid var(--rule);background:var(--paper);
   display:flex;flex-direction:column;min-width:0}
 .tate .pil:last-child{border-left:1px solid var(--rule)}
 .tate .pil:nth-child(even){background:#f7f2e6}
 .tate .pil.scr{opacity:.42}
-.tate .p-head{border-bottom:1px solid var(--rule);padding:4px 4px 5px;text-align:center}
+.tate .p-head{border-bottom:1px solid var(--rule);padding:3px 4px 4px;text-align:center}
 .tate .p-mk{font-family:var(--mincho);font-size:19px;font-weight:700;line-height:1.1;min-height:22px}
 .tate .p-waku{display:inline-block;width:24px;height:19px;line-height:17px;border:1px solid var(--rule);
   font-weight:700;font-size:12px;margin-right:3px;vertical-align:middle}
 .tate .p-uno{font-family:var(--mincho);font-size:17px;font-weight:700;vertical-align:middle}
-.tate .p-sire{font-size:9.5px;color:var(--sub);line-height:1.25;height:2.5em;overflow:hidden;padding:0 3px}
-.tate .p-namebox{display:flex;justify-content:center;padding:3px 0 4px;border-bottom:1px dotted var(--rule2)}
-.tate .p-namebox{height:158px;align-items:flex-start}
+.tate .p-sire{font-size:9.5px;color:var(--sub);line-height:1.25;min-height:2.4em;overflow:hidden;padding:1px 3px 0;text-align:center}
+.tate .p-namebox{display:flex;justify-content:center;padding:2px 0 3px;border-bottom:1px dotted var(--rule2)}
+.tate .p-namebox{height:150px;align-items:flex-start}
 .tate .p-name{writing-mode:vertical-rl;text-orientation:upright;font-family:var(--mincho);
   font-weight:700;letter-spacing:.04em;line-height:1.04;white-space:nowrap;
   font-size:17px}
@@ -179,12 +181,12 @@ body.no-idx .tate .p-idx,body.no-idx .tate .p-chips{display:none}
 body.no-memo .tate .p-memo{display:none}
 
 /* ---- 展開予想 ---- */
-.tenkai{margin:6px 12px 0;border:1px solid var(--rule2);background:#fff}
+.tenkai{margin:5px 12px 0;border:1px solid var(--rule2);background:#fff}
 .tenkai__h{display:flex;align-items:center;gap:8px;padding:4px 9px;background:var(--paper2);border-bottom:1px solid var(--rule2);font-size:11px;color:var(--sub)}
 .tenkai__h b{font-family:var(--mincho);font-size:13px;color:var(--ink)}
 .tenkai__h .pace{display:inline-block;padding:0 7px;font-weight:700;color:#fff;font-size:11px}
 .tenkai__b{display:flex;align-items:stretch;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tk-grp{flex:1 1 0;min-width:118px;padding:5px 8px 6px;border-right:1px dotted var(--rule2)}
+.tk-grp{flex:1 1 0;min-width:118px;padding:4px 8px 5px;border-right:1px dotted var(--rule2)}
 .tk-grp:last-child{border-right:0}
 .tk-grp .lab{font-size:10px;color:var(--faint);letter-spacing:.06em;margin-bottom:3px;white-space:nowrap}
 .tk-grp .lab i{font-style:normal;font-weight:700;color:var(--ink);font-family:var(--mincho);font-size:12px;margin-right:4px}
@@ -198,7 +200,7 @@ body.no-memo .tate .p-memo{display:none}
 @media (max-width:840px){ .tenkai{margin:6px 10px 0} .tk-grp{min-width:104px} }
 
 /* ---- AIのおすすめ（買い目・期待値・自信度）---- */
-.aibox{margin:8px 12px 0;border:1px solid var(--rule2);background:#fffdf7}
+.aibox{margin:5px 12px 6px;border:1px solid var(--rule2);background:#fffdf7}
 .aibox__h{display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--paper2);border-bottom:1px solid var(--rule2)}
 .aibox__h .g{display:inline-block;min-width:24px;text-align:center;font-family:var(--mincho);font-weight:700;
   font-size:15px;padding:0 5px;color:#fff;background:var(--faint)}
@@ -206,8 +208,8 @@ body.no-memo .tate .p-memo{display:none}
 .aibox__h .g.gB{background:var(--blue)}.aibox__h .g.gC{background:#8b8578}
 .aibox__h .t{font-family:var(--mincho);font-weight:700}
 .aibox__h .n{margin-left:auto;font-size:11px;color:var(--sub)}
-.aibox__b{padding:6px 9px 8px;font-size:12px}
-.aibox .row2{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:5px}
+.aibox__b{padding:5px 9px 7px;font-size:12px}
+.aibox .row2{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:4px}
 .aibox .row2 span{color:var(--faint);font-size:11px}
 .aibox .row2 b{color:var(--ink);font-size:13px}
 .aibox .meter{display:inline-block;width:64px;height:6px;background:var(--rule3);vertical-align:middle;margin-left:5px;overflow:hidden}
@@ -273,7 +275,7 @@ body.no-memo .memo{display:none}
   .memo{margin:0 -10px;padding:4px 10px 6px}
   body.no-runs .uma,body.no-idx .uma,body.no-idx.no-runs .uma{display:block}
   .swipe{font-size:10px;color:var(--faint);padding:2px 10px 0}
-  .tate .pil{flex-basis:104px}
+  .tate .pil{flex:1 0 104px;max-width:160px}
   .tate .p-namebox{height:140px}
   .tate .p-name{font-size:16px}
   .tate .p-name.l9{font-size:14px}
