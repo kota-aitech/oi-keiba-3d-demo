@@ -338,10 +338,17 @@ HTML も index.html に書き換わりうる）。
 正しくは `hs.slice().reverse()` で配列を逆順にして通常の LTR で並べ、
 描画後に `board.scrollLeft = board.scrollWidth` で右端（1番）へ寄せる。
 
-`.pillars` は **`min-width:100%` ＋ `justify-content:flex-end`** だけにする。
-- `width:max-content` を足すと、柱の `max-width` まで container が伸びて**左端の柱が切れる**
-- 柱は `flex:1 0 118px; max-width:210px`。少頭数なら広がって画面を埋め、多頭数なら
-  118px のまま横スクロールになる。`flex:0 0` だと少頭数のとき左に大きな余白が残る
+**幅は CSS ではなく JS（`fitPillars()`）で決める。** ここは2回踏んだので理由を残す。
+- `justify-content:flex-end` を使うと、**あふれた分が左側に出てスクロールで拾えなくなる**
+  （14頭立てで12番より左に行けなくなった）。使わない
+- `width:max-content` ＋ 柱の `max-width` を併用すると container がそこまで伸びて左端が切れる
+- 正解は `.pillars{width:max-content}` の左詰めのまま、`fitPillars()` が
+  `頭数×既定幅 < board.clientWidth` なら `--pw = clientWidth/頭数` に広げ（余白が消えて1番が右端）、
+  あふれるなら既定幅のままにして `scrollLeft = scrollWidth`（右端＝1番から見せる）。
+  resize でも呼ぶこと
+- 直したら Chrome で `scrollWidth - clientWidth`（スクロール可能量）と
+  左端までスクロールしたときに1番目の柱が見えるかを実測する。
+  DOM スタブの `race_check.mjs` では幅を測れないので、ここだけは実ブラウザで確認する
 
 `race_check.mjs` が柱の本数と出走頭数の一致を見ているので、崩すと検出される。
 - 柱の中身は上から 印／枠・馬番／父・母父／**馬名（縦書き）**／性齢・斤量・脚質・騎手・厩舎／

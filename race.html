@@ -138,10 +138,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset
    web は左→右のほうが読み違えが少ないので左から並べる。
    馬名は縦書き（writing-mode）。前5走は柱の中に上から積む。        */
 #board.tate{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 0 6px}
-/* width:max-content を付けると柱の max-width まで container が伸びて左端が切れる。
-   min-width:100% だけにして、余ればflex-growで広がり、足りなければ横スクロールになる。 */
-.tate .pillars{display:flex;gap:0;align-items:stretch;min-width:100%;justify-content:flex-end}
-.tate .pil{flex:1 0 118px;max-width:210px;border-right:1px solid var(--rule);background:var(--paper);
+/* 幅は JS で決める（下の fitPillars）。
+   justify-content:flex-end を使うと、あふれた分が左に出てスクロールで拾えなくなる。
+   常に左詰め＋width:max-content にしておき、収まるときだけ柱を広げて画面を埋める。 */
+.tate .pillars{display:flex;gap:0;align-items:stretch;width:max-content}
+.tate .pil{flex:0 0 var(--pw,118px);border-right:1px solid var(--rule);background:var(--paper);
   display:flex;flex-direction:column;min-width:0}
 .tate .pil:last-child{border-left:1px solid var(--rule)}
 .tate .pil:nth-child(even){background:#f7f2e6}
@@ -275,7 +276,7 @@ body.no-memo .memo{display:none}
   .memo{margin:0 -10px;padding:4px 10px 6px}
   body.no-runs .uma,body.no-idx .uma,body.no-idx.no-runs .uma{display:block}
   .swipe{font-size:10px;color:var(--faint);padding:2px 10px 0}
-  .tate .pil{flex:1 0 104px;max-width:160px}
+  .tate .pil{flex:0 0 var(--pw,104px)}
   .tate .p-namebox{height:140px}
   .tate .p-name{font-size:16px}
   .tate .p-name.l9{font-size:14px}
@@ -554,6 +555,23 @@ function aiBox(r){
     </div></div>`;
 }
 
+/* 柱の幅を決める。
+   収まるとき  … 画面幅を頭数で割って広げる（左に余白を作らず、1番が右端に来る）
+   あふれるとき … 既定幅のままにして、右端（1番）までスクロールする         */
+function fitPillars(){
+  const bd=$('board');
+  if(!bd||!bd.classList.contains('tate'))return;
+  const ps=bd.querySelector('.pillars');
+  if(!ps)return;
+  const n=ps.children.length;
+  if(!n)return;
+  const base=window.matchMedia('(max-width:840px)').matches?104:118;
+  const w=bd.clientWidth;
+  ps.style.setProperty('--pw', n*base<w ? Math.floor(w/n)+'px' : base+'px');
+  bd.scrollLeft=bd.scrollWidth;          // 右端＝1番から見せる
+}
+window.addEventListener('resize',fitPillars);
+
 let layout='yoko';
 try{layout=localStorage.getItem('nkLayout')||'yoko';}catch(e){}
 function applyLayout(){
@@ -584,8 +602,7 @@ function render(){
     /* 競馬新聞と同じく右から1番。配列を逆順にして並べ、描画後に右端へスクロールする */
     $('board').innerHTML=`<div class="pillars">${hs.slice().reverse().map(pillar).join('')}</div>`
       +'<div class="swipe">競馬新聞と同じく<b>右から1番</b>の並びです。← 横にスクロールできます →</div>';
-    const bd=$('board');
-    requestAnimationFrame(()=>{bd.scrollLeft=bd.scrollWidth;});
+    requestAnimationFrame(fitPillars);
   }else{
     $('board').innerHTML=`<div class="thead">
         <div>印</div><div>枠馬番</div><div>馬名・騎手・厩舎</div><div class="idxH">本紙指数</div>

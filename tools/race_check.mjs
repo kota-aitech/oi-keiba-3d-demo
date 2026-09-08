@@ -22,7 +22,9 @@ const document = {
 const store2 = new Map();
 const localStorage = { getItem: k => (store2.has(k) ? store2.get(k) : null), setItem: (k, v) => store2.set(k, String(v)), removeItem: k => store2.delete(k) };
 const sandbox = { document, console, Math, JSON, Date, Intl, URLSearchParams, navigator: {}, alert: noop, setTimeout: noop,
-  requestAnimationFrame: noop, localStorage, location: { search: '?track=' + track } };
+  requestAnimationFrame: noop, localStorage,
+  window: { matchMedia: () => ({ matches: false }), addEventListener: noop },
+  location: { search: '?track=' + track } };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 vm.runInContext(js + '\nglobalThis.__X={D,render,NKR,setRace:(d,i)=>{day=d;ridx=i;},setLayout:v=>{layout=v;}};', sandbox);
