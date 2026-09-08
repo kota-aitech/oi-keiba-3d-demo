@@ -34,7 +34,9 @@ const WANT = (process.env.NK_BT_MODELS || 'sim,fund,blend,pub').split(',');
 const DB = readJSON(process.env.NK_BT_DB || 'data/nankan/index.train.json');
 const MODEL = fs.existsSync(path.join(ROOT, 'data/nankan/model.json')) ? readJSON('data/nankan/model.json') : null;
 const featurize = makeFeaturizer(DB);
-const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+/* 取得ジョブが追記中でも壊れないよう、読めない行は捨てる */
+const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n')
+  .filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 const cards = jl('cards.jsonl');
 const resArr = jl('results.jsonl');
 const LAP = buildLapIndex(resArr, cards);

@@ -20,7 +20,9 @@ const SPLIT = process.env.NK_FIT_SPLIT || '2026-06-01';   // これ以降を検�
 const L2 = Number(process.env.NK_FIT_L2 || 2.0);
 const ITER = Number(process.env.NK_FIT_ITER || 4000);
 
-const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+/* 取得ジョブが追記中でも壊れないよう、読めない行は捨てる */
+const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n')
+  .filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 const DB = readJSON(DBFILE);
 const featurize = makeFeaturizer(DB);
 const resArr = jl('results.jsonl');
@@ -226,7 +228,7 @@ const coefs = FEATURES.map((k, i) => ({ f: k, beta: +beta[i].toFixed(4), perSD: 
 console.error('\n=== 効いている特徴量（標準化1つぶんの対数オッズ）');
 coefs.slice(0, 14).forEach(c => console.error(`  ${c.f.padEnd(10)} ${c.beta >= 0 ? '+' : ''}${c.beta}`));
 
-writeJSON('data/nankan/model.json', {
+writeJSON(process.env.NK_FIT_OUT || 'data/nankan/model.json', {
   builtAt: new Date().toISOString(), db: DBFILE, split: SPLIT, l2: L2,
   features: FEATURES, mean, sd, beta: Array.from(beta), beta2, metrics, coefs,
   trainRaces: train.length, testRaces: test.length,
