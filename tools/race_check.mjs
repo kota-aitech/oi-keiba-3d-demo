@@ -22,7 +22,7 @@ const document = {
 const store2 = new Map();
 const localStorage = { getItem: k => (store2.has(k) ? store2.get(k) : null), setItem: (k, v) => store2.set(k, String(v)), removeItem: k => store2.delete(k) };
 const sandbox = { document, console, Math, JSON, Date, Intl, URLSearchParams, navigator: {}, alert: noop, setTimeout: noop,
-  localStorage, location: { search: '?track=' + track } };
+  requestAnimationFrame: noop, localStorage, location: { search: '?track=' + track } };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 vm.runInContext(js + '\nglobalThis.__X={D,render,NKR,setRace:(d,i)=>{day=d;ridx=i;},setLayout:v=>{layout=v;}};', sandbox);
@@ -33,6 +33,9 @@ const r0 = (list, i) => list[i].r;
 for (const [dk, list] of Object.entries(X.D.days)) {
   for (let i = 0; i < list.length; i++) {
     X.setRace(dk, i);
+    const r = list[i];
+    const hs = X.D.entries[`${dk}|${r.r}`] || [];
+    const live = hs.filter(x => !x.scratch);
     /* 横型・縦型の両方を描いて確認する */
     let h = '';
     for (const lay of ['yoko', 'tate']) {
@@ -41,12 +44,13 @@ for (const [dk, list] of Object.entries(X.D.days)) {
       X.render();
       const cur = store.get('board').innerHTML;
       if (cur.length < 500) { console.log(`  ! ${dk} ${r0(list, i)}R の${lay}描画が空`); bad++; }
-      if (lay === 'tate' && !/class="pil /.test(cur) && !/class="pil"/.test(cur)) { console.log(`  ! ${dk} 縦型の柱が描けていない`); bad++; }
+      if (lay === 'tate') {
+        /* 柱の本数が出走頭数と一致するか（多頭数で画面外に落ちていないか）*/
+        const pil = (cur.match(/<div class="pil /g) || []).length;
+        if (pil !== live.length) { console.log(`  ! ${dk} ${list[i].r}R 縦型の柱 ${pil}本 ≠ 出走 ${live.length}頭`); bad++; }
+      }
       h = lay === 'yoko' ? cur : h;
     }
-    const r = list[i];
-    const hs = X.D.entries[`${dk}|${r.r}`] || [];
-    const live = hs.filter(x => !x.scratch);
     races++; horses += live.length;
     scratched += hs.length - live.length;
     withPast += live.filter(x => x.past && x.past.length).length;

@@ -107,66 +107,61 @@ export function makeDerivers(DB) {
   function memoOf(h, d, hu, pd, dist) {
     const note = [];
     const past = h.past || [];
+    const p0 = past[0];
 
-    /* 近走 */
-    if (past.length) {
-      const p = past[0];
-      const kai = p.pos === 1 ? '勝ち' : p.pos <= 3 ? `${p.pos}着` : `${p.pos}着`;
-      const bab = p.baba !== '良' ? `・${p.baba}` : '';
-      const nige = p.corners && p.corners.length
-        ? (p.corners[0] <= 2 ? 'ハナから' : p.corners[0] / (p.field + 1) <= 0.45 ? '前々で運んで' : p.corners[0] / (p.field + 1) <= 0.72 ? '中団から' : '後方から')
+    /* 近走：前走の中身＋近走の着順並び。文にせず要点だけ */
+    if (p0) {
+      const run = p0.corners && p0.corners.length
+        ? (p0.corners[0] <= 2 ? '逃げて' : p0.corners[0] / (p0.field + 1) <= 0.45 ? '前で' : p0.corners[0] / (p0.field + 1) <= 0.72 ? '中団' : '後方')
         : '';
-      const line = past.map(x => x.pos).join('-');
       const in3 = past.filter(x => x.pos <= 3).length;
-      const totter = in3 >= 4 ? '安定して上位' : in3 >= 2 ? 'ムラはあるが上位あり' : in3 === 1 ? '好走は1回だけ' : '掲示板も遠い';
-      note.push(['近走', `前走は${p.track}${p.dist}m（${p.field}頭・${p.pop}番人気${bab}）を${nige}${kai}。`
-        + `近${past.length}走 ${line}着で、3着内 ${in3}回と${totter}。`]);
+      note.push(['近走', `前走 ${p0.track}${p0.dist}${p0.baba !== '良' ? p0.baba : ''} ${p0.pop}人気${run}${p0.pos}着`
+        + `／近${past.length}走 ${past.map(x => x.pos).join('-')}（3着内${in3}）`]);
     } else {
-      note.push(['近走', '南関東での前走データなし（新馬・転入初戦など）。数値は控えめに置いている。']);
+      note.push(['近走', '南関の前走なし（新馬・転入初戦）']);
     }
 
-    /* 脚質・上がり */
-    const legs = [];
-    if (d.st.pos != null) legs.push(`${d.style}タイプで、3角はおよそ${d.st.pos.toFixed(1)}番手（頭数比 ${(d.epos * 100).toFixed(0)}%）。`);
-    if (d.f3) legs.push(`上がり3Fは平均${d.f3}秒で、${d.close >= 0.65 ? '終いは速い部類' : d.close >= 0.5 ? '平均並み' : '決め手は乏しい'}。`);
-    if (legs.length) note.push(['脚質', legs.join('')]);
+    /* 脚質：型・位置・上がり */
+    const legs = [d.style];
+    if (d.st.pos != null) legs.push(`3角${d.st.pos.toFixed(1)}番手`);
+    if (d.f3) legs.push(`上がり${d.f3}秒${d.close >= 0.65 ? '（速い）' : d.close <= 0.45 ? '（遅い）' : ''}`);
+    note.push(['脚質', legs.join('・')]);
 
-    /* 距離・馬場 */
+    /* 条件：距離と道悪。着度数だけ */
     const cond = [];
     const near = past.filter(p => Math.abs(p.dist - (dist || 0)) <= 200);
-    if (near.length) {
-      const n3 = near.filter(p => p.pos <= 3).length;
-      cond.push(`今回に近い距離は ${near.length}戦 ${chaku(near)}で${n3 ? `3着内 ${n3}回` : '3着内なし'}。`);
-    }
-    else if (past.length) cond.push(`今回距離の実績はなく、${Math.max(...past.map(p => p.dist))}mまでの経験。`);
+    cond.push(near.length ? `今回距離 ${near.length}戦${chaku(near)}`
+      : past.length ? `今回距離は未経験（最長${Math.max(...past.map(p => p.dist))}m）` : '距離実績なし');
     const wet = past.filter(p => p.baba !== '良');
-    if (wet.length) {
-      const w3 = wet.filter(p => p.pos <= 3).length;
-      cond.push(`道悪は ${wet.length}戦 ${chaku(wet)}で`
-        + (w3 === 0 && wet.length >= 2 ? 'まだ結果が出ていない。' : d.wet >= 0.6 ? '苦にしない。' : d.wet <= 0.4 ? '割引が要る。' : 'こなせる程度。'));
-    }
-    else cond.push('道悪の経験がない。');
-    note.push(['距離・馬場', cond.join('')]);
+    cond.push(wet.length ? `道悪 ${wet.length}戦${chaku(wet)}` : '道悪未経験');
+    note.push(['条件', cond.join('／')]);
 
-    /* 人 */
-    const man = [`${hu.jockey}（${hu.jockeyBase}）×${hu.trainer}厩舎、馬主は${hu.owner || '不明'}。`];
-    if (hu.cN >= 20) man.push(`このコンビは過去3年 ${hu.cN}走${hu.cW}勝（${(hu.cRate * 100).toFixed(0)}%）で${hu.bond >= 0.30 ? '主戦' : hu.bond >= 0.12 ? '準主戦' : 'よく乗る間柄'}。`);
-    else if (hu.cN) man.push(`このコンビは3年で${hu.cN}走しかなく、ほぼ初顔合わせ。`);
-    else man.push('このコンビは過去3年で騎乗歴なし。');
-    if (hu.jUp >= 0.35) man.push(`前走${hu.prevJockey}からの乗り替わりで指数は上がった（勝負気配）。`);
-    else if (hu.jUp <= -0.35) man.push(`前走${hu.prevJockey}から指数の下がる乗り替わり。`);
-    if (hu.spot) man.push('普段この厩舎に乗らない上位騎手のスポット起用。');
-    note.push(['人', man.join('')]);
+    /* 人：コンビと乗り替わりだけ */
+    const man = [`${hu.jockey}×${hu.trainer}`];
+    if (hu.cN >= 20) man.push(`コンビ${hu.cN}走${hu.cW}勝${hu.bond >= 0.30 ? '・主戦' : hu.bond >= 0.12 ? '・準主戦' : ''}`);
+    else man.push(hu.cN ? `コンビ${hu.cN}走のみ` : 'コンビ初');
+    if (hu.jUp >= 0.35) man.push('騎手強化');
+    else if (hu.jUp <= -0.35) man.push('騎手弱化');
+    if (hu.spot) man.push('スポット起用');
+    note.push(['人', man.join('／')]);
 
-    /* 血統 */
+    /* 血統：名前と、効いているときだけ数値 */
     if (pd && pd.sire) {
       const b = [`父${pd.sire}`];
-      if (pd.sN >= 200) b.push(`（南関3年${pd.sN}走・指数${pd.sIdx >= 0 ? '+' : ''}${pd.sIdx}${pd.sDistN >= 50 ? `／この距離${pd.sDist >= 0 ? '+' : ''}${pd.sDist}` : ''}）`);
-      b.push(pd.damSire ? `、母の父${pd.damSire}。` : '。');
-      if (pd.bIdx) b.push(`実績が少ないので血統を${pd.bIdx > 0 ? '加点' : '減点'}して見ている（${pd.bIdx >= 0 ? '+' : ''}${pd.bIdx}）。`);
-      note.push(['血統', b.join('')]);
+      if (pd.damSire) b.push(`母父${pd.damSire}`);
+      if (pd.sDistN >= 50 && Math.abs(pd.sDist) >= 0.15) b.push(`この距離${pd.sDist >= 0 ? '+' : ''}${pd.sDist}`);
+      note.push(['血統', b.join('／')]);
     }
-    return { note, memo: note.map(([k, v]) => `【${k}】${v}`).join('') };
+
+    /* brief：縦型の柱に入れる1行。目を引く要素だけ拾う */
+    const bits = [];
+    if (p0) bits.push(`前走${p0.pop}人気${p0.pos}着`);
+    bits.push(d.style);
+    if (hu.jUp >= 0.35) bits.push('騎手強化');
+    else if (hu.spot) bits.push('スポット');
+    if (d.wet >= 0.65 && wet.length >= 2) bits.push('道悪巧者');
+    if (d.close >= 0.68) bits.push('決め手');
+    return { note, brief: bits.join('・'), memo: note.map(([k, v]) => `【${k}】${v}`).join('') };
   }
 
   return { derive, human, pedigree, memoOf, styleOf, jockeyByName, norm };

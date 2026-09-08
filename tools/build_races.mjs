@@ -43,7 +43,7 @@ for (const [jaName, key] of WANT) {
         };
       });
       full[`${dk}|${c.R}`] = hs.map(({ memo, ...h }) => ({ ...h, ...h._full, _full: undefined }));
-      real[`${dk}|${c.R}`] = hs.map(({ _full, note, memo, ...rest }) => ({
+      real[`${dk}|${c.R}`] = hs.map(({ _full, note, memo, brief, ...rest }) => ({
         ...rest,
         // index.html の右パネル用は【近走】と【人】だけの短い版
         memo: (note || []).filter(([k]) => k === '近走' || k === '人').map(([k, v]) => `【${k}】${v}`).join(''),
