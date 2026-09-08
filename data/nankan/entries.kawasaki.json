@@ -53,7 +53,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 89.641
+    "winTime": 89.641,
+    "conf": 0.129,
+    "pTop": 0.287,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 2,
@@ -74,7 +79,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 89.367
+    "winTime": 89.367,
+    "conf": 0.118,
+    "pTop": 0.302,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 3,
@@ -95,7 +105,12 @@
      "front": 0.19,
      "out": 0.05
     },
-    "winTime": 54.317
+    "winTime": 54.317,
+    "conf": 0.206,
+    "pTop": 0.246,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 4,
@@ -116,7 +131,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 88.576
+    "winTime": 88.576,
+    "conf": 0.163,
+    "pTop": 0.298,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 5,
@@ -137,7 +157,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 88.707
+    "winTime": 88.707,
+    "conf": 0.071,
+    "pTop": 0.155,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 6,
@@ -159,7 +184,131 @@
      "out": 0.05
     },
     "winTime": 54.093,
-    "oddsSrc": "締切前(発走9分前)"
+    "oddsSrc": "締切前(発走9分前)",
+    "conf": 0.121,
+    "pTop": 0.219,
+    "ev": {
+     "umaren": 1.24,
+     "sanpuku": 1.27
+    },
+    "nPos": {
+     "umaren": 3,
+     "sanpuku": 8
+    },
+    "bets": {
+     "umaren": [
+      {
+       "c": [
+        9,
+        10
+       ],
+       "p": 0.0201,
+       "odds": 61.6,
+       "ev": 1.24
+      },
+      {
+       "c": [
+        10,
+        12
+       ],
+       "p": 0.0206,
+       "odds": 53,
+       "ev": 1.09
+      },
+      {
+       "c": [
+        4,
+        9
+       ],
+       "p": 0.0238,
+       "odds": 44.4,
+       "ev": 1.06
+      }
+     ],
+     "sanpuku": [
+      {
+       "c": [
+        9,
+        10,
+        12
+       ],
+       "p": 0.0137,
+       "odds": 92.7,
+       "ev": 1.27
+      },
+      {
+       "c": [
+        5,
+        9,
+        10
+       ],
+       "p": 0.0116,
+       "odds": 106.9,
+       "ev": 1.24
+      },
+      {
+       "c": [
+        9,
+        11,
+        12
+       ],
+       "p": 0.0121,
+       "odds": 98.4,
+       "ev": 1.19
+      },
+      {
+       "c": [
+        5,
+        9,
+        11
+       ],
+       "p": 0.0103,
+       "odds": 113.4,
+       "ev": 1.16
+      },
+      {
+       "c": [
+        5,
+        10,
+        12
+       ],
+       "p": 0.012,
+       "odds": 90.7,
+       "ev": 1.09
+      },
+      {
+       "c": [
+        4,
+        9,
+        12
+       ],
+       "p": 0.0162,
+       "odds": 66.3,
+       "ev": 1.08
+      },
+      {
+       "c": [
+        4,
+        5,
+        9
+       ],
+       "p": 0.0138,
+       "odds": 76.5,
+       "ev": 1.06
+      },
+      {
+       "c": [
+        5,
+        11,
+        12
+       ],
+       "p": 0.0106,
+       "odds": 96.2,
+       "ev": 1.02
+      }
+     ]
+    },
+    "grade": "A"
    },
    {
     "r": 7,
@@ -180,7 +329,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 89.424
+    "winTime": 89.424,
+    "conf": 0.221,
+    "pTop": 0.445,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 8,
@@ -201,7 +355,12 @@
      "front": -0.08,
      "out": 0.15
     },
-    "winTime": 103.915
+    "winTime": 103.915,
+    "conf": 0.053,
+    "pTop": 0.186,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 9,
@@ -222,7 +381,12 @@
      "front": 0.19,
      "out": 0.05
     },
-    "winTime": 54
+    "winTime": 54,
+    "conf": 0.167,
+    "pTop": 0.339,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 10,
@@ -243,7 +407,12 @@
      "front": 0.04,
      "out": 0
     },
-    "winTime": 95.179
+    "winTime": 95.179,
+    "conf": 0.115,
+    "pTop": 0.239,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 11,
@@ -264,7 +433,12 @@
      "front": -0.08,
      "out": 0.15
     },
-    "winTime": 103.574
+    "winTime": 103.574,
+    "conf": 0.098,
+    "pTop": 0.309,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 12,
@@ -285,7 +459,12 @@
      "front": 0.22,
      "out": 0
     },
-    "winTime": 129.764
+    "winTime": 129.764,
+    "conf": 0.19,
+    "pTop": 0.374,
+    "ev": null,
+    "bets": null,
+    "grade": null
    }
   ],
   "9/9(水) 第3日": [
@@ -308,7 +487,12 @@
      "front": 0.04,
      "out": 0
     },
-    "winTime": 94.957
+    "winTime": 94.957,
+    "conf": 0.223,
+    "pTop": 0.399,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 2,
@@ -329,7 +513,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 88.504
+    "winTime": 88.504,
+    "conf": 0.121,
+    "pTop": 0.286,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 3,
@@ -350,7 +539,12 @@
      "front": 0.19,
      "out": 0.05
     },
-    "winTime": 53.834
+    "winTime": 53.834,
+    "conf": 0.129,
+    "pTop": 0.221,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 4,
@@ -371,7 +565,12 @@
      "front": 0.22,
      "out": 0
     },
-    "winTime": 129.937
+    "winTime": 129.937,
+    "conf": 0.179,
+    "pTop": 0.315,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 5,
@@ -392,7 +591,12 @@
      "front": 0.19,
      "out": 0.05
     },
-    "winTime": 53.616
+    "winTime": 53.616,
+    "conf": 0.466,
+    "pTop": 0.669,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 6,
@@ -413,7 +617,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 88.367
+    "winTime": 88.367,
+    "conf": 0.171,
+    "pTop": 0.318,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 7,
@@ -434,7 +643,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 89.113
+    "winTime": 89.113,
+    "conf": 0.099,
+    "pTop": 0.198,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 8,
@@ -455,7 +669,12 @@
      "front": 0.04,
      "out": 0
     },
-    "winTime": 95.39
+    "winTime": 95.39,
+    "conf": 0.114,
+    "pTop": 0.203,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 9,
@@ -476,7 +695,12 @@
      "front": -0.16,
      "out": -0.08
     },
-    "winTime": 88.225
+    "winTime": 88.225,
+    "conf": 0.201,
+    "pTop": 0.244,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 10,
@@ -497,7 +721,12 @@
      "front": -0.08,
      "out": 0.15
     },
-    "winTime": 102.858
+    "winTime": 102.858,
+    "conf": 0.155,
+    "pTop": 0.294,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 11,
@@ -518,7 +747,12 @@
      "front": -0.01,
      "out": -0.02
     },
-    "winTime": 136.153
+    "winTime": 136.153,
+    "conf": 0.051,
+    "pTop": 0.166,
+    "ev": null,
+    "bets": null,
+    "grade": null
    },
    {
     "r": 12,
@@ -539,7 +773,12 @@
      "front": 0.04,
      "out": 0
     },
-    "winTime": 96.283
+    "winTime": 96.283,
+    "conf": 0.066,
+    "pTop": 0.171,
+    "ev": null,
+    "bets": null,
+    "grade": null
    }
   ]
  },

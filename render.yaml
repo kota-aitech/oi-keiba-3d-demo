@@ -10,3 +10,10 @@ services:
     runtime: static
     buildCommand: ""
     staticPublishPath: .
+    routes:
+      # トップは「おすすめレース」。3Dは /index.html で従来どおり開ける。
+      # ここに SPA 用の catch-all（/* → /index.html）は置かないこと。
+      # 置くと data/nankan/*.json や他の HTML まで index.html に書き換わる。
+      - type: rewrite
+        source: /
+        destination: /top.html

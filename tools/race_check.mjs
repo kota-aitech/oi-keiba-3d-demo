@@ -19,20 +19,31 @@ const document = {
   createElement: () => mk('anon'), querySelector: () => mk('q'), querySelectorAll: () => [],
   addEventListener: noop, body: mk('body'),
 };
+const store2 = new Map();
+const localStorage = { getItem: k => (store2.has(k) ? store2.get(k) : null), setItem: (k, v) => store2.set(k, String(v)), removeItem: k => store2.delete(k) };
 const sandbox = { document, console, Math, JSON, Date, Intl, URLSearchParams, navigator: {}, alert: noop, setTimeout: noop,
-  location: { search: '?track=' + track } };
+  localStorage, location: { search: '?track=' + track } };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
-vm.runInContext(js + '\nglobalThis.__X={D,render,setRace:(d,i)=>{day=d;ridx=i;},NKR};', sandbox);
+vm.runInContext(js + '\nglobalThis.__X={D,render,NKR,setRace:(d,i)=>{day=d;ridx=i;},setLayout:v=>{layout=v;}};', sandbox);
 const X = sandbox.__X;
 
-let bad = 0, races = 0, horses = 0, withPast = 0, scratched = 0;
+let bad = 0, races = 0, horses = 0, withPast = 0, scratched = 0, graded = 0;
+const r0 = (list, i) => list[i].r;
 for (const [dk, list] of Object.entries(X.D.days)) {
   for (let i = 0; i < list.length; i++) {
     X.setRace(dk, i);
-    store.get('board').innerHTML = '';
-    X.render();
-    const h = store.get('board').innerHTML;
+    /* 横型・縦型の両方を描いて確認する */
+    let h = '';
+    for (const lay of ['yoko', 'tate']) {
+      X.setLayout(lay);
+      store.get('board').innerHTML = '';
+      X.render();
+      const cur = store.get('board').innerHTML;
+      if (cur.length < 500) { console.log(`  ! ${dk} ${r0(list, i)}R の${lay}描画が空`); bad++; }
+      if (lay === 'tate' && !/class="pil /.test(cur) && !/class="pil"/.test(cur)) { console.log(`  ! ${dk} 縦型の柱が描けていない`); bad++; }
+      h = lay === 'yoko' ? cur : h;
+    }
     const r = list[i];
     const hs = X.D.entries[`${dk}|${r.r}`] || [];
     const live = hs.filter(x => !x.scratch);
@@ -40,6 +51,7 @@ for (const [dk, list] of Object.entries(X.D.days)) {
     scratched += hs.length - live.length;
     withPast += live.filter(x => x.past && x.past.length).length;
     if (h.length < 500) { console.log(`  ! ${dk} ${r.r}R の描画が空`); bad++; continue; }
+    if (list[i].grade) graded++;
     const marks = live.filter(x => x.mark).length;
     if (marks < Math.min(5, live.length)) { console.log(`  ! ${dk} ${r.r}R 印が ${marks} 個しかない`); bad++; }
     if (!/class="uma/.test(h) || !/class="run"/.test(h)) { console.log(`  ! ${dk} ${r.r}R 馬柱/前走の描画が欠けている`); bad++; }
@@ -51,7 +63,7 @@ for (const [dk, list] of Object.entries(X.D.days)) {
     }
   }
 }
-console.log(`${track}: ${races} レース / 出走 ${horses} 頭（うち前5走あり ${withPast}）/ 取消 ${scratched} 頭、問題 ${bad} 件`);
+console.log(`${track}: ${races} レース / 出走 ${horses} 頭（うち前5走あり ${withPast}）/ 取消 ${scratched} 頭 / 段位あり ${graded} レース、問題 ${bad} 件`);
 const rk = Object.keys(X.D.entries)[9];
 const top = X.D.entries[rk].filter(h => h.mark).sort((a, b) => b.win - a.win);
 console.log(`例 ${rk}: ` + top.map(h => `${h.mark}${h.no} ${h.name}(${(h.win * 100).toFixed(1)}%)`).join(' '));

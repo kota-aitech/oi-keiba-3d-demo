@@ -35,6 +35,8 @@ try {
 
 try { inject('data.html', 'NKBROWSE', 'NKB', readJSON('data/nankan/browse.json')); }
 catch (e) { console.error('  (data.html はスキップ: ' + e.message + ')'); }
+try { inject('top.html', 'NKTOP', 'NKT', readJSON('data/nankan/top.json')); }
+catch (e) { console.error('  (top.html はスキップ: ' + e.message + ')'); }
 try {
   const bt = readJSON('data/nankan/backtest.json');
   // レース明細は全部載せると重い。集計はそのまま、明細は直近ぶんだけ埋め込む

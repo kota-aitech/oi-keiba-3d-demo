@@ -35,8 +35,9 @@
 
 ## ファイル構成
 ```
+top.html                **トップ**。おすすめレース（段位・期待値・自信度・買い目）※新聞配色
 index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）※ダーク配色
-race.html               出馬表（競馬新聞の馬柱レイアウト。?track=… ）※新聞配色
+race.html               出馬表（競馬新聞の馬柱。横型／縦型を切替。?track=…&day=…&r=…）※新聞配色
 data.html               データブラウザ（騎手・調教師・コンビ・馬主・種牡馬の一覧）※新聞配色
 boat.html               ボートレース版（別モデル。下の専用節を参照）
 render.yaml             Render Blueprint（SPA用の catch-all rewrite は置かないこと）
@@ -66,7 +67,8 @@ tools/
   lib/embed.mjs         HTML のマーカー間に JSON を流し込む inject()
   lib/horse.mjs         1頭ぶんの推定値・指数・寸評（本番と検証で共用）
   lib/model.mjs         index.html のモデルを VM に読み込む loadModel/condOf
-  lib/feat.mjs          条件付きロジット用の特徴量29個（レース前の情報だけ）
+  lib/feat.mjs          条件付きロジット用の特徴量39個（レース前の情報だけ）
+  lib/bets.mjs          買い目・期待値・自信度（表示と検証で必ず同じ計算を使う）
   fetch_leading.mjs     リーディング取得 → leading.raw.json
   fetch_cards.mjs       出馬表取得 → cards.jsonl
   fetch_trend.mjs       レース傾向取得 → meet.*.json
@@ -83,6 +85,8 @@ tools/
   build_races.mjs       番組・出走馬の生成 → races.*.json / entries.*.json
   build_marks.mjs       index.html のモデルを VM で回して予想印を作る → entries.*.json 更新＋race.html
   build_browse.mjs      data.html 用に全データをたたむ → browse.json
+  build_top.mjs         top.html 用の要約（段位・期待値・買い目）→ top.json
+  race_pick.mjs         段位の閾値決めと「絞ると回収率が上がるか」の検証 → racepick.json
   embed_db.mjs          index.html(NKDB) / race.html(NKRACE) / data.html(NKBROWSE) に埋め込む
   sim_check.mjs         シミュレーションの妥当性チェック（ブラウザ不要）
   ui_check.mjs          DOM スタブで init() を通し、全レースをレンダリング（ブラウザ不要）
@@ -234,7 +238,8 @@ hx   = clamp(hIdx, -1.6, 2.6) × cond.human      // cond.human は左パネル�
 |---|---|---|---|
 | `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約525KB |
 | `race.html` | `NKRACE` | `entries.*.json`（前5走・予想印こみ） | 約1.0MB |
-| `data.html` | `NKBROWSE` + `NKBT` | `browse.json` + `backtest.json` | 約880KB |
+| `data.html` | `NKBROWSE` + `NKBT` | `browse.json` + `backtest.json` | 約1.1MB |
+| `top.html` | `NKTOP` | `top.json` | 約60KB |
 
 ### 見た目の方針
 `race.html` と `data.html` は**競馬新聞の紙面**に寄せてある。共通の決めごと：
@@ -253,6 +258,35 @@ HTML も index.html に書き換わりうる）。
 
 ---
 
+## おすすめレース・期待値・自信度
+
+### 定義（`tools/lib/bets.mjs`。表示と検証で必ず同じ計算を使う）
+- **期待値**：単勝オッズから Harville で組み合わせの市場価格を推定し、控除率25%を引いたうえで
+  モデル確率と比べた倍率。1.00 が損益トントン
+- **自信度**：`1 − 正規化エントロピー`。1頭に確率が集まっているほど大きい
+- **段位 S/A/B/C**：馬連の期待値の分位（S＝上位1割、A＝上位1/4、B＝上位半分）。
+  閾値は `racepick.json` が検証データから決める
+- **おすすめ買い目**：期待値1.0超の組み合わせのみ。ただし Harville は極端な低確率の組で
+  分母が潰れて想定配当が数十万倍になるため、`LIMIT`（モデル確率の下限・想定配当の上限）で
+  現実的な範囲に絞る。**この制約を外すと「買えない買い目」で期待値が決まってしまう**
+
+### 絞り込みは効くのか（**重要**）
+536レース（2026-06〜09）を前半268Rで閾値を決め、後半268Rで試した結果：
+
+| 絞り方 | 後半のレース数 | 馬連4頭BOX | 三連複4頭BOX |
+|---|---|---|---|
+| 期待値（馬連）上位1割 | 33R | **103%**（全体77%） | 95%（全体93%） |
+| 期待値（馬連）上位1/4 | 61R | 90% | 81% |
+| 期待値（三連複）上位1割 | 27R | 57% | **49%** |
+| 自信度 上位1割 | 13R | 100% | 106% |
+
+**絞り込みで回収率が安定して100%を超える証拠は得られていない。**
+指標や絞り具合を変えると49%〜106%まで振れる。レース数を減らすほど数字が暴れるだけとも読める。
+**段位を「買う・見送る」の機械的な根拠にしてはいけない。** 金額の強弱をつける参考値まで。
+この但し書きは top.html と race.html の画面にも出してある。**外さないこと。**
+
+---
+
 ## 出馬表ページ（`race.html`）— 競馬新聞の馬柱
 1頭＝1行の馬柱。左から **印／枠・馬番／馬名ブロック／本紙指数／前5走×5コマ**。
 
@@ -261,6 +295,14 @@ HTML も index.html に書き換わりうる）。
   上がり3F（順位は丸数字）／コーナー通過順。1着は赤、2〜3着は青
 - 上の「前5走・指数・寸評」で列ごと出し入れできる（`body.no-runs` などのクラスで CSS が列幅を切り替える）
 - 出走取消馬は薄く表示する（頭数には数えない）
+
+### 縦型（競馬新聞の組み方）
+「縦型」ボタンで 1頭＝1本の柱に切り替わる（`body` ではなく `#board.tate` で切替、選択は localStorage に保存）。
+- 柱の中身は上から 印／枠・馬番／父・母父／**馬名（縦書き）**／性齢・斤量・脚質・騎手・厩舎／
+  本紙の勝率・3着内率／指数チップ／前5走／寸評
+- 馬名は `writing-mode:vertical-rl; text-orientation:upright`。長い馬名は文字数で
+  クラス（`l9`/`l11`/`l13`）を付けて字を詰め、**必ず柱に収める**（`nameCls()`）
+- スマホは柱を104px幅にして横スクロール
 
 **レイアウトの注意**
 - `.thead` と `.uma` は**同じ `grid-template-columns`** を使う。片方だけ直すと前走欄がずれる

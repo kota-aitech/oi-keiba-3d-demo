@@ -13,6 +13,7 @@ import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { inject } from './lib/embed.mjs';
 import { loadModel, condOf } from './lib/model.mjs';
 import { makeFeaturizer, buildLapIndex, FEATURES } from './lib/feat.mjs';
+import { betPlan, confOf } from './lib/bets.mjs';
 
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const JA = { oi: '大井', kawasaki: '川崎', funabashi: '船橋', urawa: '浦和' };
@@ -42,6 +43,17 @@ function logitP(f) {
   const { mean, sd, beta } = MDL;
   return softmax(f.rows.map(h => FEATURES.reduce((s, k, i) => s + beta[i] * ((h.x[k] - mean[k]) / sd[k]), 0)));
 }
+/* --- 買い目・期待値・自信度 ------------------------------------------
+   計算は lib/bets.mjs（検証の race_pick.mjs と同じもの）。
+   段位は evUmaren の分位で決める。**検証では絞り込みで回収率が安定して上がる
+   証拠は得られていない**ので、あくまで強弱をつけるための参考値として出す。   */
+const PICK = fs.existsSync(path.join(ROOT, 'data/nankan/racepick.json')) ? readJSON('data/nankan/racepick.json') : null;
+const MAXPTS = Number(process.env.NK_BET_MAXPTS || 12);
+const gradeOf = ev => {
+  const t = (PICK && PICK.thresholds && PICK.thresholds.evUmaren) || { p10: 1.35, p25: 1.21, p50: 1.08 };
+  return ev >= t.p10 ? 'S' : ev >= t.p25 ? 'A' : ev >= t.p50 ? 'B' : 'C';
+};
+
 /* 3着以内に入る確率（Harville）。三連系の期待値を見るときの土台にもなる */
 function top3Of(p) {
   const n = p.length, out = new Array(n).fill(0);
@@ -94,13 +106,14 @@ for (const key of TRACKS) {
       if (!p) { p = mc.win.slice(); noModel++; }
 
       /* 単勝オッズがあれば第2段で合成する（検証では人気と互角まで来る） */
-      let blended = null;
+      let blended = null, marketP = null;
       const od = oddsMap.get(r.raceId);
       if (MDL && MDL.beta2 && od) {
         const o = live.map(h => (od.tan[h.no] || {}).odds);
         if (o.every(x => x > 0)) {
           const inv = o.map(x => 1 / x), z = inv.reduce((a, b) => a + b, 0);
-          const pp = inv.map(x => x / z);
+          marketP = inv.map(x => x / z);
+          const pp = marketP;
           const u = p.map((x, i) => MDL.beta2[0] * Math.log(Math.max(x, 1e-9)) + MDL.beta2[1] * Math.log(pp[i]));
           const mx = Math.max(...u), ex = u.map(x => Math.exp(x - mx)), sz = ex.reduce((a, b) => a + b, 0);
           blended = ex.map(x => x / sz);
@@ -110,6 +123,17 @@ for (const key of TRACKS) {
         }
       }
       const t3 = top3Of(p);
+
+      /* 自信度・期待値・おすすめ買い目 */
+      r.conf = r3(confOf(p));
+      r.pTop = r3(Math.max(...p));
+      if (marketP) {
+        const plan = betPlan(p, marketP, live.map(h => h.no), MAXPTS);
+        r.ev = { umaren: plan.umaren.best, sanpuku: plan.sanpuku.best };
+        r.nPos = { umaren: plan.umaren.nPos, sanpuku: plan.sanpuku.nPos };
+        r.bets = { umaren: plan.umaren.buy, sanpuku: plan.sanpuku.buy };
+        r.grade = gradeOf(plan.umaren.best);
+      } else { r.ev = null; r.bets = null; r.grade = null; }
 
       const order = p.map((w, i) => [w, t3[i], i]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
       const mark = {};
