@@ -3,3 +3,6 @@ data/cache/
 # 生データと中間ファイル（index.json / races.*.json から再生成できる）
 data/nankan/leading.raw.json
 data/nankan/cards.jsonl
+# launchd が書くログと実行状態（マシンごとの一時ファイル）
+data/nankan/*.log
+data/nankan/.refresh-stamp
