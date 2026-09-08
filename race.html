@@ -178,6 +178,25 @@ body.no-runs .tate .p-runs{display:none}
 body.no-idx .tate .p-idx,body.no-idx .tate .p-chips{display:none}
 body.no-memo .tate .p-memo{display:none}
 
+/* ---- 展開予想 ---- */
+.tenkai{margin:6px 12px 0;border:1px solid var(--rule2);background:#fff}
+.tenkai__h{display:flex;align-items:center;gap:8px;padding:4px 9px;background:var(--paper2);border-bottom:1px solid var(--rule2);font-size:11px;color:var(--sub)}
+.tenkai__h b{font-family:var(--mincho);font-size:13px;color:var(--ink)}
+.tenkai__h .pace{display:inline-block;padding:0 7px;font-weight:700;color:#fff;font-size:11px}
+.tenkai__b{display:flex;align-items:stretch;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tk-grp{flex:1 1 0;min-width:118px;padding:5px 8px 6px;border-right:1px dotted var(--rule2)}
+.tk-grp:last-child{border-right:0}
+.tk-grp .lab{font-size:10px;color:var(--faint);letter-spacing:.06em;margin-bottom:3px;white-space:nowrap}
+.tk-grp .lab i{font-style:normal;font-weight:700;color:var(--ink);font-family:var(--mincho);font-size:12px;margin-right:4px}
+.tk-nos{display:flex;flex-wrap:wrap;gap:4px 5px}
+.tk-cell{display:flex;flex-direction:column;align-items:center;line-height:1}
+.tk-cell .m{height:12px;font-family:var(--mincho);font-size:11px;font-weight:700;color:var(--sub)}
+.tk-cell .m.m1{color:var(--red)}.tk-cell .m.m2{color:var(--blue)}
+.tk-no{display:inline-block;min-width:22px;height:20px;line-height:18px;text-align:center;
+  border:1px solid var(--rule);font-weight:700;font-size:12px}
+.tenkai .note{padding:3px 9px 6px;font-size:10.5px;color:var(--sub);border-top:1px dotted var(--rule2)}
+@media (max-width:840px){ .tenkai{margin:6px 10px 0} .tk-grp{min-width:104px} }
+
 /* ---- AIのおすすめ（買い目・期待値・自信度）---- */
 .aibox{margin:8px 12px 0;border:1px solid var(--rule2);background:#fffdf7}
 .aibox__h{display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--paper2);border-bottom:1px solid var(--rule2)}
@@ -304,6 +323,7 @@ body.no-memo .memo{display:none}
   <button data-k="memo" class="on">寸評</button>
   <span class="sp" id="sp"></span>
 </div>
+<div id="tenkai"></div>
 <div id="ai"></div>
 
 <div id="board"></div>
@@ -451,6 +471,42 @@ function pillar(h){
   </div>`;
 }
 
+/* 展開予想。シミュレータが出した3角の平均位置で並べ、4つの集団に分ける。
+   競馬新聞の「予想隊列」と同じ読み方ができるようにする。               */
+function tenkai(r,hs){
+  const live=hs.filter(h=>!h.scratch&&h.c3!=null);
+  if(live.length<4){$('tenkai').innerHTML='';return;}
+  const sorted=live.slice().sort((a,b)=>a.c3-b.c3);
+  const n=sorted.length;
+  /* 逃げ＝3角2番手以内、以降は頭数を3等分して 先行／中団／後方 */
+  const nige=sorted.filter(h=>h.c3<=2.5);
+  const rest=sorted.filter(h=>h.c3>2.5);
+  const cut=Math.ceil(rest.length/3);
+  const grp=[
+    ['逃げ','ハナ',nige],
+    ['先行','前々',rest.slice(0,cut)],
+    ['中団','中',rest.slice(cut,cut*2)],
+    ['後方','後ろ',rest.slice(cut*2)],
+  ].filter(g=>g[2].length);
+  const PC={H:['ハイ','#c0102a'],M:['平均','#c9761a'],S:['スロー','#1b4f9c']}[r.pace]||['—','#8b8578'];
+  const cell=h=>{const w=WAKU[h.gate]||WAKU[0];
+    return `<span class="tk-cell" title="${esc(h.name)}／3角${h.c3.toFixed(1)}番手">
+      <span class="m ${MARKC[h.mark]||''}">${h.mark||''}</span>
+      <span class="tk-no" style="background:${w[0]};color:${w[1]}">${h.no}</span></span>`;};
+  const nN=live.filter(h=>h.style==='逃げ').length;
+  $('tenkai').innerHTML=`<div class="tenkai">
+    <div class="tenkai__h"><b>展開予想</b>
+      <span>想定ペース</span><span class="pace" style="background:${PC[1]}">${PC[0]}</span>
+      <span>逃げ${nN}頭・先行${live.filter(h=>h.style==='先行').length}頭</span></div>
+    <div class="tenkai__b">${grp.map(([g,sub,list])=>`<div class="tk-grp">
+      <div class="lab"><i>${g}</i>${sub}</div>
+      <div class="tk-nos">${list.map(cell).join('')}</div></div>`).join('')}</div>
+    <div class="note">3角での位置取りをシミュレータで${(NKR.meta&&NKR.meta.marks&&NKR.meta.marks.trials)||600}回試行した平均。左ほど前。
+      ${nN===0?'明確な逃げ馬がおらず、誰が行くかで結果が変わりやすい。':nN>=3?'逃げ候補が3頭以上。前が競り合うと差しが届きやすい。':''}
+      ${r.cond?`馬場 ${esc(r.cond.baba)}／前残り度 ${r.cond.front>0?'+':''}${r.cond.front}`:''}</div>
+  </div>`;
+}
+
 /* AIのおすすめ（買い目・期待値・自信度）
    主役は「本命BOX」。過去230レースの実測で、期待値1.0超だけを買うやり方（0〜52%）より
    BOX（75〜112%）のほうが明確に良かったため。期待値は参考として併記する。 */
@@ -519,6 +575,7 @@ function render(){
       　${esc(day)}　想定ペース <b>${PACE}</b>${r.cond?`　馬場 ${esc(r.cond.baba)}／前残り度 ${sgn(r.cond.front)}・内外 ${sgn(r.cond.out)}`:''}</div>
     ${top.length?`<div class="honshi">${top.map(h=>`<span><i class="${MARKC[h.mark]||''}" style="color:${h.mark==='◎'?'var(--red)':h.mark==='○'?'var(--blue)':'inherit'}">${h.mark}</i>${h.no} ${esc(h.name)}</span>`).join('')}</div>`:''}`;
   $('sp').textContent=hs.some(h=>h.scratch)?`取消 ${hs.filter(h=>h.scratch).length}頭を含む`:'';
+  tenkai(r,hs);
   aiBox(r);
   applyLayout();
   if(layout==='tate'){

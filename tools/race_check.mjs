@@ -44,6 +44,12 @@ for (const [dk, list] of Object.entries(X.D.days)) {
       X.render();
       const cur = store.get('board').innerHTML;
       if (cur.length < 500) { console.log(`  ! ${dk} ${r0(list, i)}R の${lay}描画が空`); bad++; }
+      if (lay === 'yoko') {
+        /* 展開予想に全頭が入っているか（欠けても画面では気づきにくい）*/
+        const t = store.get('tenkai').innerHTML || '';
+        const nos = (t.match(/class="tk-cell"/g) || []).length;
+        if (live.length >= 4 && nos !== live.length) { console.log(`  ! ${dk} ${r.r}R 展開予想 ${nos}頭 ≠ 出走 ${live.length}頭`); bad++; }
+      }
       if (lay === 'tate') {
         /* 柱の本数が出走頭数と一致するか（多頭数で画面外に落ちていないか）*/
         const pil = (cur.match(/<div class="pil /g) || []).length;

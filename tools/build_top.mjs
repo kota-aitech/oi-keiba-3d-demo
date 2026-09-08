@@ -26,12 +26,16 @@ for (const key of TRACKS) {
       const top = hs.slice().sort((a, b) => (b.win || 0) - (a.win || 0)).slice(0, 4)
         .map(h => ({ no: h.no, gate: h.gate, name: h.name, mark: h.mark, win: h.win, top3: h.top3,
           style: h.style, jockey: h.jockey, odds: h.pubOdds || null }));
+      /* 展開予想（3角の平均位置順）。TOP では馬番と枠だけの軽い形で持つ */
+      const flow = hs.filter(h => h.c3 != null).sort((a, b) => a.c3 - b.c3)
+        .map(h => [h.no, h.gate, +h.c3.toFixed(1), h.mark || '']);
       return { r: r.r, time: r.time, dist: r.dist, n: r.n, cls: r.cls, date: r.date,
         grade: r.grade || null, conf: r.conf ?? null, pTop: r.pTop ?? null,
         ev: r.ev || null, nPos: r.nPos || null, pace: r.pace || null,
         oddsSrc: r.oddsSrc || null,
         bets: r.bets ? { umaren: (r.bets.umaren || []).slice(0, 6), sanpuku: (r.bets.sanpuku || []).slice(0, 6) } : null,
         box: r.box || null,
+        flow,
         top };
     });
   }
