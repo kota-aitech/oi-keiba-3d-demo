@@ -16,7 +16,8 @@ export function parseOdds(js) {
   return {
     updated: t ? t[1] : '',
     live,
-    tan: Object.fromEntries(Object.entries(tan).map(([k, v]) => [k, { odds: Number(v.v) || null, pop: v.pop || null }])),
+    // sale=false は発売中止（出走取消・除外）。出馬表がまだ取消を反映していないことがあるので必ず残す
+    tan: Object.fromEntries(Object.entries(tan).map(([k, v]) => [k, { odds: Number(v.v) || null, pop: v.pop || null, sale: v.sale }])),
     fuku: Object.fromEntries(Object.entries(fuku).map(([k, v]) => {
       const [lo, hi] = v.v.split('-').map(Number);
       return [k, { lo: lo || null, hi: hi || null, pop: v.pop || null }];

@@ -50,12 +50,13 @@ for (const [dk, list] of Object.entries(X.D.days)) {
         /* 展開予想に全頭が入っているか（欠けても画面では気づきにくい）*/
         const t = store.get('tenkai').innerHTML || '';
         const nos = (t.match(/class="tk-cell"/g) || []).length;
+        /* 展開予想は出走馬のみ（取消は除く）*/
         if (live.length >= 4 && nos !== live.length) { console.log(`  ! ${dk} ${r.r}R 展開予想 ${nos}頭 ≠ 出走 ${live.length}頭`); bad++; }
       }
       if (lay === 'tate') {
-        /* 柱の本数が出走頭数と一致するか（多頭数で画面外に落ちていないか）*/
+        /* 柱の本数が全頭ぶんあるか（取消馬も薄く表示するので hs 基準）*/
         const pil = (cur.match(/<div class="pil /g) || []).length;
-        if (pil !== live.length) { console.log(`  ! ${dk} ${list[i].r}R 縦型の柱 ${pil}本 ≠ 出走 ${live.length}頭`); bad++; }
+        if (pil !== hs.length) { console.log(`  ! ${dk} ${list[i].r}R 縦型の柱 ${pil}本 ≠ 出馬表 ${hs.length}頭`); bad++; }
       }
       h = lay === 'yoko' ? cur : h;
     }

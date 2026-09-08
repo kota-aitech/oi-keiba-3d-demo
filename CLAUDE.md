@@ -58,7 +58,8 @@ data/
     payouts.jsonl       ★払戻金（全券種の組番と配当）— コミット対象
     backtest.json       ★的中率・回収率の検証結果 — コミット対象
     odds.jsonl          ★単勝・複勝オッズ（最終）— コミット対象
-    odds_live.jsonl     ★締切前スナップショットと最終の対 — コミット対象
+    odds_live.jsonl     ★締切前(T-n)と最終の対（追記のみ・検証用）— コミット対象
+    odds_pre.json       ★暫定オッズ。1レース1件だけ上書き — コミット対象
     model.json          ★条件付きロジットの係数と検証結果 — コミット対象
     index.train.json    ★先読みを避けた学習用の指数（2023〜2025のみ）— コミット対象
 
@@ -76,7 +77,8 @@ tools/
   fetch_results.mjs     競走成績取得（天候・馬場・着順）→ results.jsonl
   fetch_payouts.mjs     払戻金一覧取得（1日1リクエストで全券種）→ payouts.jsonl
   fetch_odds.mjs        単勝・複勝オッズ取得（/oddsJS の軽い JS）→ odds.jsonl
-  watch_odds.mjs        締切前のオッズを自動で拾う → odds_live.jsonl
+  watch_odds.mjs        締切前・暫定のオッズを自動で拾う → odds_live.jsonl / odds_pre.json
+  refresh.mjs           オッズが変わったら印・期待値・買い目・TOPを作り直して各ページへ反映
   odds_drift.mjs        締切前と最終オッズのズレを測る
   launchd/              締切前オッズ取得を macOS に登録する plist と install.sh
   fit_model.mjs         条件付きロジットの当てはめ → model.json
@@ -486,14 +488,32 @@ HTML のオッズページ（100KB）は使わない。発売前は `0.0` が並
 **発走の9分前**に取りに行く設定になる。同じレースについて締切前と最終の両方を残すので、
 `odds_drift.mjs` で「8分前の数字で判断して間に合うか」を後から測れる。
 
-さらに、あるレースの締切8分前に来たタイミングで**それ以降の全レースの暫定オッズ**も拾う（tag `pre`）。
-後半のレースも早い段階から値が入るので、**いつ画面を見てもおすすめが出る**。
-暫定は同じレースについて何度でも上書きし、締切前（`T-8`）が取れたらそちらが優先される。
+さらに、あるレースの締切8分前を取ったタイミングで**まだ発走していない全レースの暫定オッズを取り直す**。
+＝レースが1つ進むごとに後半のオッズが更新される。取るものがない時間帯も
+`NK_ODDS_REFRESH`（既定12分）より古ければ取り直して鮮度を保つ。
+
+- **翌日以降も対象**（`NK_ODDS_AHEAD` 既定3日）。南関は重賞などで前日発売があり、そこで値が入る
+- 暫定は `odds_pre.json` に**1レース1件だけ上書き**する。毎分 jsonl に追記すると際限なく増える
+- 締切前（`T-8`）と最終だけ `odds_live.jsonl` に追記し、あとで実際のズレを検証できるようにする
+
+**発売中止（`sale:false`）の扱い**：オッズが `["0.0", false, …]` の馬は出走取消・除外。
+出馬表への反映は遅れることがあり、**1頭でも欠けると `o.every(x => x > 0)` が false になって
+レース丸ごと「オッズなし」に落ちていた**。`build_marks` / `build_results` で取消扱いにし、
+頭数からも引く。画面には「発売中止」と出す。
+
+**反映（`tools/refresh.mjs`）**
+オッズが変わったら `build_marks → build_top → embed_db` を回して各ページに埋め直す。
+`odds_pre.json` / `odds_live.jsonl` の mtime+size で変化を見て、変わっていなければ何もしない。
+`NK_MARK_FAST=1` で位置取り（3角・4角・ペース）の再計算を省くので**2秒**で終わる
+（省かないと48レース×600試行で2分かかり、実行間隔に収まらない）。
 
 ```bash
-node tools/watch_odds.mjs                  # その日を見張り続ける（開催終了で自動終了）
-NK_ODDS_ONCE=1 node tools/watch_odds.mjs   # いま取り時のものだけ拾って終了（cron/launchd 向き）
-sh tools/launchd/install.sh                # macOS に1分おきの自動実行を登録
+sh tools/launchd/install.sh                # macOS に自動実行を登録（下の2つをまとめて）
+#   com.nankan.oddswatch … 1分おきにオッズの取り時を見る
+#   com.nankan.refresh   … 2分おきに、オッズが変われば各ページへ反映
+node tools/watch_odds.mjs                  # 手で見張り続ける（開催終了で自動終了）
+NK_ODDS_ONCE=1 node tools/watch_odds.mjs   # いま取り時のものだけ拾って終了
+NK_REFRESH_FORCE=1 node tools/refresh.mjs  # 変化が無くても反映し直す
 node tools/odds_drift.mjs                  # 締切前と最終のズレを見る
 ```
 

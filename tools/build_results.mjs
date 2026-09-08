@@ -31,8 +31,11 @@ const results = new Map(resArr.map(r => [r.raceId, r]));
 const payouts = new Map(jl('payouts.jsonl').map(p => [p.raceId, p]));
 const oddsMap = new Map();
 for (const o of jl('odds.jsonl')) oddsMap.set(o.raceId, { src: '最終', tan: o.tan });
-/* 暫定(pre) → 締切前(T-n) の順に上書きするので、締切前があればそちらが残る */
-for (const o of jl('odds_live.jsonl')) if (o.tag === 'pre') oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
+/* 暫定(odds_pre.json) → 締切前(T-n) の順に上書きするので、締切前があればそちらが残る */
+try {
+  const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/nankan/odds_pre.json'), 'utf8'));
+  for (const o of Object.values(P)) oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
+} catch {}
 for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final' && o.tag !== 'pre') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
 
 const softmax = us => { const mx = Math.max(...us); const e = us.map(u => Math.exp(u - mx)); const z = e.reduce((a, b) => a + b, 0); return e.map(x => x / z); };

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  オッズが更新されたら、印・期待値・おすすめ買い目・TOPを作り直して各ページに反映する。
+  2分おきに見て、オッズに変化が無ければ何もしない（数百ミリ秒で終わる）。
+  導入は tools/launchd/install.sh がまとめてやる。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nankan.refresh</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/tools/refresh.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>StartInterval</key><integer>120</integer>
+  <key>StandardOutPath</key><string>__REPO__/data/nankan/refresh.log</string>
+  <key>StandardErrorPath</key><string>__REPO__/data/nankan/refresh.log</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

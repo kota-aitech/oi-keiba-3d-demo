@@ -18,6 +18,7 @@ import { betPlan, confOf } from './lib/bets.mjs';
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const JA = { oi: '大井', kawasaki: '川崎', funabashi: '船橋', urawa: '浦和' };
 const N = Number(process.env.NK_MARK_TRIALS || 600);
+const FAST = !!process.env.NK_MARK_FAST;   // オッズだけ変わったときの再計算を省く
 const MARKS = ['◎', '○', '▲', '△', '△', '☆'];
 const r3 = x => Math.round(x * 1000) / 1000;
 
@@ -34,8 +35,11 @@ const cards = new Map(jl('cards.jsonl').map(c => [c.raceId, c]));
    締切前スナップショット（watch_odds.mjs）を最優先、無ければ最終オッズ。 */
 const oddsMap = new Map();
 for (const o of jl('odds.jsonl')) oddsMap.set(o.raceId, { src: '最終', tan: o.tan });
-/* 暫定(pre) → 締切前(T-n) の順に上書きするので、締切前があればそちらが残る */
-for (const o of jl('odds_live.jsonl')) if (o.tag === 'pre') oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
+/* 暫定(odds_pre.json) → 締切前(T-n) の順に上書きするので、締切前があればそちらが残る */
+try {
+  const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/nankan/odds_pre.json'), 'utf8'));
+  for (const o of Object.values(P)) oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
+} catch {}
 for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final' && o.tag !== 'pre') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
 const LAP = buildLapIndex(jl('results.jsonl'), [...cards.values()]);
 if (!MDL) console.error('!! model.json がない。印はシミュレータの勝率で出す');
@@ -82,17 +86,33 @@ const ent = { meta: null };
 for (const key of TRACKS) {
   const M = loadModel(key);
   const d = readJSON(`data/nankan/entries.${key}.json`);
-  let done = 0, noModel = 0;
+  let done = 0, noModel = 0, reused = 0;
   for (const [dk, list] of Object.entries(d.days)) {
     for (const r of list) {
       const rk = `${dk}|${r.r}`;
       const all = d.entries[rk] || [];
+      /* オッズが「発売中止」になっている馬は取消として扱う。
+         出馬表の取消反映は遅れることがあり、1頭でも欠けると
+         「オッズなし」に落ちてレース丸ごとおすすめが出せなくなっていた。 */
+      const od0 = oddsMap.get(r.raceId);
+      if (od0) for (const h of all) {
+        const t = od0.tan[h.no];
+        if (t && t.sale === false) { h.scratch = true; h.noSale = true; }
+      }
       const live = all.filter(h => !h.scratch);
       if (live.length < 2) continue;
+      r.n = live.length;                     // 発売中止ぶんを頭数から引く
 
-      /* シミュレータ：3角・4角の平均位置とペース（馬場条件つき） */
+      /* シミュレータ：3角・4角の平均位置とペース（馬場条件つき）。
+         オッズだけが変わったときは前回の結果を使い回す（NK_MARK_FAST）。
+         位置取りは馬場条件が同じなら変わらないので、毎回600回まわす必要がない。 */
       const cond = condOf(M, r.dist);
-      const mc = M.monteCarlo({ dist: r.dist, horses: live.map(h => ({ ...h })) }, cond, N);
+      const reusable = FAST && r.pace && live.every(h => h.c3 != null && h.simWin != null);
+      const mc = reusable
+        ? { win: live.map(h => h.simWin), c3: live.map(h => h.c3), c4: live.map(h => h.c4),
+            pace: { label: r.pace }, winTime: r.winTime }
+        : M.monteCarlo({ dist: r.dist, horses: live.map(h => ({ ...h })) }, cond, N);
+      if (reusable) reused++;
 
       /* 予測：ロジット */
       let p = null;
@@ -169,7 +189,7 @@ for (const key of TRACKS) {
   writeJSON(`data/nankan/entries.${key}.json`, d);
   ent[key] = { track: d.track, days: d.days, entries: d.entries };
   ent.meta = d.meta;
-  console.error(`${JA[key] || key}: ${done} レースに印（ロジット${done - noModel} / シミュレータ${noModel} / うちオッズ合成 ${blendN}）`);
+  console.error(`${JA[key] || key}: ${done} レースに印（ロジット${done - noModel} / シミュレータ${noModel} / うちオッズ合成 ${blendN}${reused ? ` / 位置取り再利用 ${reused}` : ''}）`);
 }
 /* 「この買い方は実際どうだったか」を画面に出すため、実測も一緒に渡す */
 ent.record = {};
