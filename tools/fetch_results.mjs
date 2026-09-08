@@ -4,7 +4,7 @@
    出力: data/nankan/results.jsonl                                            */
 import fs from 'node:fs';
 import path from 'node:path';
-import { get, tables, num, ROOT } from './lib/nk.mjs';
+import { get, tables, text, num, ROOT } from './lib/nk.mjs';
 
 const BASE = 'https://www.nankankeiba.com';
 const OUT = path.join(ROOT, 'data', 'nankan', 'results.jsonl');
@@ -13,23 +13,34 @@ const FROM = process.env.NK_BT_FROM || '2000-01-01';
 const TO = process.env.NK_BT_TO || new Date().toISOString().slice(0, 10);
 
 function parseResult(html) {
-  const w = /天候[:：]\s*([^<\s]{1,4})/.exec(html.replace(/<[^>]+>/g, ' '));
-  const b = /馬場[:：]\s*(?:ダート|芝)?\s*([^<\s]{1,4})/.exec(html.replace(/<[^>]+>/g, ' '));
+  const flat = text(html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, '|'))
+    .replace(/\s+/g, ' ').replace(/(\|\s*)+/g, '|');
+  const w = /天候[:：]\s*([^<\s|]{1,4})/.exec(html.replace(/<[^>]+>/g, ' '));
+  const b = /馬場[:：]\s*(?:ダート|芝)?\s*([^<\s|]{1,4})/.exec(html.replace(/<[^>]+>/g, ' '));
+  /* ハロンタイム（レースラップ）。上がり3F・4F も同じ並びに出る */
+  let lap = null, agari3 = null, agari4 = null;
+  const lm = /ハロンタイム\|([\d.]+)\|([\d.]+)\|([\d.\-]+)/.exec(flat);
+  if (lm) { agari3 = Number(lm[1]); agari4 = Number(lm[2]); lap = lm[3].split('-').map(Number).filter(x => x > 0); }
   const rows = [];
   for (const tb of tables(html)) {
     if (!(tb[0] && tb[0][0] === '着' && tb[0][1] === '枠' && tb[0][2] === '馬番')) continue;
     for (const r of tb.slice(1)) {
       if (r.length < 10) continue;
       const pos = /^\d+$/.test(r[0]) ? Number(r[0]) : null;
-      rows.push({ pos, gate: num(r[1]), no: num(r[2]), name: r[3], jockey: r[8], pop: num(r[14]) });
+      rows.push({ pos, gate: num(r[1]), no: num(r[2]), name: r[3],
+        bw: num((/(\d{3})/.exec(r[6]) || [])[1]),
+        jockey: r[8], time: r[10], last3f: Number(r[12]) || null, pop: num(r[14]) });
     }
     break;
   }
   return {
     weather: w ? w[1] : '', baba: b ? b[1] : '',
+    lap, agari3, agari4,
+    ten3: lap && lap.length >= 3 ? +(lap[0] + lap[1] + lap[2]).toFixed(1) : null,
     order: rows.filter(r => r.pos).sort((a, c) => a.pos - c.pos).map(r => r.no),
     gates: Object.fromEntries(rows.map(r => [r.no, r.gate])),
     pops: Object.fromEntries(rows.map(r => [r.no, r.pop])),
+    last3f: Object.fromEntries(rows.filter(r => r.last3f).map(r => [r.no, r.last3f])),
     n: rows.length,
   };
 }

@@ -13,7 +13,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
-import { makeFeaturizer, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, FEATURES } from './lib/feat.mjs';
 
 const DBFILE = process.env.NK_FIT_DB || 'data/nankan/index.json';
 const SPLIT = process.env.NK_FIT_SPLIT || '2026-06-01';   // これ以降を検証に回す
@@ -23,15 +23,18 @@ const ITER = Number(process.env.NK_FIT_ITER || 4000);
 const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 const DB = readJSON(DBFILE);
 const featurize = makeFeaturizer(DB);
-const results = new Map(jl('results.jsonl').map(r => [r.raceId, r]));
+const resArr = jl('results.jsonl');
+const cardArr = jl('cards.jsonl');
+const LAP = buildLapIndex(resArr, cardArr);
+const results = new Map(resArr.map(r => [r.raceId, r]));
 const oddsMap = new Map((fs.existsSync(path.join(ROOT, 'data/nankan/odds.jsonl')) ? jl('odds.jsonl') : []).map(o => [o.raceId, o]));
 
 /* ---- 1. 学習データを組む ---- */
 const races = [];
-for (const card of jl('cards.jsonl')) {
+for (const card of cardArr) {
   const res = results.get(card.raceId);
   if (!res || res.order.length < 3) continue;
-  const f = featurize(card, res.baba, null);
+  const f = featurize(card, res.baba, null, LAP);
   if (!f) continue;
   const nos = new Set(f.rows.map(r => r.no));
   const order = res.order.filter(no => nos.has(no));

@@ -27,11 +27,14 @@ export function parseCard(html, raceId) {
   const track = JO[raceId.slice(8, 10)] || raceId.slice(8, 10);
   const R = Number(raceId.slice(14, 16));
   const p0 = html.indexOf('発走時刻');
-  const hdr = text(html.slice(Math.max(0, p0 - 2000), p0 + 500));
+  const hdr = text(html.slice(Math.max(0, p0 - 2000), p0 + 2500));
   const dist = num((/([\d,]{3,6})\s*m/.exec(hdr) || [0, 0])[1]);
   const n = num((/（(\d+)頭）/.exec(hdr) || [0, 0])[1]);
   const cls = ((/発走時刻\s*[\d:]+\s*(.+?)\s*詳細/.exec(hdr) || [0, ''])[1] || '').trim();
   const time = ((/発走時刻\s*(\d{1,2}:\d{2})/.exec(hdr) || [0, ''])[1] || '');
+  // 番組ポイント（1着ぶん）。南関の格付ポイント制度でクラスの上下を決める
+  const pt1 = num((/番組ポイント[\s\S]{0,40}?1着\s*([\d,]+)\s*P/.exec(hdr) || [0, 0])[1]);
+  const prize1 = num((/1着\s*([\d,]+)円/.exec(hdr) || [0, 0])[1]);
   const night = /ナイター|薄暮/.test(hdr);
 
   /* 枠番は rowspan で省かれる行があるため、/uma_info/ を含むセルを起点に相対位置で読む */
@@ -94,7 +97,7 @@ export function parseCard(html, raceId) {
     }
   }
 
-  return { raceId, date, track, R, dist, n, cls, time, night, horses };
+  return { raceId, date, track, R, dist, n, cls, time, night, pt1, prize1, horses };
 }
 
 const TRACK_RE = /(浦和|船橋|大井|川崎|大井|門別|盛岡|水沢|金沢|笠松|名古屋|園田|姫路|高知|佐賀|中山|東京|阪神|京都|中京|新潟|福島|小倉|札幌|函館)/;
@@ -111,6 +114,7 @@ export function parsePast(cellHtml) {
   if (!m) return null;
   const tail = s.slice(m[0].length - 1).split('|').filter(Boolean);
   const last3 = /3F\s*([\d.]+)\s*\((\d+)\)/.exec(s);
+  const rid = /\/result\/(\d{16})\.do/.exec(cellHtml);
   const wt = /(\d{3})kg/.exec(s);
   const corners = tail.filter(x => /^\d{1,2}$/.test(x)).map(Number).slice(-4);
   const jk = (m[13] || '').replace(/^[▲△☆★◇◎]\s*/, '').replace(/\s*[\d.]+\s*$/, '').trim();
@@ -120,6 +124,7 @@ export function parsePast(cellHtml) {
     field: Number(m[10]), no: Number(m[11]), pop: Number(m[12]), jockey: jk,
     last3f: last3 ? Number(last3[1]) : null, last3fRank: last3 ? Number(last3[2]) : null,
     kg: wt ? Number(wt[1]) : null,
+    rid: rid ? rid[1] : null,
     corners,
   };
 }

@@ -39,8 +39,9 @@ for (const [jaName, key] of WANT) {
         return { no: h.no, name: h.name, gate: h.gate, style: d2.style, epos: d2.epos, ability: d2.ability,
           close: d2.close, stamina: d2.stamina, wet: d2.wet, ...hu, ...pd, ...memoOf(h, d2, hu, pd, c.dist),
           // ここから先は出馬表ページ（race.html）だけで使う
+          // rid（前走のレースID）は特徴量づくり用。ページには載せないので落とす
           _full: { horseId: h.horseId, sexAge: h.sexAge, kg: h.kg, dam: h.dam, farm: h.farm, f3: d2.f3,
-            epR: d2.st.ratio, past: h.past },
+            epR: d2.st.ratio, past: (h.past || []).map(({ rid, ...p }) => p) },
         };
       });
       full[`${dk}|${c.R}`] = hs.map(({ memo, ...h }) => ({ ...h, ...h._full, _full: undefined }));

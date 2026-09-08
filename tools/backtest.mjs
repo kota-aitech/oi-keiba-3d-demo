@@ -17,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
-import { makeFeaturizer, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, FEATURES } from './lib/feat.mjs';
 import { loadModel, condOf } from './lib/model.mjs';
 
 const TRACKS = (process.env.NK_BT_TRACKS || '大井').split(',');
@@ -36,7 +36,9 @@ const MODEL = fs.existsSync(path.join(ROOT, 'data/nankan/model.json')) ? readJSO
 const featurize = makeFeaturizer(DB);
 const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
 const cards = jl('cards.jsonl');
-const results = new Map(jl('results.jsonl').map(r => [r.raceId, r]));
+const resArr = jl('results.jsonl');
+const LAP = buildLapIndex(resArr, cards);
+const results = new Map(resArr.map(r => [r.raceId, r]));
 const payouts = new Map(jl('payouts.jsonl').map(p => [p.raceId, p]));
 const oddsMap = new Map((fs.existsSync(path.join(ROOT, 'data/nankan/odds.jsonl')) ? jl('odds.jsonl') : []).map(o => [o.raceId, o]));
 
@@ -131,7 +133,7 @@ for (const track of TRACKS) {
   for (const c of mine.sort((a, b) => a.raceId.localeCompare(b.raceId))) {
     const pay = payouts.get(c.raceId), res = results.get(c.raceId), od = oddsMap.get(c.raceId);
     if (!pay || !pay.order || pay.order.length < 3) continue;
-    const f = featurize(c, res && res.baba, null);
+    const f = featurize(c, res && res.baba, null, LAP);
     if (!f) continue;
     const gateOf = no => (f.rows.find(h => h.no === no) || {}).gate || 0;
     const nos = f.rows.map(h => h.no);
