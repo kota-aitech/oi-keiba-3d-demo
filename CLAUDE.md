@@ -501,11 +501,22 @@ HTML のオッズページ（100KB）は使わない。発売前は `0.0` が並
 レース丸ごと「オッズなし」に落ちていた**。`build_marks` / `build_results` で取消扱いにし、
 頭数からも引く。画面には「発売中止」と出す。
 
-**反映（`tools/refresh.mjs`）**
-オッズが変わったら `build_marks → build_top → embed_db` を回して各ページに埋め直す。
-`odds_pre.json` / `odds_live.jsonl` の mtime+size で変化を見て、変わっていなければ何もしない。
-`NK_MARK_FAST=1` で位置取り（3角・4角・ペース）の再計算を省くので**2秒**で終わる
-（省かないと48レース×600試行で2分かかり、実行間隔に収まらない）。
+**反映と公開（`tools/refresh.mjs`）**
+オッズが変わったら `build_marks → build_top → embed_db` を回して各ページに埋め直し、
+**git に commit / push して公開サイトへ反映する**（Render は main を見てデプロイするため、
+push しないと手元のファイルが変わるだけで公開側は古いまま）。
+
+- `odds_pre.json` / `odds_live.jsonl` の mtime+size で変化を見て、変わっていなければ何もしない
+- `NK_MARK_FAST=1` で位置取り（3角・4角・ペース）の再計算を省くので **2秒**で終わる
+  （省かないと48レース×600試行で2分かかり、実行間隔に収まらない）
+- **commit するのは生成物だけ**（HTML 5枚と `data/nankan` の生成 JSON）。
+  `tools/` や `*.md` は対象外なので、**作業中でも安全に走らせられる**
+- `main` 以外のブランチでは push しない
+- リモートが先行していたら fetch → rebase して押し直す（生成物は作り直せるので安全）
+- 止めたいときは `NK_REFRESH_NOPUSH=1`
+
+コミットは `chore(odds): 2026-9-8 19:15:49 時点のオッズを反映` の形で積む。
+オッズ更新のたびに1コミットなので、開催日は1日あたり数十コミットになる。
 
 ```bash
 sh tools/launchd/install.sh                # macOS に自動実行を登録（下の2つをまとめて）
