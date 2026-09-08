@@ -35,3 +35,5 @@ try {
 
 try { inject('data.html', 'NKBROWSE', 'NKB', readJSON('data/nankan/browse.json')); }
 catch (e) { console.error('  (data.html はスキップ: ' + e.message + ')'); }
+try { inject('data.html', 'NKBT', 'NKBT', readJSON('data/nankan/backtest.json')); }
+catch (e) { console.error('  (バックテストはスキップ: ' + e.message + ')'); }

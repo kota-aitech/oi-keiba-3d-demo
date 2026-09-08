@@ -52,14 +52,22 @@ data/
     races.<track>.json  ★番組＋出走馬（index.html 埋め込み用）— コミット対象
     entries.<track>.json ★出馬表＋前5走の全項目（race.html 埋め込み用）— コミット対象
     browse.json         ★data.html 埋め込み用にたたんだ全データ — コミット対象
+    results.jsonl       ★競走成績（天候・馬場・着順）— コミット対象
+    payouts.jsonl       ★払戻金（全券種の組番と配当）— コミット対象
+    backtest.json       ★的中率・回収率の検証結果 — コミット対象
 
 tools/
   lib/nk.mjs            取得共通（Shift_JIS デコード・キャッシュ・レート制限・テーブル読み）
   lib/card.mjs          出馬表パーサ（壊れた HTML を <tr> 分割で読む）
   lib/embed.mjs         HTML のマーカー間に JSON を流し込む inject()
+  lib/horse.mjs         1頭ぶんの推定値・指数・寸評（本番と検証で共用）
+  lib/model.mjs         index.html のモデルを VM に読み込む loadModel/condOf
   fetch_leading.mjs     リーディング取得 → leading.raw.json
   fetch_cards.mjs       出馬表取得 → cards.jsonl
   fetch_trend.mjs       レース傾向取得 → meet.*.json
+  fetch_results.mjs     競走成績取得（天候・馬場・着順）→ results.jsonl
+  fetch_payouts.mjs     払戻金一覧取得（1日1リクエストで全券種）→ payouts.jsonl
+  backtest.mjs          BOX買いの的中率・回収率を検証 → backtest.json
   build_db.mjs          指数の算出 → index.json
   build_trend.mjs       距離別傾向・バイアス基準値の算出 → trend.*.json
   build_races.mjs       番組・出走馬の生成 → races.*.json / entries.*.json
@@ -206,7 +214,7 @@ hx   = clamp(hIdx, -1.6, 2.6) × cond.human      // cond.human は左パネル�
 |---|---|---|---|
 | `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約525KB |
 | `race.html` | `NKRACE` | `entries.*.json`（前5走・予想印こみ） | 約1.0MB |
-| `data.html` | `NKBROWSE` | `browse.json` | 約840KB |
+| `data.html` | `NKBROWSE` + `NKBT` | `browse.json` + `backtest.json` | 約880KB |
 
 ### 見た目の方針
 `race.html` と `data.html` は**競馬新聞の紙面**に寄せてある。共通の決めごと：
@@ -252,11 +260,52 @@ HTML も index.html に書き換わりうる）。
 
 ---
 
+## 的中率・回収率の検証（`tools/backtest.mjs`）
+
+```bash
+NK_BT_TRACKS=大井 NK_BT_FROM=2026-08-31 NK_BT_TO=2026-09-04 node tools/fetch_payouts.mjs
+NK_BT_TRACKS=大井 NK_BT_FROM=2026-08-31 NK_BT_TO=2026-09-04 node tools/fetch_results.mjs
+NK_BT_TRACKS=大井 NK_BT_FROM=2026-08-31 NK_BT_TO=2026-09-04 node tools/backtest.mjs
+node tools/embed_db.mjs      # data.html の「成績・回収率」タブに反映
+```
+`NK_BT_TRACKS` を変えるだけで他場に横展開できる（浦和・船橋も出馬表を取ってあれば動く）。
+`NK_BT_SIZES`（既定 3,4,5,6）で BOX の頭数、`NK_BT_TRIALS`（既定 800）で試行回数。
+
+- 買い方は「予想勝率の上位 k 頭の BOX を1点100円」。券種は 馬連・馬単・三連複・三連単・枠単
+- 予想は必ず `lib/model.mjs` 経由で **index.html のモデルそのもの**を回す。検証用の別式を作らない
+- 馬場・天候は results.jsonl の**実際に発表された値**を使う（レース前に分かる情報なので使ってよい）
+- 比較用に「単勝人気の上位 k 頭 BOX」も同じ条件で出す。**これに勝てていなければモデルに賭ける価値はない**
+
+### 最初の検証（大井60R + 川崎60R = 120レース）
+大井 2026-08-31〜09-04、川崎 2026-08-18〜21・09-07。
+
+| | 大井 モデル | 大井 人気 | 川崎 モデル | 川崎 人気 |
+|---|---|---|---|---|
+| 予想1位が1着 | 36.7% | 36.7% | 20.0% | 43.3% |
+| 上位3頭に勝ち馬が入る | 55.0% | 75.0% | 55.0% | 71.7% |
+| 上位3頭で1-2-3着独占 | 5.0% | 15.0% | 6.7% | 13.3% |
+
+回収率は 120レースを通してほぼ全券種・全BOXサイズで100%未満（大井の最高は馬連4頭BOX 73.5%）。
+川崎の三連複3頭BOX 107.5%・三連単3頭BOX 96.8% は的中 4/60 の当たりが大きかっただけで、
+サンプルが少なすぎて意味のある数字ではない。
+
+**現時点では馬券の判断に使えるモデルではない。他場に横展開する前に、まず次を直すこと。**
+
+- 1着を当てる力は大井では人気と互角だったが、川崎では大きく負けた（20% 対 43%）。
+  **2番手以下の並べ方はどちらの場でも人気に負けている**（上位3頭に勝ち馬 55% 対 72〜75%）
+- 原因はモデルの勝率分布が尖りすぎていること。1頭に50%超が集まるが、実際の12頭立ては
+  30/18/13/10/8… くらいに散る。`simRace` の `noiseAmp` と ability・hIdx の効き方の見直しが要る
+- 直すと3Dの見え方も変わるので、**こたに確認してから触る**
+- 未検証の案：BOX に選ぶ順を「勝率」ではなく「3着内率（`mc.top3`）」にする。
+  BOX は「上位3頭に入るか」を当てる買い方なので、こちらのほうが素直かもしれない
+
+---
+
 ## データブラウザ（`data.html`）
 数字だけを見たいとき用の別ページ。**index.html と同じく1ファイル・依存ゼロ**で、
 `browse.json`（約770KB）を `NKBROWSE` マーカーに埋め込んである。
 
-- タブ: 騎手／調教師／厩舎×騎手／馬主／種牡馬／母の父／場・距離の傾向
+- タブ: 騎手／調教師／厩舎×騎手／馬主／種牡馬／母の父／場・距離の傾向／成績・回収率／指数の読み方
 - 検索・最低出走数・場での絞り込み、列見出しクリックでソート、TSV コピー
 - 行数が多いので既定200件ずつ表示（「さらに表示」で追加）
 - 表示を足すときは `tools/build_browse.mjs` の `cols` と `data.html` の `TABS` を対で直す。
@@ -300,7 +349,8 @@ HTML も index.html に書き換わりうる）。
 | `close` | 上がり3F から `0.70 − (平均3F − 36.5)×0.10`。上がり順位で1/4だけ補正 |
 | `stamina` | 今回距離±200m の実績。未経験の距離延長は低め |
 | `wet` | 良以外（稍重・重・不良）での相対着順 |
-| `memo` | 前5走の着順・3角平均・上がり・道悪成績・騎手×厩舎・コンビ成績・騎手強化を自動で1行に |
+| `note` | 寸評。`[見出し, 本文]` の配列で【近走】【脚質】【距離・馬場】【人】【血統】の5本立て。read できる日本語で書く（数値の羅列にしない）。race.html が見出しつきで組む |
+| `memo` | note のうち【近走】【人】だけを連ねた短い版（index.html 用） |
 
 重みは前走から `[1, .85, .7, .55, .45]`。出走取消馬は除外（頭数 `n` と配列長は自動で一致する）。
 

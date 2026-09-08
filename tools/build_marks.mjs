@@ -4,39 +4,14 @@
    結果（勝率・3着内率・3角/4角の平均位置・印）を entries.<track>.json に書き戻し、
    race.html に埋め直す。
    ※ embed_db.mjs のあとに実行すること（index.html の傾向データを使うため）。 */
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { inject } from './lib/embed.mjs';
+import { loadModel, condOf } from './lib/model.mjs';
 
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const N = Number(process.env.NK_MARK_TRIALS || 600);
 const MARKS = ['◎', '○', '▲', '△', '△', '☆'];
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const r3 = x => Math.round(x * 1000) / 1000;
-
-function loadModel(track) {
-  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const js = html.slice(html.lastIndexOf('<script>') + 8, html.lastIndexOf('</script>'));
-  const cut = js.indexOf('   6. 3Dシーン');
-  const src = js.slice(0, js.lastIndexOf('/* ====', cut));
-  const ctx = vm.createContext({ location: { search: '?track=' + track }, URLSearchParams, Math, JSON, console,
-    document: { getElementById: () => ({ style: {}, dataset: {} }) } });
-  vm.runInContext(src + '\nglobalThis.__M={monteCarlo,combinedTrend,gateEdge,TK,BABA,CALIB_DEF};', ctx);
-  return ctx.__M;
-}
-
-/* index.html の autoBias と同じ式。あちらを変えたらここも変える（sim_check で差を見る） */
-function condOf(M, dist) {
-  const c = M.combinedTrend(dist), cal = M.TK.calib || M.CALIB_DEF;
-  const { gd } = M.gateEdge(c);
-  return {
-    baba: M.TK.defaults.baba, weather: M.TK.defaults.weather, wind: 0, recent: 0.6, human: 1,
-    front: +clamp((c.front3 - cal.frontMid) / (2.2 * cal.frontSd), -1, 1).toFixed(2),
-    out: +clamp((gd - cal.gateMid) / (2.2 * cal.gateSd), -1, 1).toFixed(2),
-  };
-}
 
 const ent = { meta: null };
 for (const key of TRACKS) {
