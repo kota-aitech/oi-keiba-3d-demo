@@ -31,6 +31,7 @@ for (const key of TRACKS) {
         ev: r.ev || null, nPos: r.nPos || null, pace: r.pace || null,
         oddsSrc: r.oddsSrc || null,
         bets: r.bets ? { umaren: (r.bets.umaren || []).slice(0, 6), sanpuku: (r.bets.sanpuku || []).slice(0, 6) } : null,
+        box: r.box || null,
         top };
     });
   }
@@ -43,6 +44,14 @@ if (MDL && MDL.metrics) {
     split: MDL.split, trainRaces: MDL.trainRaces, testRaces: MDL.testRaces,
     fund: MDL.metrics.fund, pub: MDL.metrics.pub, final: MDL.metrics.final,
   };
+}
+/* 実績（results.*.json の集計）。おすすめの根拠として画面に出す */
+out.record = {};
+for (const key of TRACKS) {
+  const rp = path.join(ROOT, `data/nankan/results.${key}.json`);
+  if (!fs.existsSync(rp)) continue;
+  const R = readJSON(`data/nankan/results.${key}.json`);
+  if (R.meta && R.meta.summary) out.record[R.track] = R.meta.summary;
 }
 if (BT && BT.tracks) {
   const t = {};

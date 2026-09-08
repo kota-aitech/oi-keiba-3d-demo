@@ -5,6 +5,11 @@
    同じレースについて、締切前スナップショットと、レース後の最終オッズの両方を残す。
    最終と比べてどれだけ動いたかが後から測れるようにするため。
 
+   さらに、あるレースの締切8分前に来たときは「そのレース以降の全レース」の暫定オッズも拾う。
+   後半のレースも早い段階から値が入るので、いつ画面を見ても AI のおすすめが出る。
+   暫定は tag に pre を付けて締切前スナップショット（T-n）とは別に持ち、
+   同じレースについて何度でも上書きする（最新の暫定だけ残す）。
+
    使い方
      node tools/watch_odds.mjs              その日のレースを見張り続ける（開催終了で自動終了）
      NK_ODDS_ONCE=1 node tools/watch_odds.mjs   いま取り時のものだけ拾って終了（cron 向き）
@@ -63,6 +68,7 @@ const at = (hhmm, offsetMin) => {
   return d;
 };
 
+let FIRSTPASS = true;
 const races = await todaysRaces();
 if (!races.length) { log(`${DATE} は開催がありません`); process.exit(0); }
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
@@ -70,9 +76,9 @@ const done = new Set(jl('odds_live.jsonl').map(o => o.raceId + '|' + o.tag));
 log(`${DATE} ${races.length}レース／締切${LEAD}分前（＝発走${LEAD + CLOSE_BEFORE_POST}分前）に取得`);
 for (const r of races) log(`  ${r.R}R 発走 ${r.time} → 取得 ${at(r.time, -(LEAD + CLOSE_BEFORE_POST)).toLocaleTimeString('ja-JP')}`);
 
-async function snap(r, tag) {
+async function snap(r, tag, overwrite) {
   const key = r.raceId + '|' + tag;
-  if (done.has(key)) return false;
+  if (!overwrite && done.has(key)) return false;
   let o;
   try { o = parseOdds(await get(`${BASE}/oddsJS/${r.raceId}.do?_=${Date.now()}`, { ttlDays: 0 })); }
   catch (e) { log(`  ! ${r.R}R ${tag} ${e.message}`); return false; }
@@ -83,17 +89,34 @@ async function snap(r, tag) {
     updated: o.updated, tan: o.tan, fuku: o.fuku };
   fs.appendFileSync(OUT, JSON.stringify(rec) + '\n');
   done.add(key);
-  const top = Object.entries(o.tan).filter(([, v]) => v.pop === 1)[0];
-  log(`  ✓ ${r.R}R ${tag} 取得（${o.updated}／1番人気 ${top ? top[0] + '番 ' + top[1].odds + '倍' : '—'}）`);
+  if (!overwrite) {
+    const top = Object.entries(o.tan).filter(([, v]) => v.pop === 1)[0];
+    log(`  ✓ ${r.R}R ${tag} 取得（${o.updated}／1番人気 ${top ? top[0] + '番 ' + top[1].odds + '倍' : '—'}）`);
+  }
   return true;
 }
 
 async function pass() {
   const now = Date.now();
+  let tookSnap = false;
   for (const r of races) {
     const post = at(r.time, 0);
-    if (now >= at(r.time, -(LEAD + CLOSE_BEFORE_POST)) && now < post.getTime() + 60000) await snap(r, `T-${LEAD}`);
+    if (now >= at(r.time, -(LEAD + CLOSE_BEFORE_POST)) && now < post.getTime() + 60000) {
+      if (await snap(r, `T-${LEAD}`)) tookSnap = true;
+    }
     if (now >= post.getTime() + FINAL_AFTER * 60000) await snap(r, 'final');
+  }
+  /* 締切前を1本取ったタイミングで、まだ発走していないレースの暫定オッズもまとめて拾う。
+     これで後半のレースにも早くから値が入り、いつ見てもおすすめが出る。 */
+  if (tookSnap || FIRSTPASS) {
+    FIRSTPASS = false;
+    let n = 0;
+    for (const r of races) {
+      if (now >= at(r.time, 0).getTime()) continue;                 // 発走済みは飛ばす
+      if (done.has(r.raceId + `|T-${LEAD}`)) continue;              // 締切前を取ってあるなら不要
+      if (await snap(r, 'pre', true)) n++;
+    }
+    if (n) log(`  ・以降 ${n} レースの暫定オッズも取得`);
   }
   return races.every(r => done.has(r.raceId + '|final'));
 }

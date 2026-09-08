@@ -34,7 +34,9 @@ const cards = new Map(jl('cards.jsonl').map(c => [c.raceId, c]));
    締切前スナップショット（watch_odds.mjs）を最優先、無ければ最終オッズ。 */
 const oddsMap = new Map();
 for (const o of jl('odds.jsonl')) oddsMap.set(o.raceId, { src: '最終', tan: o.tan });
-for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
+/* 暫定(pre) → 締切前(T-n) の順に上書きするので、締切前があればそちらが残る */
+for (const o of jl('odds_live.jsonl')) if (o.tag === 'pre') oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
+for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final' && o.tag !== 'pre') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
 const LAP = buildLapIndex(jl('results.jsonl'), [...cards.values()]);
 if (!MDL) console.error('!! model.json がない。印はシミュレータの勝率で出す');
 
@@ -138,6 +140,16 @@ for (const key of TRACKS) {
       const order = p.map((w, i) => [w, t3[i], i]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
       const mark = {};
       order.forEach(([, , i], q) => { if (q < MARKS.length) mark[i] = MARKS[q]; });
+      /* 本命BOX。過去230レースの実績では、期待値1.0超だけを買うやり方（回収率0〜52%）より
+         こちらのほうがはるかに良い（三連複4頭BOXで84〜112%）。おすすめの主役はこちら。 */
+      const ordNos = order.map(([, , i]) => live[i].no);
+      const cmb2 = a => { const o = []; for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) o.push([a[i], a[j]]); return o; };
+      const cmb3 = a => { const o = []; for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) for (let k = j + 1; k < a.length; k++) o.push([a[i], a[j], a[k]]); return o; };
+      r.box = {};
+      for (const k of [3, 4]) if (ordNos.length >= k) {
+        const sel = ordNos.slice(0, k);
+        r.box[k] = { sel, umaren: cmb2(sel).map(c => c.join('-')), sanpuku: cmb3(sel).map(c => c.join('-')) };
+      }
       live.forEach((h, i) => {
         h.win = r3(p[i]); h.top3 = r3(t3[i]);
         h.simWin = r3(mc.win[i]);
@@ -158,6 +170,14 @@ for (const key of TRACKS) {
   ent[key] = { track: d.track, days: d.days, entries: d.entries };
   ent.meta = d.meta;
   console.error(`${JA[key] || key}: ${done} レースに印（ロジット${done - noModel} / シミュレータ${noModel} / うちオッズ合成 ${blendN}）`);
+}
+/* 「この買い方は実際どうだったか」を画面に出すため、実測も一緒に渡す */
+ent.record = {};
+for (const key of TRACKS) {
+  const rp = path.join(ROOT, `data/nankan/results.${key}.json`);
+  if (!fs.existsSync(rp)) continue;
+  const R = readJSON(`data/nankan/results.${key}.json`);
+  if (R.meta && R.meta.summary) ent.record[R.track] = R.meta.summary;
 }
 inject('race.html', 'NKRACE', 'NKR', ent);
 

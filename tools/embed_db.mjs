@@ -35,6 +35,8 @@ try {
 
 try { inject('data.html', 'NKBROWSE', 'NKB', readJSON('data/nankan/browse.json')); }
 catch (e) { console.error('  (data.html はスキップ: ' + e.message + ')'); }
+try { inject('marks.html', 'NKMR', 'NKMR', readJSON('data/nankan/marksrec.json')); }
+catch (e) { console.error('  (marks.html はスキップ: ' + e.message + ')'); }
 try { inject('top.html', 'NKTOP', 'NKT', readJSON('data/nankan/top.json')); }
 catch (e) { console.error('  (top.html はスキップ: ' + e.message + ')'); }
 try {

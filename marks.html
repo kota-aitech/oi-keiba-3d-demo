@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>印別の回収率 — 南関東本紙</title>
+<style>
+:root{
+  --paper:#fbf8f1; --paper2:#f1ebdc; --band:#1a1512;
+  --ink:#14100c; --sub:#6a6055; --faint:#9a9083;
+  --rule:#2a2420; --rule2:#cfc6b4; --rule3:#e6dfd0;
+  --red:#c0102a; --blue:#1b4f9c; --gold:#f0c24a;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+  --gothic:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);
+  font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.masthead{background:var(--band);color:#fdf9f0;padding:8px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.masthead .logo{font-family:var(--mincho);font-size:20px;font-weight:700;letter-spacing:.12em}
+.masthead .logo em{font-style:normal;color:var(--gold)}
+.masthead nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.masthead nav a{color:#fdf9f0;text-decoration:none;border:1px solid #4a423a;border-radius:2px;padding:3px 10px;font-size:11px;white-space:nowrap}
+.lead{padding:10px 14px;background:var(--paper2);border-bottom:2px solid var(--rule);font-size:12px;color:var(--sub)}
+.lead b{color:var(--ink)}
+.warn{margin-top:6px;padding:6px 10px;background:#fff4f2;border-left:4px solid var(--red);color:var(--ink);font-size:11.5px;line-height:1.6}
+.wrap{padding:12px 14px 40px;max-width:1100px}
+h2{font-family:var(--mincho);font-size:15px;margin:20px 0 8px;border-left:5px solid var(--red);padding-left:9px}
+h2:first-child{margin-top:0}
+h2 small{font-family:var(--gothic);font-weight:400;font-size:11px;color:var(--sub);margin-left:8px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;border:1px solid var(--rule2);margin-bottom:6px}
+th{background:var(--band);color:#efe7d8;padding:6px 8px;font-size:10.5px;text-align:right;white-space:nowrap;border-right:1px solid #453d34}
+th:last-child{border-right:0}
+th.l,td.l{text-align:left}
+td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--rule3);white-space:nowrap}
+tr:nth-child(even) td{background:#f7f2e6}
+.mk{font-family:var(--mincho);font-size:18px;font-weight:700}
+.mk.m1{color:var(--red)}.mk.m2{color:var(--blue)}
+.roi{font-weight:700}
+.pos{color:var(--red)}.neg{color:var(--blue)}
+.bar{display:inline-block;width:70px;height:7px;background:var(--rule3);vertical-align:middle;margin-left:6px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:0;background:var(--blue)}
+.bar i.ok{background:var(--red)}
+.bar .line{position:absolute;top:0;bottom:0;width:1px;background:var(--ink);opacity:.55}
+.note{color:var(--sub);font-size:11.5px;line-height:1.7;margin:6px 0 0;max-width:74ch}
+footer{border-top:2px solid var(--rule);background:var(--paper2);padding:10px 14px 30px;color:var(--sub);font-size:11px;line-height:1.7}
+@media (max-width:640px){ .wrap{padding:10px 10px 40px} table{font-size:11.5px} td,th{padding:5px 5px} .bar{display:none} }
+</style>
+</head>
+<body>
+<div class="masthead">
+  <div class="logo">南関東<em>本紙</em>｜印別成績</div>
+  <nav>
+    <a href="top.html">TOP</a>
+    <a href="race.html?track=kawasaki">馬柱</a>
+    <a href="data.html">データ</a>
+    <a href="index.html?track=oi">3D予想</a>
+  </nav>
+</div>
+<div class="lead" id="lead"></div>
+<div class="wrap">
+  <h2>印ごとの成績 <small>南関東4場・全レース</small></h2>
+  <div id="all"></div>
+  <h2>競馬場ごと</h2>
+  <div id="tracks"></div>
+</div>
+<footer id="foot"></footer>
+
+<script>
+/* NKMR:BEGIN — 生成データ。tools/build_marksrec.mjs → tools/embed_db.mjs が書き込む。手で編集しない */
+const NKMR={"builtAt":"2026-09-08T09:12:54.976Z","from":"2026-06-01","to":"2026-09-08","unit":100,"races":945,"skippedNoOdds":0,"marks":["◎","○","▲","△1","△2","☆"],"all":{"◎":{"n":945,"win":395,"place":690,"tanCost":94500,"tanRet":72790,"fukuCost":94500,"fukuRet":80470,"popSum":988,"oddsSum":1951.5999999999992,"winRate":0.418,"placeRate":0.7302,"tanRoi":0.7703,"fukuRoi":0.8515,"avgPop":1,"avgOdds":2.1},"○":{"n":945,"win":207,"place":541,"tanCost":94500,"tanRet":79850,"fukuCost":94500,"fukuRet":76370,"popSum":1929,"oddsSum":4079.5999999999985,"winRate":0.219,"placeRate":0.5725,"tanRoi":0.845,"fukuRoi":0.8081,"avgPop":2,"avgOdds":4.3},"▲":{"n":945,"win":117,"place":417,"tanCost":94500,"tanRet":71460,"fukuCost":94500,"fukuRet":71400,"popSum":2845,"oddsSum":6929.599999999986,"winRate":0.1238,"placeRate":0.4413,"tanRoi":0.7562,"fukuRoi":0.7556,"avgPop":3,"avgOdds":7.3},"△1":{"n":945,"win":65,"place":332,"tanCost":94500,"tanRet":61350,"fukuCost":94500,"fukuRet":68060,"popSum":3784,"oddsSum":10898.099999999995,"winRate":0.0688,"placeRate":0.3513,"tanRoi":0.6492,"fukuRoi":0.7202,"avgPop":4,"avgOdds":11.5},"△2":{"n":943,"win":63,"place":279,"tanCost":94300,"tanRet":79920,"fukuCost":94300,"fukuRet":74840,"popSum":4770,"oddsSum":17407.400000000005,"winRate":0.0668,"placeRate":0.2959,"tanRoi":0.8475,"fukuRoi":0.7936,"avgPop":5.1,"avgOdds":18.5},"☆":{"n":918,"win":34,"place":183,"tanCost":91800,"tanRet":65140,"fukuCost":91800,"fukuRet":62520,"popSum":5495,"oddsSum":25011.800000000003,"winRate":0.037,"placeRate":0.1993,"tanRoi":0.7096,"fukuRoi":0.681,"avgPop":6,"avgOdds":27.2}},"byTrack":{"船橋":{"◎":{"n":240,"win":108,"place":173,"tanCost":24000,"tanRet":17820,"fukuCost":24000,"fukuRet":19550,"popSum":247,"oddsSum":467.49999999999994,"winRate":0.45,"placeRate":0.7208,"tanRoi":0.7425,"fukuRoi":0.8146,"avgPop":1,"avgOdds":1.9},"○":{"n":240,"win":49,"place":131,"tanCost":24000,"tanRet":19830,"fukuCost":24000,"fukuRet":17840,"popSum":492,"oddsSum":1052.4,"winRate":0.2042,"placeRate":0.5458,"tanRoi":0.8263,"fukuRoi":0.7433,"avgPop":2,"avgOdds":4.4},"▲":{"n":240,"win":28,"place":114,"tanCost":24000,"tanRet":14740,"fukuCost":24000,"fukuRet":19370,"popSum":727,"oddsSum":1828.600000000001,"winRate":0.1167,"placeRate":0.475,"tanRoi":0.6142,"fukuRoi":0.8071,"avgPop":3,"avgOdds":7.6},"△1":{"n":240,"win":20,"place":85,"tanCost":24000,"tanRet":18930,"fukuCost":24000,"fukuRet":17310,"popSum":964,"oddsSum":2915.499999999999,"winRate":0.0833,"placeRate":0.3542,"tanRoi":0.7887,"fukuRoi":0.7212,"avgPop":4,"avgOdds":12.1},"△2":{"n":240,"win":17,"place":72,"tanCost":24000,"tanRet":20780,"fukuCost":24000,"fukuRet":20810,"popSum":1205,"oddsSum":5050.5999999999985,"winRate":0.0708,"placeRate":0.3,"tanRoi":0.8658,"fukuRoi":0.8671,"avgPop":5,"avgOdds":21},"☆":{"n":228,"win":8,"place":43,"tanCost":22800,"tanRet":20670,"fukuCost":22800,"fukuRet":16250,"popSum":1373,"oddsSum":7299.0000000000055,"winRate":0.0351,"placeRate":0.1886,"tanRoi":0.9066,"fukuRoi":0.7127,"avgPop":6,"avgOdds":32}},"大井":{"◎":{"n":297,"win":138,"place":229,"tanCost":29700,"tanRet":26100,"fukuCost":29700,"fukuRet":27000,"popSum":308,"oddsSum":626.8000000000004,"winRate":0.4646,"placeRate":0.771,"tanRoi":0.8788,"fukuRoi":0.9091,"avgPop":1,"avgOdds":2.1},"○":{"n":297,"win":57,"place":160,"tanCost":29700,"tanRet":22190,"fukuCost":29700,"fukuRet":22340,"popSum":607,"oddsSum":1331.2000000000007,"winRate":0.1919,"placeRate":0.5387,"tanRoi":0.7471,"fukuRoi":0.7522,"avgPop":2,"avgOdds":4.5},"▲":{"n":297,"win":35,"place":133,"tanCost":29700,"tanRet":22640,"fukuCost":29700,"fukuRet":23680,"popSum":893,"oddsSum":2206.1000000000004,"winRate":0.1178,"placeRate":0.4478,"tanRoi":0.7623,"fukuRoi":0.7973,"avgPop":3,"avgOdds":7.4},"△1":{"n":297,"win":21,"place":108,"tanCost":29700,"tanRet":19310,"fukuCost":29700,"fukuRet":22970,"popSum":1188,"oddsSum":3437.600000000003,"winRate":0.0707,"placeRate":0.3636,"tanRoi":0.6502,"fukuRoi":0.7734,"avgPop":4,"avgOdds":11.6},"△2":{"n":297,"win":17,"place":82,"tanCost":29700,"tanRet":21880,"fukuCost":29700,"fukuRet":21470,"popSum":1510,"oddsSum":5271.0999999999985,"winRate":0.0572,"placeRate":0.2761,"tanRoi":0.7367,"fukuRoi":0.7229,"avgPop":5.1,"avgOdds":17.7},"☆":{"n":290,"win":12,"place":65,"tanCost":29000,"tanRet":22140,"fukuCost":29000,"fukuRet":21650,"popSum":1735,"oddsSum":7107.299999999997,"winRate":0.0414,"placeRate":0.2241,"tanRoi":0.7634,"fukuRoi":0.7466,"avgPop":6,"avgOdds":24.5}},"川崎":{"◎":{"n":240,"win":89,"place":171,"tanCost":24000,"tanRet":16870,"fukuCost":24000,"fukuRet":19490,"popSum":254,"oddsSum":503,"winRate":0.3708,"placeRate":0.7125,"tanRoi":0.7029,"fukuRoi":0.8121,"avgPop":1.1,"avgOdds":2.1},"○":{"n":240,"win":60,"place":150,"tanCost":24000,"tanRet":20920,"fukuCost":24000,"fukuRet":21320,"popSum":484,"oddsSum":958.4999999999997,"winRate":0.25,"placeRate":0.625,"tanRoi":0.8717,"fukuRoi":0.8883,"avgPop":2,"avgOdds":4},"▲":{"n":240,"win":32,"place":106,"tanCost":24000,"tanRet":19300,"fukuCost":24000,"fukuRet":17500,"popSum":717,"oddsSum":1709.8000000000013,"winRate":0.1333,"placeRate":0.4417,"tanRoi":0.8042,"fukuRoi":0.7292,"avgPop":3,"avgOdds":7.1},"△1":{"n":240,"win":15,"place":87,"tanCost":24000,"tanRet":13110,"fukuCost":24000,"fukuRet":17730,"popSum":960,"oddsSum":2797.100000000001,"winRate":0.0625,"placeRate":0.3625,"tanRoi":0.5463,"fukuRoi":0.7388,"avgPop":4,"avgOdds":11.7},"△2":{"n":239,"win":13,"place":66,"tanCost":23900,"tanRet":12680,"fukuCost":23900,"fukuRet":16550,"popSum":1217,"oddsSum":4369.699999999998,"winRate":0.0544,"placeRate":0.2762,"tanRoi":0.5305,"fukuRoi":0.6925,"avgPop":5.1,"avgOdds":18.3},"☆":{"n":235,"win":6,"place":41,"tanCost":23500,"tanRet":10580,"fukuCost":23500,"fukuRet":13940,"popSum":1403,"oddsSum":6749.499999999997,"winRate":0.0255,"placeRate":0.1745,"tanRoi":0.4502,"fukuRoi":0.5932,"avgPop":6,"avgOdds":28.7}},"浦和":{"◎":{"n":168,"win":60,"place":117,"tanCost":16800,"tanRet":12000,"fukuCost":16800,"fukuRet":14430,"popSum":179,"oddsSum":354.3,"winRate":0.3571,"placeRate":0.6964,"tanRoi":0.7143,"fukuRoi":0.8589,"avgPop":1.1,"avgOdds":2.1},"○":{"n":168,"win":41,"place":100,"tanCost":16800,"tanRet":16910,"fukuCost":16800,"fukuRet":14870,"popSum":346,"oddsSum":737.5000000000003,"winRate":0.244,"placeRate":0.5952,"tanRoi":1.0065,"fukuRoi":0.8851,"avgPop":2.1,"avgOdds":4.4},"▲":{"n":168,"win":22,"place":64,"tanCost":16800,"tanRet":14780,"fukuCost":16800,"fukuRet":10850,"popSum":508,"oddsSum":1185.1000000000001,"winRate":0.131,"placeRate":0.381,"tanRoi":0.8798,"fukuRoi":0.6458,"avgPop":3,"avgOdds":7.1},"△1":{"n":168,"win":9,"place":52,"tanCost":16800,"tanRet":10000,"fukuCost":16800,"fukuRet":10050,"popSum":672,"oddsSum":1747.8999999999994,"winRate":0.0536,"placeRate":0.3095,"tanRoi":0.5952,"fukuRoi":0.5982,"avgPop":4,"avgOdds":10.4},"△2":{"n":167,"win":16,"place":59,"tanCost":16700,"tanRet":24580,"fukuCost":16700,"fukuRet":16010,"popSum":838,"oddsSum":2716.000000000002,"winRate":0.0958,"placeRate":0.3533,"tanRoi":1.4719,"fukuRoi":0.9587,"avgPop":5,"avgOdds":16.3},"☆":{"n":165,"win":8,"place":34,"tanCost":16500,"tanRet":11750,"fukuCost":16500,"fukuRet":10680,"popSum":984,"oddsSum":3855.999999999998,"winRate":0.0485,"placeRate":0.2061,"tanRoi":0.7121,"fukuRoi":0.6473,"avgPop":6,"avgOdds":23.4}}}};
+/* NKMR:END */
+
+const $=id=>document.getElementById(id);
+const MKC={'◎':'m1','○':'m2','▲':'m3'};
+const pc=v=>(v*100).toFixed(1)+'%';
+const roiCls=v=>v>=1?'pos':v<0.75?'neg':'';
+/* 100% を基準線にしたバー。控除率のぶん 75〜80% が「何も考えず買った場合」 */
+const bar=v=>`<span class="bar"><i class="${v>=1?'ok':''}" style="width:${Math.min(100,v/1.4*100)}%"></i><span class="line" style="left:${100/1.4}%"></span></span>`;
+
+function table(d,label){
+  return `<table><thead><tr><th class="l">${label}</th><th>頭数</th><th>勝率</th><th>複勝率</th>
+    <th>平均人気</th><th>平均単勝</th><th>単勝回収率</th><th>複勝回収率</th></tr></thead><tbody>`
+    +(NKMR.marks||[]).map(m=>{
+      const e=d[m]; if(!e||!e.n)return '';
+      return `<tr><td class="l"><span class="mk ${MKC[m]||''}">${m}</span></td>
+        <td>${e.n.toLocaleString()}</td><td>${pc(e.winRate)}</td><td>${pc(e.placeRate)}</td>
+        <td>${e.avgPop||'—'}</td><td>${e.avgOdds?e.avgOdds.toFixed(1)+'倍':'—'}</td>
+        <td class="roi ${roiCls(e.tanRoi)}">${(e.tanRoi*100).toFixed(0)}%${bar(e.tanRoi)}</td>
+        <td class="roi ${roiCls(e.fukuRoi)}">${(e.fukuRoi*100).toFixed(0)}%${bar(e.fukuRoi)}</td></tr>`;
+    }).join('')+'</tbody></table>';
+}
+
+$('all').innerHTML=table(NKMR.all||{},'印')+
+  `<p class="note">1点100円で、その印の馬を全レース買い続けた場合。バーの縦線が回収率100%。
+   南関の払戻率はおよそ75〜80%なので、そこが「何も考えずに買った場合」の水準。</p>`;
+$('tracks').innerHTML=Object.entries(NKMR.byTrack||{})
+  .map(([name,d])=>table(d,name)).join('');
+
+const nf=(NKMR.races||0).toLocaleString();
+$('lead').innerHTML=`◎○▲△☆ は本紙の予想印（条件付きロジット＋単勝人気の合成）。
+  集計は <b>${NKMR.from} 〜 ${NKMR.to}</b> の南関東4場 <b>${nf}レース</b>。
+  <div class="warn"><b>どの印も回収率100%に届いていません。</b>◎の単勝は77%、複勝は85%で、
+  控除率（南関はおよそ20〜25%）を超えられていません。つまり<b>印をそのまま買っても勝てません</b>。
+  印は「どの馬が上位に来やすいか」の順位付けとしては機能していますが（◎の複勝率73%）、
+  オッズに見合うかは別の話で、そこはまだ超えられていない、というのが正直なところです。</div>`;
+$('foot').innerHTML=`印は各レースの予想確率の上位から ◎○▲△△☆ の順に付けたもの。
+  検証用モデル（学習は2024-01〜2026-05、この集計期間を含まない）で再現している。
+  単勝・複勝の払戻は nankankeiba の払戻金一覧の実額。生成 ${(NKMR.builtAt||'').slice(0,16).replace('T',' ')}`;
+</script>
+</body>
+</html>

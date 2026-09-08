@@ -20,12 +20,10 @@ const meta = { builtAt: new Date().toISOString(), leading: DB.window, pop: DB.po
 for (const [jaName, key] of WANT) {
   const mine = cards.filter(c => c.track === jaName && c.horses.length >= 4);
   const all = [...new Set(mine.map(c => c.date))].sort();
-  // 今日を含む開催（なければ直近）から NDAYS 日ぶんを切り出す
-  const today = process.env.NK_TODAY || new Date().toISOString().slice(0, 10);
-  let i = all.reduce((acc, d, k) => (d <= today ? k : acc), -1);
-  if (i < 0) i = 0;
-  let dates = all.slice(i, i + NDAYS);
-  if (dates.length < NDAYS) dates = all.slice(Math.max(0, all.length - NDAYS));
+  /* 出馬表に載せるのは「今日以降」だけ。終わったレースは結果ページに回す
+     （build_results.mjs）。開催の谷間だと0日になるが、それが正しい状態。 */
+  const today = process.env.NK_TODAY || new Date().toLocaleDateString('sv-SE');
+  const dates = all.filter(d => d >= today).slice(0, NDAYS);
   const days = {}, real = {}, full = {};
   for (const date of dates) {
     const rs = mine.filter(c => c.date === date).sort((a, b) => a.R - b.R);
@@ -62,5 +60,5 @@ for (const [jaName, key] of WANT) {
   }
   writeJSON(`data/nankan/races.${key}.json`, { track: jaName, meta, days, real });
   writeJSON(`data/nankan/entries.${key}.json`, { track: jaName, meta, days, entries: full });
-  console.error(`${jaName}: ${dates.join(', ')} → ${Object.keys(real).length} レース`);
+  console.error(`${jaName}: ${dates.length ? dates.join(', ') : '今日以降の開催なし'} → ${Object.keys(real).length} レース`);
 }
