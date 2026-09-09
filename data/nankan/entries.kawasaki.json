@@ -712,7 +712,7 @@
      "out": -0.08
     },
     "winTime": 88.225,
-    "oddsSrc": "暫定(発走16分前)",
+    "oddsSrc": "暫定(発走13分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -788,7 +788,7 @@
      "out": 0.15
     },
     "winTime": 102.858,
-    "oddsSrc": "暫定(発走51分前)",
+    "oddsSrc": "暫定(発走48分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -803,7 +803,7 @@
     "date": "2026-09-09",
     "raceId": "2026090921070311",
     "night": false,
-    "oddsSrc": "暫定(発走91分前)",
+    "oddsSrc": "暫定(発走88分前)",
     "conf": 1,
     "pTop": null,
     "ev": {
@@ -940,7 +940,7 @@
      "out": 0
     },
     "winTime": 96.283,
-    "oddsSrc": "暫定(発走131分前)",
+    "oddsSrc": "暫定(発走128分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -1668,7 +1668,7 @@
      "out": 0
     },
     "winTime": 94.993,
-    "oddsSrc": "暫定(発走1531分前)",
+    "oddsSrc": "暫定(発走1528分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -20388,7 +20388,7 @@
     "c4": 5.338,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 25.1,
+    "pubOdds": 26.1,
     "pFund": null
    },
    {
@@ -20576,7 +20576,7 @@
     "c4": 9.988,
     "mark": "▲",
     "rank": 3,
-    "pubOdds": 47.1,
+    "pubOdds": 48.4,
     "pFund": null
    },
    {
@@ -20764,7 +20764,7 @@
     "c4": 3.302,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 3.4,
+    "pubOdds": 3.6,
     "pFund": null
    },
    {
@@ -20952,7 +20952,7 @@
     "c4": 9.742,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 35.3,
+    "pubOdds": 27.9,
     "pFund": null
    },
    {
@@ -21139,7 +21139,7 @@
     "c4": 11.852,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 93.1,
+    "pubOdds": 90.6,
     "pFund": null
    },
    {
@@ -21327,7 +21327,7 @@
     "c4": 6.573,
     "mark": "",
     "rank": 7,
-    "pubOdds": 15.6,
+    "pubOdds": 14,
     "pFund": null
    },
    {
@@ -21492,7 +21492,7 @@
     "c4": 4.445,
     "mark": "",
     "rank": 8,
-    "pubOdds": 22.9,
+    "pubOdds": 24.1,
     "pFund": null
    },
    {
@@ -21670,7 +21670,7 @@
     "c4": 6.077,
     "mark": "",
     "rank": 9,
-    "pubOdds": 14,
+    "pubOdds": 14.2,
     "pFund": null
    },
    {
@@ -22041,7 +22041,7 @@
     "c4": 10.335,
     "mark": "",
     "rank": 11,
-    "pubOdds": 3.7,
+    "pubOdds": 3.6,
     "pFund": null
    },
    {
@@ -22224,7 +22224,7 @@
     "c4": 6.358,
     "mark": "",
     "rank": 12,
-    "pubOdds": 42.3,
+    "pubOdds": 40.7,
     "pFund": null
    }
   ],
@@ -22393,7 +22393,7 @@
     "c4": 2.417,
     "mark": "◎",
     "rank": 1,
-    "pubOdds": 11,
+    "pubOdds": 10.8,
     "pFund": null
    },
    {
@@ -22559,7 +22559,7 @@
     "c4": 3.71,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 28.8,
+    "pubOdds": 26.3,
     "pFund": null
    },
    {
@@ -22933,7 +22933,7 @@
     "c4": 4.335,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 9.4,
+    "pubOdds": 9.5,
     "pFund": null
    },
    {
@@ -23121,7 +23121,7 @@
     "c4": 10.305,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 18.8,
+    "pubOdds": 19,
     "pFund": null
    },
    {
@@ -23288,7 +23288,7 @@
     "c4": 7.665,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 14.2,
+    "pubOdds": 14.6,
     "pFund": null
    },
    {
@@ -23476,7 +23476,7 @@
     "c4": 8.102,
     "mark": "",
     "rank": 7,
-    "pubOdds": 49,
+    "pubOdds": 49.9,
     "pFund": null
    },
    {
@@ -23663,7 +23663,7 @@
     "c4": 4.857,
     "mark": "",
     "rank": 8,
-    "pubOdds": 8.2,
+    "pubOdds": 8,
     "pFund": null
    },
    {
@@ -23851,7 +23851,7 @@
     "c4": 12.472,
     "mark": "",
     "rank": 9,
-    "pubOdds": 93.3,
+    "pubOdds": 78.5,
     "pFund": null
    },
    {
@@ -24039,7 +24039,7 @@
     "c4": 8.072,
     "mark": "",
     "rank": 10,
-    "pubOdds": 25,
+    "pubOdds": 24.7,
     "pFund": null
    },
    {
@@ -24227,7 +24227,7 @@
     "c4": 3.553,
     "mark": "",
     "rank": 11,
-    "pubOdds": 8.6,
+    "pubOdds": 8.5,
     "pFund": null
    },
    {
@@ -24602,7 +24602,7 @@
     "c4": 5.103,
     "mark": "",
     "rank": 13,
-    "pubOdds": 2.1,
+    "pubOdds": 2.2,
     "pFund": null
    }
   ],
@@ -26851,7 +26851,7 @@
       ]
      }
     ],
-    "pubOdds": 84.3,
+    "pubOdds": 83.2,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -27757,7 +27757,7 @@
     "c4": 1.605,
     "mark": "▲",
     "rank": 3,
-    "pubOdds": 4.3,
+    "pubOdds": 4.4,
     "pFund": null
    },
    {
@@ -27944,7 +27944,7 @@
     "c4": 11.397,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 49.1,
+    "pubOdds": 49.4,
     "pFund": null
    },
    {
@@ -28132,7 +28132,7 @@
     "c4": 1.88,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 7.2,
+    "pubOdds": 7.3,
     "pFund": null
    },
    {
@@ -28320,7 +28320,7 @@
     "c4": 10.945,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 30.1,
+    "pubOdds": 30.3,
     "pFund": null
    },
    {
@@ -28879,7 +28879,7 @@
     "c4": 4.583,
     "mark": "",
     "rank": 9,
-    "pubOdds": 55.6,
+    "pubOdds": 55.9,
     "pFund": null
    },
    {
@@ -29067,7 +29067,7 @@
     "c4": 7.473,
     "mark": "",
     "rank": 10,
-    "pubOdds": 43.5,
+    "pubOdds": 43.8,
     "pFund": null
    },
    {
@@ -29255,7 +29255,7 @@
     "c4": 7.22,
     "mark": "",
     "rank": 11,
-    "pubOdds": 16.7,
+    "pubOdds": 16.8,
     "pFund": null
    },
    {
@@ -29631,7 +29631,7 @@
     "c4": 11.315,
     "mark": "",
     "rank": 13,
-    "pubOdds": 8.3,
+    "pubOdds": 8,
     "pFund": null
    },
    {
@@ -29819,7 +29819,7 @@
     "c4": 7.052,
     "mark": "",
     "rank": 14,
-    "pubOdds": 25.3,
+    "pubOdds": 25,
     "pFund": null
    }
   ],
@@ -50673,7 +50673,7 @@
     "c4": 6.082,
     "mark": "◎",
     "rank": 1,
-    "pubOdds": 10.2,
+    "pubOdds": 10.5,
     "pFund": null
    },
    {
@@ -50802,7 +50802,7 @@
     "c4": 5.307,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 5.6,
+    "pubOdds": 5.8,
     "pFund": null
    },
    {
@@ -50989,7 +50989,7 @@
     "c4": 7.378,
     "mark": "▲",
     "rank": 3,
-    "pubOdds": 92,
+    "pubOdds": 95.2,
     "pFund": null
    },
    {
@@ -51177,7 +51177,7 @@
     "c4": 10.972,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 115,
+    "pubOdds": 119,
     "pFund": null
    },
    {
@@ -51306,7 +51306,7 @@
     "c4": 3.588,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 2.3,
+    "pubOdds": 2.4,
     "pFund": null
    },
    {
@@ -51435,7 +51435,7 @@
     "c4": 6.245,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 12.4,
+    "pubOdds": 12.8,
     "pFund": null
    },
    {
@@ -51581,7 +51581,7 @@
     "c4": 5.9,
     "mark": "",
     "rank": 7,
-    "pubOdds": 18.4,
+    "pubOdds": 19,
     "pFund": null
    },
    {
@@ -51710,7 +51710,7 @@
     "c4": 3.597,
     "mark": "",
     "rank": 8,
-    "pubOdds": 27,
+    "pubOdds": 28,
     "pFund": null
    },
    {
@@ -51855,7 +51855,7 @@
     "c4": 7.928,
     "mark": "",
     "rank": 9,
-    "pubOdds": 92,
+    "pubOdds": 95.2,
     "pFund": null
    },
    {
@@ -52001,7 +52001,7 @@
     "c4": 4.312,
     "mark": "",
     "rank": 10,
-    "pubOdds": 92,
+    "pubOdds": 95.2,
     "pFund": null
    },
    {
@@ -52147,7 +52147,7 @@
     "c4": 4.692,
     "mark": "",
     "rank": 11,
-    "pubOdds": 3,
+    "pubOdds": 2.7,
     "pFund": null
    }
   ],
