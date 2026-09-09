@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T08:27:19.962Z",
+ "builtAt": "2026-09-09T08:29:24.879Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -1377,9 +1377,9 @@
       "date": "2026-09-09",
       "grade": "C",
       "conf": 0.101,
-      "pTop": 0.264,
+      "pTop": 0.263,
       "ev": {
-       "umaren": 0.97,
+       "umaren": 0.96,
        "sanpuku": 0.98
       },
       "nPos": {
@@ -1387,7 +1387,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走18分前)",
+      "oddsSrc": "暫定(発走17分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -1511,7 +1511,7 @@
         "gate": 1,
         "name": "ライヴバフィ",
         "mark": "◎",
-        "win": 0.264,
+        "win": 0.263,
         "top3": 0.643,
         "style": "差し",
         "jockey": "石川倭",
@@ -1533,7 +1533,7 @@
         "gate": 3,
         "name": "ビールボーイ",
         "mark": "▲",
-        "win": 0.11,
+        "win": 0.109,
         "top3": 0.34,
         "style": "差し",
         "jockey": "和田譲治",
@@ -1545,7 +1545,7 @@
         "name": "ロットゥーラ",
         "mark": "△",
         "win": 0.091,
-        "top3": 0.289,
+        "top3": 0.288,
         "style": "逃げ",
         "jockey": "保園翔也",
         "odds": 9.3
@@ -1571,7 +1571,7 @@
        "sanpuku": 2
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走53分前)",
+      "oddsSrc": "暫定(発走52分前)",
       "bets": {
        "umaren": [
         {
@@ -1795,7 +1795,7 @@
        "sanpuku": 3
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走88分前)",
+      "oddsSrc": "暫定(発走87分前)",
       "bets": {
        "umaren": [
         {
@@ -2020,7 +2020,7 @@
        "sanpuku": 0
       },
       "pace": "M",
-      "oddsSrc": "暫定(発走123分前)",
+      "oddsSrc": "暫定(発走122分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2210,7 +2210,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走163分前)",
+      "oddsSrc": "暫定(発走162分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2406,7 +2406,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走203分前)",
+      "oddsSrc": "暫定(発走202分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -4342,7 +4342,7 @@
        "sanpuku": 6
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走1603分前)",
+      "oddsSrc": "暫定(発走1602分前)",
       "bets": {
        "umaren": [
         {
