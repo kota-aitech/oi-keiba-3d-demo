@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T09:32:57.898Z",
+ "builtAt": "2026-09-09T09:35:32.116Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -1494,7 +1494,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走23分前)",
+      "oddsSrc": "暫定(発走20分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -1622,7 +1622,7 @@
         "top3": null,
         "style": "逃げ",
         "jockey": "Ｆ．ゴンサルベス",
-        "odds": 7.9
+        "odds": 7
        },
        {
         "no": 2,
@@ -1633,7 +1633,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "新原周馬",
-        "odds": 34.3
+        "odds": 24.7
        },
        {
         "no": 3,
@@ -1644,7 +1644,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "古岡勇樹",
-        "odds": 56.8
+        "odds": 54.9
        },
        {
         "no": 4,
@@ -1655,7 +1655,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "矢野貴之",
-        "odds": 3.3
+        "odds": 3.6
        }
       ]
      },
@@ -1678,7 +1678,7 @@
        "sanpuku": 0
       },
       "pace": "M",
-      "oddsSrc": "暫定(発走58分前)",
+      "oddsSrc": "暫定(発走55分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -1812,7 +1812,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "張田昂",
-        "odds": 11.8
+        "odds": 10.9
        },
        {
         "no": 2,
@@ -1823,7 +1823,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "増田充宏",
-        "odds": 30.5
+        "odds": 28.7
        },
        {
         "no": 3,
@@ -1834,7 +1834,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "岡村健司",
-        "odds": 10
+        "odds": 10.4
        },
        {
         "no": 4,
@@ -1845,7 +1845,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "佐野遥久",
-        "odds": 10
+        "odds": 9.4
        }
       ]
      },
@@ -1868,7 +1868,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走98分前)",
+      "oddsSrc": "暫定(発走95分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2008,7 +2008,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "岡村健司",
-        "odds": 78
+        "odds": 77.8
        },
        {
         "no": 2,
@@ -2064,7 +2064,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走138分前)",
+      "oddsSrc": "暫定(発走135分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2215,7 +2215,7 @@
         "top3": null,
         "style": "追込",
         "jockey": "山林堂信彦",
-        "odds": 7
+        "odds": 6.8
        },
        {
         "no": 3,
@@ -2226,7 +2226,7 @@
         "top3": null,
         "style": "逃げ",
         "jockey": "増田充宏",
-        "odds": 4.1
+        "odds": 4.2
        },
        {
         "no": 4,
@@ -2237,7 +2237,7 @@
         "top3": null,
         "style": "追込",
         "jockey": "中越琉世",
-        "odds": 46.2
+        "odds": 47.6
        }
       ]
      }
@@ -4000,7 +4000,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走1538分前)",
+      "oddsSrc": "暫定(発走1535分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -4122,7 +4122,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "野畑凌",
-        "odds": 8.3
+        "odds": 8.4
        },
        {
         "no": 2,
@@ -4144,7 +4144,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "木間塚龍馬",
-        "odds": 75.2
+        "odds": 75.8
        },
        {
         "no": 4,
@@ -4155,7 +4155,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "中越琉世",
-        "odds": 94
+        "odds": 94.8
        }
       ]
      },
