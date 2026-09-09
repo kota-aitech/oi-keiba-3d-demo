@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T02:02:46.422Z",
+ "builtAt": "2026-09-09T02:04:52.104Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -1796,7 +1796,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走548分前)",
+      "oddsSrc": "暫定(発走546分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -6282,30 +6282,30 @@
  "validation": {
   "split": "2026-06-01",
   "trainRaces": 7931,
-  "testRaces": 946,
+  "testRaces": 957,
   "fund": {
    "label": "第1段 オッズなし",
-   "races": 946,
-   "logloss": 1.855,
-   "top1": 0.3499,
-   "winnerInTop3": 0.6734,
-   "top3Exact": 0.0962
+   "races": 957,
+   "logloss": 1.8571,
+   "top1": 0.3511,
+   "winnerInTop3": 0.6708,
+   "top3Exact": 0.094
   },
   "pub": {
    "label": "単勝人気だけ",
-   "races": 945,
-   "logloss": 1.6384,
-   "top1": 0.4233,
-   "winnerInTop3": 0.763,
-   "top3Exact": 0.1175
+   "races": 956,
+   "logloss": 1.647,
+   "top1": 0.4205,
+   "winnerInTop3": 0.7626,
+   "top3Exact": 0.1172
   },
   "final": {
    "label": "第2段 合成",
-   "races": 945,
-   "logloss": 1.659,
-   "top1": 0.418,
-   "winnerInTop3": 0.7608,
-   "top3Exact": 0.1185
+   "races": 956,
+   "logloss": 1.6659,
+   "top1": 0.4132,
+   "winnerInTop3": 0.7615,
+   "top3Exact": 0.1192
   }
  },
  "record": {
