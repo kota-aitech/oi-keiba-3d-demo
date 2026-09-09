@@ -115,7 +115,7 @@
      "out": 0
     },
     "winTime": 94.957,
-    "oddsSrc": "暫定(発走64分前)",
+    "oddsSrc": "暫定(発走63分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 1
@@ -280,7 +280,7 @@
      "out": -0.08
     },
     "winTime": 88.504,
-    "oddsSrc": "暫定(発走94分前)",
+    "oddsSrc": "暫定(発走93分前)",
     "nPos": {
      "umaren": 3,
      "sanpuku": 6
@@ -435,7 +435,7 @@
      "out": 0.05
     },
     "winTime": 53.834,
-    "oddsSrc": "暫定(発走124分前)",
+    "oddsSrc": "暫定(発走123分前)",
     "nPos": {
      "umaren": 3,
      "sanpuku": 5
@@ -542,7 +542,7 @@
      "out": 0
     },
     "winTime": 129.937,
-    "oddsSrc": "暫定(発走154分前)",
+    "oddsSrc": "暫定(発走153分前)",
     "nPos": {
      "umaren": 1,
      "sanpuku": 2
@@ -694,7 +694,7 @@
      "out": 0.05
     },
     "winTime": 53.616,
-    "oddsSrc": "暫定(発走184分前)",
+    "oddsSrc": "暫定(発走183分前)",
     "nPos": {
      "umaren": 6,
      "sanpuku": 2
@@ -887,7 +887,7 @@
      "out": -0.08
     },
     "winTime": 88.367,
-    "oddsSrc": "暫定(発走214分前)",
+    "oddsSrc": "暫定(発走213分前)",
     "nPos": {
      "umaren": 5,
      "sanpuku": 7
@@ -1014,7 +1014,7 @@
      "out": -0.08
     },
     "winTime": 89.113,
-    "oddsSrc": "暫定(発走244分前)",
+    "oddsSrc": "暫定(発走243分前)",
     "nPos": {
      "umaren": 1,
      "sanpuku": 4
@@ -1206,7 +1206,7 @@
      "out": 0
     },
     "winTime": 95.39,
-    "oddsSrc": "暫定(発走279分前)",
+    "oddsSrc": "暫定(発走278分前)",
     "nPos": {
      "umaren": 6,
      "sanpuku": 6
@@ -1370,7 +1370,7 @@
      "out": -0.08
     },
     "winTime": 88.225,
-    "oddsSrc": "暫定(発走314分前)",
+    "oddsSrc": "暫定(発走313分前)",
     "nPos": {
      "umaren": 4,
      "sanpuku": 5
@@ -1505,7 +1505,7 @@
      "out": 0.15
     },
     "winTime": 102.858,
-    "oddsSrc": "暫定(発走349分前)",
+    "oddsSrc": "暫定(発走348分前)",
     "nPos": {
      "umaren": 3,
      "sanpuku": 3
@@ -1520,7 +1520,7 @@
     "date": "2026-09-09",
     "raceId": "2026090921070311",
     "night": false,
-    "oddsSrc": "暫定(発走389分前)",
+    "oddsSrc": "暫定(発走388分前)",
     "conf": 0.092,
     "pTop": 0.197,
     "ev": {
@@ -1667,7 +1667,7 @@
      "out": 0
     },
     "winTime": 96.283,
-    "oddsSrc": "暫定(発走429分前)",
+    "oddsSrc": "暫定(発走428分前)",
     "nPos": {
      "umaren": 1,
      "sanpuku": 0
