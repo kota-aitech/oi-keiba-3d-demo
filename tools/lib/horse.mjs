@@ -2,7 +2,7 @@
    人的要因・血統の指数、寸評をまとめて作る。
    build_races.mjs（本番データ生成）と backtest.mjs（検証）で同じものを使うため、
    ここに切り出してある。DB は data/nankan/index.json。                       */
-export function makeDerivers(DB, SK) {
+export function makeDerivers(DB, SK, FM) {
   const r2 = x => Math.round(x * 100) / 100;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const W = [1, .85, .7, .55, .45];                      // 前走ほど重い
@@ -113,7 +113,26 @@ export function makeDerivers(DB, SK) {
       jockey: r.jockey, diff, fast: diff != null && diff <= -1 };
   }
 
-  function memoOf(h, d, hu, pd, dist) {
+  /* 馬体重。今回の値と、その馬の普段との差 */
+  function bodyOf(h) {
+    if (!h.bw) return null;
+    const ws = (h.past || []).map(p => p.kg).filter(x => x > 0);
+    const avg = ws.length ? Math.round(ws.reduce((a, b) => a + b, 0) / ws.length) : null;
+    const dev = avg ? h.bw - avg : null;
+    return { bw: h.bw, diff: h.bwDiff ?? null, avg, dev,
+      note: dev == null ? '' : dev >= 10 ? '普段より重め' : dev <= -10 ? '普段より絞れている' : '' };
+  }
+  /* 騎手の調子（そのレース時点の直近成績。平常値と比べて上か下か） */
+  function formOf(h, raceId) {
+    if (!FM || !h.jockeyId) return null;
+    const J = DB.jockey['kis' + h.jockeyId];
+    const f = FM.get(raceId, 'j', h.jockeyId, J ? J.idx : 0);
+    if (!f.n || f.n < 20) return null;
+    return { n: f.n, form: r2(f.form), rides30: f.rides30,
+      label: f.form >= 0.25 ? '好調' : f.form <= -0.25 ? '不振' : '平常' };
+  }
+
+  function memoOf(h, d, hu, pd, dist, raceId) {
     const note = [];
     const past = h.past || [];
     const p0 = past[0];
@@ -153,8 +172,18 @@ export function makeDerivers(DB, SK) {
     cond.push(wet.length ? `道悪 ${wet.length}戦${chaku(wet)}` : '道悪未経験');
     note.push(['条件', cond.join('／')]);
 
+    /* 馬体重 */
+    const bd = bodyOf(h);
+    if (bd) {
+      const bits2 = [`${bd.bw}kg${bd.diff != null ? `（${bd.diff >= 0 ? '+' : ''}${bd.diff}）` : ''}`];
+      if (bd.avg) bits2.push(`平均${bd.avg}kg${bd.note ? '・' + bd.note : ''}`);
+      note.push(['馬体', bits2.join('／')]);
+    }
+
     /* 人：コンビと乗り替わりだけ */
+    const fo = formOf(h, raceId);
     const man = [`${hu.jockey}×${hu.trainer}`];
+    if (fo && fo.label !== '平常') man.push(`${hu.jockey}は直近${fo.n}騎乗が${fo.label}`);
     if (hu.cN >= 20) man.push(`コンビ${hu.cN}走${hu.cW}勝${hu.bond >= 0.30 ? '・主戦' : hu.bond >= 0.12 ? '・準主戦' : ''}`);
     else man.push(hu.cN ? `コンビ${hu.cN}走のみ` : 'コンビ初');
     if (hu.jUp >= 0.35) man.push('騎手強化');
@@ -174,6 +203,8 @@ export function makeDerivers(DB, SK) {
     const bits = [];
     if (p0) bits.push(`前走${p0.pop}人気${p0.pos}着`);
     else if (sk) bits.push(`試験${sk.time}秒${sk.fast ? '(速)' : ''}`);
+    if (bd && bd.note) bits.push(bd.note);
+    if (fo && fo.label !== '平常') bits.push(`騎手${fo.label}`);
     bits.push(d.style);
     if (hu.jUp >= 0.35) bits.push('騎手強化');
     else if (hu.spot) bits.push('スポット');
@@ -182,5 +213,5 @@ export function makeDerivers(DB, SK) {
     return { note, brief: bits.join('・'), memo: note.map(([k, v]) => `【${k}】${v}`).join('') };
   }
 
-  return { derive, human, pedigree, memoOf, shikenOf, styleOf, jockeyByName, norm };
+  return { derive, human, pedigree, memoOf, shikenOf, bodyOf, formOf, styleOf, jockeyByName, norm };
 }

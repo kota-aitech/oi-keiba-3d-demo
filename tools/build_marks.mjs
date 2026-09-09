@@ -12,7 +12,7 @@ import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { inject } from './lib/embed.mjs';
 import { loadModel, condOf } from './lib/model.mjs';
-import { makeFeaturizer, buildLapIndex, buildShikenIndex, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, buildShikenIndex, buildFormIndex, FEATURES } from './lib/feat.mjs';
 import { betPlan, confOf } from './lib/bets.mjs';
 
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
@@ -41,9 +41,12 @@ try {
   for (const o of Object.values(P)) oddsMap.set(o.raceId, { src: `暫定(発走${o.minsToPost}分前)`, tan: o.tan });
 } catch {}
 for (const o of jl('odds_live.jsonl')) if (o.tag !== 'final' && o.tag !== 'pre') oddsMap.set(o.raceId, { src: `締切前(発走${o.minsToPost}分前)`, tan: o.tan });
-const LAP = buildLapIndex(jl('results.jsonl'), [...cards.values()]);
+const resForForm = jl('results.jsonl');
+const LAP = buildLapIndex(resForForm, [...cards.values()]);
 /* 能力・調教試験（新馬・転入初戦の手がかり）*/
 try { LAP.shiken = buildShikenIndex(jl('shiken.jsonl')); } catch { LAP.shiken = null; }
+/* 騎手・調教師の「そのレース時点」の調子（過去の騎乗だけから作る）*/
+LAP.form = buildFormIndex([...cards.values()], resForForm);
 if (!MDL) console.error('!! model.json がない。印はシミュレータの勝率で出す');
 
 const softmax = us => { const mx = Math.max(...us); const e = us.map(u => Math.exp(u - mx)); const z = e.reduce((a, b) => a + b, 0); return e.map(x => x / z); };

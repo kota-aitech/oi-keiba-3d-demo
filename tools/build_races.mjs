@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { makeDerivers } from './lib/horse.mjs';
-import { buildShikenIndex } from './lib/feat.mjs';
+import { buildShikenIndex, buildFormIndex } from './lib/feat.mjs';
 
 const DB = readJSON('data/nankan/index.json');
 const NDAYS = Number(process.env.NK_RACE_DAYS || 3);   // 今日・明日・明後日
@@ -17,11 +17,19 @@ try {
   SK = buildShikenIndex(fs.readFileSync(path.join(ROOT, 'data/nankan/shiken.jsonl'), 'utf8')
     .split('\n').filter(Boolean).map(l => JSON.parse(l)));
 } catch {}
-const { derive, human, pedigree, memoOf, shikenOf } = makeDerivers(DB, SK);
-
 /* ---- cards.jsonl を読み、場ごとに最新 N 開催日を組み立てる ---- */
 const lines = fs.readFileSync(path.join(ROOT, 'data/nankan/cards.jsonl'), 'utf8').split('\n').filter(Boolean);
 const cards = lines.map(l => JSON.parse(l));
+
+/* 騎手の調子（そのレース時点の直近成績）*/
+let FM = null;
+try {
+  const rd = fs.readFileSync(path.join(ROOT, 'data/nankan/results.jsonl'), 'utf8')
+    .split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  FM = buildFormIndex(cards, rd);
+} catch {}
+const { derive, human, pedigree, memoOf, shikenOf, bodyOf, formOf } = makeDerivers(DB, SK, FM);
+
 const meta = { builtAt: new Date().toISOString(), leading: DB.window, pop: DB.pop, fit: DB.fit };
 
 for (const [jaName, key] of WANT) {
@@ -42,7 +50,9 @@ for (const [jaName, key] of WANT) {
       const hs = c.horses.filter(h => !h.scratch).map(h => {
         const d2 = derive(h, c.dist), hu = human(h, jaName), pd = pedigree(h, c.dist);
         return { no: h.no, name: h.name, gate: h.gate, style: d2.style, epos: d2.epos, ability: d2.ability,
-          close: d2.close, stamina: d2.stamina, wet: d2.wet, ...hu, ...pd, ...memoOf(h, d2, hu, pd, c.dist),
+          close: d2.close, stamina: d2.stamina, wet: d2.wet, ...hu, ...pd,
+          shiken: shikenOf(h), body: bodyOf(h), jform: formOf(h, c.raceId),
+          ...memoOf(h, d2, hu, pd, c.dist, c.raceId),
           // ここから先は出馬表ページ（race.html）だけで使う
           // rid（前走のレースID）は特徴量づくり用。ページには載せないので落とす
           _full: { horseId: h.horseId, sexAge: h.sexAge, kg: h.kg, dam: h.dam, farm: h.farm, f3: d2.f3,

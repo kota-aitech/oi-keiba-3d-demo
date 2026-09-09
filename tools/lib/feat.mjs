@@ -38,11 +38,93 @@ export const FEATURES = [
   'ptLog', 'upFirst', 'downFirst', 'winStreak', 'afterWin',
   // 能力・調教試験（新馬・転入初戦は前5走が無いので、実際に走った唯一の記録になる）
   'skTime', 'skHas', 'skFail',
+  // 騎手・調教師の「そのレース時点」の調子
+  'jForm', 'jForm3', 'jRides', 'tForm',
+  // 馬体重（自己比・仕上がり）
+  'bwDev', 'bwSwing', 'bwRel',
 ];
 
 /* results.jsonl と cards.jsonl から、前走レースのラップを引くための索引を作る */
 /* 能力・調教試験。馬IDで引けるようにする。同じ馬が複数回受けていたら直近を使う。
    タイムは距離（ほぼ800m）ごとに標準化して、速い＝プラスになる向きに揃える。 */
+/* 騎手・調教師の「そのレース時点」の直近成績。
+   index.json の hot は build_db を回した時点の直近3ヶ月なので、
+   過去のレースに当てると先読みになる。ここでは結果を日付順に流し込み、
+   各レースについて「その日より前の騎乗だけ」から作る。                      */
+export function buildFormIndex(cards, results) {
+  const res = new Map(results.map(r => [r.raceId, r]));
+  /* (日付, レース, 騎手/調教師, 着順) を時系列に並べる */
+  const runs = [];
+  for (const c of cards) {
+    const r = res.get(c.raceId);
+    if (!r || !r.order || !r.order.length) continue;
+    for (const h of c.horses) {
+      if (h.scratch || !h.jockeyId) continue;
+      const pos = r.order.indexOf(h.no) + 1;
+      if (!pos) continue;
+      runs.push({ date: c.date, raceId: c.raceId, j: h.jockeyId, t: h.trainerId, pos, n: r.order.length });
+    }
+  }
+  runs.sort((a, b) => a.raceId.localeCompare(b.raceId));
+
+  const W = Number(process.env.NK_FORM_W || 60);      // 直近何回の騎乗を見るか
+  const K = Number(process.env.NK_FORM_K || 40);      // 縮小の強さ
+  const hist = { j: new Map(), t: new Map() };        // id -> {q:[勝敗], win, top3, days:[日付]}
+  const snap = new Map();                             // raceId|kind|id -> {win, top3, rides30}
+  const D = d => new Date(d + 'T00:00:00').getTime();
+
+  for (const r of runs) {
+    for (const [kind, id] of [['j', r.j], ['t', r.t]]) {
+      if (!id) continue;
+      const h = hist[kind].get(id) || { q: [], win: 0, top3: 0, days: [] };
+      /* 先に「このレース時点」を記録してから、この結果を足す（先読み防止）*/
+      const key = `${r.raceId}|${kind}|${id}`;
+      if (!snap.has(key)) {
+        const n = h.q.length;
+        const rides30 = h.days.filter(d => D(r.date) - d <= 30 * 86400000).length;
+        snap.set(key, n ? { n, win: h.win / n, top3: h.top3 / n, rides30 } : null);
+      }
+      h.q.push(r.pos);
+      if (r.pos === 1) h.win++;
+      if (r.pos <= 3) h.top3++;
+      h.days.push(D(r.date));
+      while (h.q.length > W) { const o = h.q.shift(); if (o === 1) h.win--; if (o <= 3) h.top3--; }
+      while (h.days.length > 400) h.days.shift();
+      hist[kind].set(id, h);
+    }
+  }
+  /* 母集団の平均。縮小推定の事前分布に使う */
+  const all = runs.length || 1;
+  const p0 = runs.filter(r => r.pos === 1).length / all;
+  const p3 = runs.filter(r => r.pos <= 3).length / all;
+  const logit = p => Math.log(p / (1 - p));
+  /* 最新の状態（＝これから行われるレース用）。結果がまだ無いので snap には入らない */
+  const nowMs = Date.now();
+  const latest = new Map();
+  for (const kind of ['j', 't']) for (const [id, h] of hist[kind]) {
+    const n = h.q.length;
+    if (!n) continue;
+    latest.set(`${kind}|${id}`, { n, win: h.win / n, top3: h.top3 / n,
+      rides30: h.days.filter(d => nowMs - d <= 30 * 86400000).length });
+  }
+  return {
+    K, p0, p3,
+    /* そのレース時点の調子。長期平均からのズレを対数オッズで返す。
+       未来のレース（結果がまだ無い）は最新の状態を使う */
+    get(raceId, kind, id, baseIdx = 0) {
+      const s = snap.get(`${raceId}|${kind}|${id}`) || latest.get(`${kind}|${id}`);
+      if (!s || !s.n) return { form: 0, form3: 0, rides30: 0, n: 0 };
+      const exp0 = 1 / (1 + Math.exp(-(logit(p0) + baseIdx)));
+      const exp3 = 1 / (1 + Math.exp(-(logit(p3) + baseIdx)));
+      return {
+        n: s.n, rides30: s.rides30,
+        form: logit((s.win * s.n + K * exp0) / (s.n + K)) - logit(exp0),
+        form3: logit((s.top3 * s.n + K * exp3) / (s.n + K)) - logit(exp3),
+      };
+    },
+  };
+}
+
 export function buildShikenIndex(rows) {
   const by = new Map();
   for (const r of rows) {
@@ -76,6 +158,7 @@ export function buildLapIndex(results, cards) {
 const days = (a, b) => (new Date(a) - new Date(b)) / 86400000;
 
 const W = [1, .85, .7, .55, .45];        // 前走ほど重い（lib/horse.mjs と同じ）
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 export function makeFeaturizer(DB) {
   const { derive, human, pedigree } = makeDerivers(DB);
@@ -93,8 +176,13 @@ export function makeFeaturizer(DB) {
     const cntStyle = {};
     styles.forEach(s2 => cntStyle[s2] = (cntStyle[s2] || 0) + 1);
     const sk = lapIdx && lapIdx.shiken;
+    const fm = lapIdx && lapIdx.form;
+    /* 馬体重は「その馬の普段の体重」と「同レースの平均」の両方と比べる */
+    const bws = live.map(h => h.bw).filter(x => x > 0);
+    const bwAvg = bws.length ? bws.reduce((a, b) => a + b, 0) / bws.length : 460;
     const rows = live.map((h, hi) => {
       const d = derive(h, card.dist), hu = human(h, card.track), pd = pedigree(h, card.dist);
+      const hu0 = hu;
       const p0 = h.past && h.past[0];
       const others = Math.max(1, live.length - 1);
       const nNigeOther = (cntStyle['逃げ'] || 0) - (styles[hi] === '逃げ' ? 1 : 0);
@@ -165,6 +253,25 @@ export function makeFeaturizer(DB) {
           return ((sk.med - r.time) / sk.sd) * w;      // 速いほどプラス
         })(),
         skHas: sk && sk.by.has(h.horseId) ? 1 : 0,
+        /* 騎手・調教師の調子。過去の騎乗だけから作っているので先読みは無い。
+           生の直近成績は長期指数（jIdx）と相関0.81でほぼ同じ情報になってしまうので、
+           **その騎手自身の平常値を事前分布に置いて縮小**し「本来より上か下か」だけを見る。
+           （単純に jIdx を引くと縮小のかかり方の差が残り、逆相関の見せかけが出る）*/
+        jForm: fm ? fm.get(card.raceId, 'j', h.jockeyId, hu0.jIdx).form : 0,
+        jForm3: fm ? fm.get(card.raceId, 'j', h.jockeyId, hu0.jIdx).form3 : 0,
+        /* 直近30日の騎乗数。多い＝乗り鞍が集まっている（＝評価されている）*/
+        jRides: fm ? Math.min(fm.get(card.raceId, 'j', h.jockeyId).rides30, 80) / 40 - 1 : 0,
+        tForm: fm ? fm.get(card.raceId, 't', h.trainerId, hu0.tIdx).form : 0,
+        /* 馬体重：自分の普段との差（仕上がり）／増減の大きさ／同レース内での相対 */
+        bwDev: (() => {
+          const ws = (h.past || []).map(p => p.kg).filter(x => x > 0);
+          if (!h.bw || !ws.length) return 0;
+          const m = ws.reduce((a, b) => a + b, 0) / ws.length;
+          return clamp((h.bw - m) / 12, -2.5, 2.5);
+        })(),
+        /* 増減の絶対値。大幅な増減はどちらもマイナスに働きやすい */
+        bwSwing: h.bwDiff == null ? 0 : Math.min(Math.abs(h.bwDiff), 30) / 10,
+        bwRel: h.bw ? clamp((h.bw - bwAvg) / 25, -2.5, 2.5) : 0,
         skFail: (() => {
           const r = sk && sk.by.get(h.horseId);
           return r && /不合格|失格|中止/.test(r.pass) ? 1 : 0;

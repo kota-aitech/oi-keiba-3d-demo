@@ -13,6 +13,8 @@ const today = new Date();
 const ym = d => d.getFullYear() * 100 + d.getMonth() + 1;
 const TO = Number(process.env.NK_TO || ym(today));
 const FROM = Number(process.env.NK_FROM || (ym(today) - 100));
+/* 特定の日だけ取り直したいとき（当日の馬体重の反映用）*/
+const ONLY = process.env.NK_ONLY_DATE || '';
 
 function months(from, to) {
   const out = [];
@@ -27,6 +29,7 @@ if (fs.existsSync(OUT)) for (const l of fs.readFileSync(OUT, 'utf8').split('\n')
 console.error(`既存 ${done.size} レース`);
 
 let added = 0, days = 0;
+const replace = new Map();     // 当日の取り直しぶん（あとでまとめて差し替える）
 /* カレンダーは四半期単位（202601 / 202604 / 202607 / 202610）で1ページ */
 const quarter = mo => mo.slice(0, 4) + String(Math.floor((Number(mo.slice(4)) - 1) / 3) * 3 + 1).padStart(2, '0');
 const seen = new Set();
@@ -38,20 +41,34 @@ for (const mo of months(FROM, TO)) {
   const progs = [...new Set([...cal.matchAll(/\/program\/(\d{14})\.do/g)].map(m => m[1]))]
     .filter(d => { const x = Number(d.slice(0, 6)); return x >= FROM && x <= TO; });
   for (const day of progs.sort()) {
+    if (ONLY && `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}` !== ONLY) continue;
     days++;
-    const fresh = Number(day.slice(0, 6)) >= ym(today) ? 1 : 365;
+    /* 当日は馬体重・出走取消が随時載るので短いTTL。翌日以降は1日、過去は1年 */
+    const dstr = `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}`;
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    const fresh = dstr === todayStr ? 0.007 : (Number(day.slice(0, 6)) >= ym(today) ? 1 : 365);
     const pg = await get(`${BASE}/program/${day}.do`, { ttlDays: fresh });
     const races = [...new Set([...pg.matchAll(/\/syousai\/(\d{16})\.do/g)].map(m => m[1]))].sort();
     for (const rid of races) {
-      if (done.has(rid)) continue;
+      if (done.has(rid) && !ONLY) continue;      // 当日の取り直しは上書きする
       let card;
       try { card = parseCard(await get(`${BASE}/uma_shosai/${rid}.do`, { ttlDays: fresh }), rid); }
       catch (e) { console.error(`  ! ${rid} ${e.message}`); continue; }
       if (!card.horses.length) { console.error(`  ! ${rid} 出走馬なし`); continue; }
-      fs.appendFileSync(OUT, JSON.stringify(card) + '\n');
-      done.add(rid); added++;
+      if (done.has(rid)) { replace.set(rid, card); }
+      else { fs.appendFileSync(OUT, JSON.stringify(card) + '\n'); done.add(rid); }
+      added++;
     }
     console.error(`${day} ${races.length}R  (累計 ${added} レース / ${days} 日)`);
   }
+}
+/* 取り直したレースを書き戻す（追記だと同じ raceId が二重になるため）*/
+if (replace.size) {
+  const out = fs.readFileSync(OUT, 'utf8').split('\n').filter(Boolean).map(l => {
+    try { const c = JSON.parse(l); return replace.has(c.raceId) ? JSON.stringify(replace.get(c.raceId)) : l; }
+    catch { return l; }
+  });
+  fs.writeFileSync(OUT, out.join('\n') + '\n');
+  console.error(`  ${replace.size} レースを最新の内容に差し替え`);
 }
 console.error(`完了: ${added} レース追加、合計 ${done.size}`);

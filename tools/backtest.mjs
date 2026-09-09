@@ -17,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
-import { makeFeaturizer, buildLapIndex, buildShikenIndex, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, buildShikenIndex, buildFormIndex, FEATURES } from './lib/feat.mjs';
 import { loadModel, condOf } from './lib/model.mjs';
 
 const TRACKS = (process.env.NK_BT_TRACKS || '大井').split(',');
@@ -42,6 +42,8 @@ const resArr = jl('results.jsonl');
 const LAP = buildLapIndex(resArr, cards);
 /* 能力・調教試験（新馬・転入初戦の手がかり）*/
 try { LAP.shiken = buildShikenIndex(jl('shiken.jsonl')); } catch { LAP.shiken = null; }
+/* 騎手・調教師の「そのレース時点」の調子（過去の騎乗だけから作る）*/
+LAP.form = buildFormIndex(cards, resArr);
 const results = new Map(resArr.map(r => [r.raceId, r]));
 const payouts = new Map(jl('payouts.jsonl').map(p => [p.raceId, p]));
 const oddsMap = new Map((fs.existsSync(path.join(ROOT, 'data/nankan/odds.jsonl')) ? jl('odds.jsonl') : []).map(o => [o.raceId, o]));
