@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T03:51:15.962Z",
+ "builtAt": "2026-09-09T03:53:20.499Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -20,15 +20,15 @@
       "conf": 0.154,
       "pTop": 0.328,
       "ev": {
-       "umaren": 0.95,
-       "sanpuku": 1.11
+       "umaren": 0.93,
+       "sanpuku": 1.09
       },
       "nPos": {
        "umaren": 0,
        "sanpuku": 2
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走114分前)",
+      "oddsSrc": "暫定(発走112分前)",
       "bets": {
        "umaren": [],
        "sanpuku": [
@@ -38,9 +38,9 @@
           11,
           14
          ],
-         "p": 0.0106,
-         "odds": 104.8,
-         "ev": 1.11
+         "p": 0.011,
+         "odds": 99.5,
+         "ev": 1.09
         },
         {
          "c": [
@@ -48,9 +48,9 @@
           11,
           14
          ],
-         "p": 0.0198,
-         "odds": 53.2,
-         "ev": 1.05
+         "p": 0.0208,
+         "odds": 49.7,
+         "ev": 1.03
         }
        ]
       },
@@ -191,7 +191,7 @@
         "name": "オンナユメラク",
         "mark": "○",
         "win": 0.135,
-        "top3": 0.422,
+        "top3": 0.421,
         "style": "先行",
         "jockey": "矢野貴之",
         "odds": 5
@@ -212,11 +212,11 @@
         "gate": 8,
         "name": "テンノウズアイル",
         "mark": "△",
-        "win": 0.07,
-        "top3": 0.239,
+        "win": 0.071,
+        "top3": 0.243,
         "style": "差し",
         "jockey": "中山遥人",
-        "odds": 11.2
+        "odds": 10.9
        }
       ]
      },
@@ -239,7 +239,7 @@
        "sanpuku": 10
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走144分前)",
+      "oddsSrc": "暫定(発走142分前)",
       "bets": {
        "umaren": [
         {
@@ -497,7 +497,7 @@
        "sanpuku": 3
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走174分前)",
+      "oddsSrc": "暫定(発走172分前)",
       "bets": {
        "umaren": [
         {
@@ -740,7 +740,7 @@
        "sanpuku": 5
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走204分前)",
+      "oddsSrc": "暫定(発走202分前)",
       "bets": {
        "umaren": [
         {
@@ -1190,7 +1190,7 @@
        "sanpuku": 10
       },
       "pace": "M",
-      "oddsSrc": "暫定(発走264分前)",
+      "oddsSrc": "暫定(発走262分前)",
       "bets": {
        "umaren": [
         {
@@ -1490,7 +1490,7 @@
        "sanpuku": 3
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走294分前)",
+      "oddsSrc": "暫定(発走292分前)",
       "bets": {
        "umaren": [],
        "sanpuku": [
@@ -1880,7 +1880,7 @@
        "sanpuku": 5
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走364分前)",
+      "oddsSrc": "暫定(発走362分前)",
       "bets": {
        "umaren": [
         {
@@ -2324,7 +2324,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走439分前)",
+      "oddsSrc": "暫定(発走437分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2520,7 +2520,7 @@
        "sanpuku": 1
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走479分前)",
+      "oddsSrc": "暫定(発走477分前)",
       "bets": {
        "umaren": [
         {
