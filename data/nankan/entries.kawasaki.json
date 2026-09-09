@@ -712,7 +712,7 @@
      "out": -0.08
     },
     "winTime": 88.225,
-    "oddsSrc": "暫定(発走13分前)",
+    "oddsSrc": "暫定(発走11分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -788,7 +788,7 @@
      "out": 0.15
     },
     "winTime": 102.858,
-    "oddsSrc": "暫定(発走48分前)",
+    "oddsSrc": "暫定(発走46分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -803,7 +803,7 @@
     "date": "2026-09-09",
     "raceId": "2026090921070311",
     "night": false,
-    "oddsSrc": "暫定(発走88分前)",
+    "oddsSrc": "暫定(発走86分前)",
     "conf": 1,
     "pTop": null,
     "ev": {
@@ -940,7 +940,7 @@
      "out": 0
     },
     "winTime": 96.283,
-    "oddsSrc": "暫定(発走128分前)",
+    "oddsSrc": "暫定(発走126分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -1668,7 +1668,7 @@
      "out": 0
     },
     "winTime": 94.993,
-    "oddsSrc": "暫定(発走1528分前)",
+    "oddsSrc": "暫定(発走1526分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -20200,7 +20200,7 @@
     "c4": 2.045,
     "mark": "◎",
     "rank": 1,
-    "pubOdds": 6.1,
+    "pubOdds": 5.5,
     "pFund": null
    },
    {
@@ -20388,7 +20388,7 @@
     "c4": 5.338,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 26.1,
+    "pubOdds": 26.4,
     "pFund": null
    },
    {
@@ -20576,7 +20576,7 @@
     "c4": 9.988,
     "mark": "▲",
     "rank": 3,
-    "pubOdds": 48.4,
+    "pubOdds": 46.5,
     "pFund": null
    },
    {
@@ -20764,7 +20764,7 @@
     "c4": 3.302,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 3.6,
+    "pubOdds": 3.7,
     "pFund": null
    },
    {
@@ -20952,7 +20952,7 @@
     "c4": 9.742,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 27.9,
+    "pubOdds": 27.2,
     "pFund": null
    },
    {
@@ -21139,7 +21139,7 @@
     "c4": 11.852,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 90.6,
+    "pubOdds": 80.6,
     "pFund": null
    },
    {
@@ -21327,7 +21327,7 @@
     "c4": 6.573,
     "mark": "",
     "rank": 7,
-    "pubOdds": 14,
+    "pubOdds": 12.4,
     "pFund": null
    },
    {
@@ -21492,7 +21492,7 @@
     "c4": 4.445,
     "mark": "",
     "rank": 8,
-    "pubOdds": 24.1,
+    "pubOdds": 24.8,
     "pFund": null
    },
    {
@@ -21670,7 +21670,7 @@
     "c4": 6.077,
     "mark": "",
     "rank": 9,
-    "pubOdds": 14.2,
+    "pubOdds": 14.7,
     "pFund": null
    },
    {
@@ -21855,7 +21855,7 @@
     "c4": 1.945,
     "mark": "",
     "rank": 10,
-    "pubOdds": 4.3,
+    "pubOdds": 4.4,
     "pFund": null
    },
    {
@@ -22041,7 +22041,7 @@
     "c4": 10.335,
     "mark": "",
     "rank": 11,
-    "pubOdds": 3.6,
+    "pubOdds": 3.8,
     "pFund": null
    },
    {
@@ -22224,7 +22224,7 @@
     "c4": 6.358,
     "mark": "",
     "rank": 12,
-    "pubOdds": 40.7,
+    "pubOdds": 40.5,
     "pFund": null
    }
   ],
@@ -22559,7 +22559,7 @@
     "c4": 3.71,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 26.3,
+    "pubOdds": 25.1,
     "pFund": null
    },
    {
@@ -22933,7 +22933,7 @@
     "c4": 4.335,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 9.5,
+    "pubOdds": 9.2,
     "pFund": null
    },
    {
@@ -23121,7 +23121,7 @@
     "c4": 10.305,
     "mark": "△",
     "rank": 5,
-    "pubOdds": 19,
+    "pubOdds": 19.1,
     "pFund": null
    },
    {
@@ -23288,7 +23288,7 @@
     "c4": 7.665,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 14.6,
+    "pubOdds": 14.7,
     "pFund": null
    },
    {
@@ -23476,7 +23476,7 @@
     "c4": 8.102,
     "mark": "",
     "rank": 7,
-    "pubOdds": 49.9,
+    "pubOdds": 50.2,
     "pFund": null
    },
    {
@@ -23851,7 +23851,7 @@
     "c4": 12.472,
     "mark": "",
     "rank": 9,
-    "pubOdds": 78.5,
+    "pubOdds": 79,
     "pFund": null
    },
    {
@@ -24039,7 +24039,7 @@
     "c4": 8.072,
     "mark": "",
     "rank": 10,
-    "pubOdds": 24.7,
+    "pubOdds": 24.5,
     "pFund": null
    },
    {
@@ -24227,7 +24227,7 @@
     "c4": 3.553,
     "mark": "",
     "rank": 11,
-    "pubOdds": 8.5,
+    "pubOdds": 8.4,
     "pFund": null
    },
    {
@@ -24414,7 +24414,7 @@
     "c4": 11.227,
     "mark": "",
     "rank": 12,
-    "pubOdds": 31.7,
+    "pubOdds": 31.9,
     "pFund": null
    },
    {
@@ -24783,7 +24783,7 @@
       ]
      }
     ],
-    "pubOdds": 82.3,
+    "pubOdds": 83.5,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -24971,7 +24971,7 @@
       ]
      }
     ],
-    "pubOdds": 71.5,
+    "pubOdds": 72.7,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -25159,7 +25159,7 @@
       ]
      }
     ],
-    "pubOdds": 20.2,
+    "pubOdds": 20,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -25347,7 +25347,7 @@
       ]
      }
     ],
-    "pubOdds": 38.2,
+    "pubOdds": 38,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -25723,7 +25723,7 @@
       ]
      }
     ],
-    "pubOdds": 6.9,
+    "pubOdds": 6.8,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -26663,7 +26663,7 @@
       ]
      }
     ],
-    "pubOdds": 46.9,
+    "pubOdds": 46.1,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -26851,7 +26851,7 @@
       ]
      }
     ],
-    "pubOdds": 83.2,
+    "pubOdds": 80.9,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -27227,7 +27227,7 @@
       ]
      }
     ],
-    "pubOdds": 44.7,
+    "pubOdds": 43.5,
     "pFund": null,
     "win": null,
     "top3": null,
@@ -50673,7 +50673,7 @@
     "c4": 6.082,
     "mark": "◎",
     "rank": 1,
-    "pubOdds": 10.5,
+    "pubOdds": 10,
     "pFund": null
    },
    {
@@ -50802,7 +50802,7 @@
     "c4": 5.307,
     "mark": "○",
     "rank": 2,
-    "pubOdds": 5.8,
+    "pubOdds": 5.9,
     "pFund": null
    },
    {
@@ -50989,7 +50989,7 @@
     "c4": 7.378,
     "mark": "▲",
     "rank": 3,
-    "pubOdds": 95.2,
+    "pubOdds": 96.6,
     "pFund": null
    },
    {
@@ -51177,7 +51177,7 @@
     "c4": 10.972,
     "mark": "△",
     "rank": 4,
-    "pubOdds": 119,
+    "pubOdds": 120.8,
     "pFund": null
    },
    {
@@ -51435,7 +51435,7 @@
     "c4": 6.245,
     "mark": "☆",
     "rank": 6,
-    "pubOdds": 12.8,
+    "pubOdds": 13,
     "pFund": null
    },
    {
@@ -51581,7 +51581,7 @@
     "c4": 5.9,
     "mark": "",
     "rank": 7,
-    "pubOdds": 19,
+    "pubOdds": 19.3,
     "pFund": null
    },
    {
@@ -51710,7 +51710,7 @@
     "c4": 3.597,
     "mark": "",
     "rank": 8,
-    "pubOdds": 28,
+    "pubOdds": 24.1,
     "pFund": null
    },
    {
@@ -51855,7 +51855,7 @@
     "c4": 7.928,
     "mark": "",
     "rank": 9,
-    "pubOdds": 95.2,
+    "pubOdds": 96.6,
     "pFund": null
    },
    {
@@ -52001,7 +52001,7 @@
     "c4": 4.312,
     "mark": "",
     "rank": 10,
-    "pubOdds": 95.2,
+    "pubOdds": 96.6,
     "pFund": null
    },
    {
