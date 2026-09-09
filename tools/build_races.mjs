@@ -6,11 +6,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { makeDerivers } from './lib/horse.mjs';
+import { buildShikenIndex } from './lib/feat.mjs';
 
 const DB = readJSON('data/nankan/index.json');
 const NDAYS = Number(process.env.NK_RACE_DAYS || 3);   // 今日・明日・明後日
 const WANT = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':'));
-const { derive, human, pedigree, memoOf } = makeDerivers(DB);
+/* 能力・調教試験。新馬・転入初戦の唯一の実走記録なので寸評に載せる */
+let SK = null;
+try {
+  SK = buildShikenIndex(fs.readFileSync(path.join(ROOT, 'data/nankan/shiken.jsonl'), 'utf8')
+    .split('\n').filter(Boolean).map(l => JSON.parse(l)));
+} catch {}
+const { derive, human, pedigree, memoOf, shikenOf } = makeDerivers(DB, SK);
 
 /* ---- cards.jsonl を読み、場ごとに最新 N 開催日を組み立てる ---- */
 const lines = fs.readFileSync(path.join(ROOT, 'data/nankan/cards.jsonl'), 'utf8').split('\n').filter(Boolean);

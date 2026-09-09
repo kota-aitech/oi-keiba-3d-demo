@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
-import { makeFeaturizer, buildLapIndex, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, buildShikenIndex, FEATURES } from './lib/feat.mjs';
 import { betPlan, confOf } from './lib/bets.mjs';
 
 const TRACKS = (process.env.NK_BT_TRACKS || '大井,川崎').split(',');
@@ -28,6 +28,8 @@ const jl = f => fs.readFileSync(path.join(ROOT, 'data/nankan', f), 'utf8').split
   .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 const cards = jl('cards.jsonl'), resArr = jl('results.jsonl');
 const LAP = buildLapIndex(resArr, cards);
+/* 能力・調教試験（新馬・転入初戦の手がかり）*/
+try { LAP.shiken = buildShikenIndex(jl('shiken.jsonl')); } catch { LAP.shiken = null; }
 const results = new Map(resArr.map(r => [r.raceId, r]));
 const payouts = new Map(jl('payouts.jsonl').map(p => [p.raceId, p]));
 const oddsMap = new Map(jl('odds.jsonl').map(o => [o.raceId, o]));

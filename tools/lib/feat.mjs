@@ -36,9 +36,26 @@ export const FEATURES = [
   'agariRel', 'paceExp', 'fastFit',
   // 南関のポイント制度まわり（ヤリヤラズの手がかり）
   'ptLog', 'upFirst', 'downFirst', 'winStreak', 'afterWin',
+  // 能力・調教試験（新馬・転入初戦は前5走が無いので、実際に走った唯一の記録になる）
+  'skTime', 'skHas', 'skFail',
 ];
 
 /* results.jsonl と cards.jsonl から、前走レースのラップを引くための索引を作る */
+/* 能力・調教試験。馬IDで引けるようにする。同じ馬が複数回受けていたら直近を使う。
+   タイムは距離（ほぼ800m）ごとに標準化して、速い＝プラスになる向きに揃える。 */
+export function buildShikenIndex(rows) {
+  const by = new Map();
+  for (const r of rows) {
+    if (!r.time) continue;
+    const cur = by.get(r.horseId);
+    if (!cur || r.date > cur.date) by.set(r.horseId, r);
+  }
+  const t = [...by.values()].map(r => r.time).sort((a, b) => a - b);
+  const med = t[t.length >> 1] || 52.6;
+  const sd = Math.sqrt(t.reduce((a, x) => a + (x - med) ** 2, 0) / (t.length || 1)) || 1.5;
+  return { by, med, sd };
+}
+
 export function buildLapIndex(results, cards) {
   const lap = new Map();          // raceId -> {ten3, agari3}
   for (const r of results) if (r.ten3 && r.agari3) lap.set(r.raceId, { ten3: r.ten3, agari3: r.agari3 });
@@ -75,6 +92,7 @@ export function makeFeaturizer(DB) {
     const styles = live.map(h => derive(h, card.dist).style);
     const cntStyle = {};
     styles.forEach(s2 => cntStyle[s2] = (cntStyle[s2] || 0) + 1);
+    const sk = lapIdx && lapIdx.shiken;
     const rows = live.map((h, hi) => {
       const d = derive(h, card.dist), hu = human(h, card.track), pd = pedigree(h, card.dist);
       const p0 = h.past && h.past[0];
@@ -138,6 +156,19 @@ export function makeFeaturizer(DB) {
         downFirst: cls < prevCls ? 1 : 0,
         winStreak: Math.min(streak, 3) / 3,
         afterWin: (p0 && p0.pos === 1 && cls === prevCls) ? 1 : 0,
+        /* 前5走が少ない馬ほど効かせる。実績がある馬には試験タイムは要らない */
+        skTime: (() => {
+          if (!sk) return 0;
+          const r = sk.by.get(h.horseId);
+          if (!r) return 0;
+          const w = Math.max(0, 1 - (h.past || []).length / 3);
+          return ((sk.med - r.time) / sk.sd) * w;      // 速いほどプラス
+        })(),
+        skHas: sk && sk.by.has(h.horseId) ? 1 : 0,
+        skFail: (() => {
+          const r = sk && sk.by.get(h.horseId);
+          return r && /不合格|失格|中止/.test(r.pass) ? 1 : 0;
+        })(),
       };
       return { no: h.no, gate: h.gate, name: h.name, x, d, hu, pd };
     });

@@ -2,7 +2,7 @@
    人的要因・血統の指数、寸評をまとめて作る。
    build_races.mjs（本番データ生成）と backtest.mjs（検証）で同じものを使うため、
    ここに切り出してある。DB は data/nankan/index.json。                       */
-export function makeDerivers(DB) {
+export function makeDerivers(DB, SK) {
   const r2 = x => Math.round(x * 100) / 100;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const W = [1, .85, .7, .55, .45];                      // 前走ほど重い
@@ -104,6 +104,15 @@ export function makeDerivers(DB) {
     rs.forEach(p => c[Math.min(p.pos, 4) - 1]++);
     return `[${c[0]}-${c[1]}-${c[2]}-${c[3]}]`;
   }
+  /* 能力・調教試験。前走が無い馬にとっては唯一の実走記録なので必ず出す */
+  function shikenOf(h) {
+    const r = SK && SK.by ? SK.by.get(h.horseId) : null;
+    if (!r) return null;
+    const diff = SK.med ? +(r.time - SK.med).toFixed(1) : null;
+    return { date: r.date, track: r.track, time: r.time, pass: r.pass, bw: r.bw,
+      jockey: r.jockey, diff, fast: diff != null && diff <= -1 };
+  }
+
   function memoOf(h, d, hu, pd, dist) {
     const note = [];
     const past = h.past || [];
@@ -119,6 +128,14 @@ export function makeDerivers(DB) {
         + `／近${past.length}走 ${past.map(x => x.pos).join('-')}（3着内${in3}）`]);
     } else {
       note.push(['近走', '南関の前走なし（新馬・転入初戦）']);
+    }
+
+    /* 能力試験（前走が無いときは近走の代わりにここが手がかり）*/
+    const sk = shikenOf(h);
+    if (sk && (past.length < 3)) {
+      note.push(['能力試験', `${sk.date.slice(5).replace('-', '/')} ${sk.track} ${sk.time}秒 ${sk.pass}`
+        + (sk.diff != null ? `（平均比 ${sk.diff >= 0 ? '+' : ''}${sk.diff}秒${sk.fast ? '・速い' : ''}）` : '')
+        + (sk.bw ? `／${sk.bw}kg` : '')]);
     }
 
     /* 脚質：型・位置・上がり */
@@ -156,6 +173,7 @@ export function makeDerivers(DB) {
     /* brief：縦型の柱に入れる1行。目を引く要素だけ拾う */
     const bits = [];
     if (p0) bits.push(`前走${p0.pop}人気${p0.pos}着`);
+    else if (sk) bits.push(`試験${sk.time}秒${sk.fast ? '(速)' : ''}`);
     bits.push(d.style);
     if (hu.jUp >= 0.35) bits.push('騎手強化');
     else if (hu.spot) bits.push('スポット');
@@ -164,5 +182,5 @@ export function makeDerivers(DB) {
     return { note, brief: bits.join('・'), memo: note.map(([k, v]) => `【${k}】${v}`).join('') };
   }
 
-  return { derive, human, pedigree, memoOf, styleOf, jockeyByName, norm };
+  return { derive, human, pedigree, memoOf, shikenOf, styleOf, jockeyByName, norm };
 }

@@ -13,7 +13,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
-import { makeFeaturizer, buildLapIndex, FEATURES } from './lib/feat.mjs';
+import { makeFeaturizer, buildLapIndex, buildShikenIndex, FEATURES } from './lib/feat.mjs';
 
 const DBFILE = process.env.NK_FIT_DB || 'data/nankan/index.json';
 const SPLIT = process.env.NK_FIT_SPLIT || '2026-06-01';   // これ以降を検証に回す
@@ -28,6 +28,8 @@ const featurize = makeFeaturizer(DB);
 const resArr = jl('results.jsonl');
 const cardArr = jl('cards.jsonl');
 const LAP = buildLapIndex(resArr, cardArr);
+/* 能力・調教試験（新馬・転入初戦の手がかり）*/
+try { LAP.shiken = buildShikenIndex(jl('shiken.jsonl')); } catch { LAP.shiken = null; }
 const results = new Map(resArr.map(r => [r.raceId, r]));
 const oddsMap = new Map((fs.existsSync(path.join(ROOT, 'data/nankan/odds.jsonl')) ? jl('odds.jsonl') : []).map(o => [o.raceId, o]));
 
