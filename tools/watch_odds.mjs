@@ -34,6 +34,7 @@ const PRE = path.join(ROOT, 'data', 'nankan', 'odds_pre.json');
 const DATE = process.env.NK_ODDS_DATE || new Date().toLocaleDateString('sv-SE');  // ローカル日付
 const AHEAD = Number(process.env.NK_ODDS_AHEAD || 3);          // 何日先まで見るか
 const REFRESH = Number(process.env.NK_ODDS_REFRESH || 12);     // 暫定を何分で取り直すか
+const MAXPRE = Number(process.env.NK_ODDS_MAXPRE || 14);       // 1周回で暫定を取る上限
 const LEAD = Number(process.env.NK_ODDS_LEAD || 8);        // 締切の何分前
 const CLOSE_BEFORE_POST = Number(process.env.NK_ODDS_CLOSE || 1);  // 締切は発走の何分前か
 const ONCE = !!process.env.NK_ODDS_ONCE;
@@ -79,6 +80,23 @@ const at = (r, offsetMin) => {
   return d;
 };
 
+/* launchd は1分おきに起動する。1回の処理が1分を超えるとプロセスが重なり、
+   サイトを叩きすぎて通信エラーの連鎖になる（実際に9/8夜これで T-8 を取り逃した）。
+   ロックを置いて多重起動を防ぐ。 */
+const LOCK = path.join(ROOT, 'data', 'nankan', '.oddswatch.lock');
+if (ONCE) {
+  try {
+    const st = fs.statSync(LOCK);
+    const age = (Date.now() - st.mtimeMs) / 60000;
+    if (age < 5) { process.exit(0); }             // 実行中。黙って終わる
+    fs.unlinkSync(LOCK);                          // 5分以上前のは死んだプロセスの残骸
+  } catch {}
+  fs.writeFileSync(LOCK, String(process.pid));
+  const release = () => { try { fs.unlinkSync(LOCK); } catch {} };
+  process.on('exit', release);
+  process.on('SIGTERM', () => { release(); process.exit(0); });
+}
+
 let FIRSTPASS = true;
 const races = await todaysRaces();
 if (!races.length) { log(`${DATE} は開催がありません`); process.exit(0); }
@@ -92,20 +110,32 @@ for (const r of today) log(`  ${r.R}R 発走 ${r.time} → 取得 ${at(r, -(LEAD
 let pre = {};
 try { pre = JSON.parse(fs.readFileSync(PRE, 'utf8')); } catch {}
 const savePre = () => fs.writeFileSync(PRE, JSON.stringify(pre));
+/* 発売前・取得失敗を覚えておき、毎周回叩かないようにする（翌日以降のレースが大半）*/
+const NOTYET = path.join(ROOT, 'data', 'nankan', '.oddswatch.notyet.json');
+let notYet = {};
+try { notYet = JSON.parse(fs.readFileSync(NOTYET, 'utf8')); } catch {}
+const SKIP_MIN = Number(process.env.NK_ODDS_SKIP || 20);
 
 async function snap(r, tag) {
   const key = r.raceId + '|' + tag;
   const isPre = tag === 'pre';
   if (!isPre && done.has(key)) return false;
   let o;
-  try { o = parseOdds(await get(`${BASE}/oddsJS/${r.raceId}.do?_=${Date.now()}`, { ttlDays: 0 })); }
-  catch (e) { log(`  ! ${r.R}R ${tag} ${e.message}`); return false; }
-  if (!o.live) return false;                      // 発売前。翌日ぶんは普通ここに来る
+  try {
+    /* 暫定は取れなくても次の周回で取り直せばよいので粘らない。
+       ここで3回リトライすると1レース5秒かかり、締切前の取得まで遅れる。 */
+    o = parseOdds(await get(`${BASE}/oddsJS/${r.raceId}.do?_=${Date.now()}`, { ttlDays: 0, tries: isPre ? 1 : 3 }));
+  } catch (e) {
+    if (!isPre) log(`  ! ${r.R}R ${tag} ${e.message}`);
+    notYet[r.raceId] = Date.now();                // しばらく置く
+    return false;
+  }
+  if (!o.live) { notYet[r.raceId] = Date.now(); return false; }   // 発売前。翌日以降は普通ここ
   const rec = { raceId: r.raceId, date: r.date || DATE, track: r.track, R: r.R, tag,
     post: r.time, capturedAt: new Date().toISOString(),
     minsToPost: Math.round((at(r, 0) - Date.now()) / 60000),
     updated: o.updated, tan: o.tan, fuku: o.fuku };
-  if (isPre) { pre[r.raceId] = rec; savePre(); return true; }
+  if (isPre) { pre[r.raceId] = rec; delete notYet[r.raceId]; return true; }
   fs.appendFileSync(OUT, JSON.stringify(rec) + '\n');
   done.add(key);
   const top = Object.entries(o.tan).filter(([, v]) => v.pop === 1)[0];
@@ -133,12 +163,18 @@ async function pass() {
     if (!p) return true;
     return (now - new Date(p.capturedAt).getTime()) / 60000 >= REFRESH;
   };
-  const targets = races.filter(r => now < at(r, 0).getTime() && !done.has(r.raceId + `|T-${LEAD}`));
-  const todo = tookSnap || FIRSTPASS ? targets : targets.filter(stale);
+  const targets = races
+    .filter(r => now < at(r, 0).getTime() && !done.has(r.raceId + `|T-${LEAD}`))
+    /* 発売前だと分かっているものは SKIP_MIN 分あけてから試す */
+    .filter(r => !notYet[r.raceId] || (now - notYet[r.raceId]) / 60000 >= SKIP_MIN)
+    /* 発走が近い順。1周回で取り切れなくても大事なものから埋まる */
+    .sort((a, b) => at(a, 0) - at(b, 0));
+  const todo = (tookSnap || FIRSTPASS ? targets : targets.filter(stale)).slice(0, MAXPRE);
   FIRSTPASS = false;
   let n = 0;
   for (const r of todo) if (await snap(r, 'pre')) n++;
-  if (n) log(`  ・暫定オッズを ${n} レース更新${tookSnap ? '（締切前の取得に合わせて全件）' : ''}`);
+  if (n) { savePre(); log(`  ・暫定オッズを ${n} レース更新${tookSnap ? '（締切前の取得に合わせて）' : ''}`); }
+  fs.writeFileSync(NOTYET, JSON.stringify(notYet));
 
   return races.filter(r => (r.date || DATE) === DATE).every(r => done.has(r.raceId + '|final'));
 }

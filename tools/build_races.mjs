@@ -8,7 +8,7 @@ import { ROOT, readJSON, writeJSON } from './lib/nk.mjs';
 import { makeDerivers } from './lib/horse.mjs';
 
 const DB = readJSON('data/nankan/index.json');
-const NDAYS = Number(process.env.NK_RACE_DAYS || 2);
+const NDAYS = Number(process.env.NK_RACE_DAYS || 3);   // 今日・明日・明後日
 const WANT = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':'));
 const { derive, human, pedigree, memoOf } = makeDerivers(DB);
 

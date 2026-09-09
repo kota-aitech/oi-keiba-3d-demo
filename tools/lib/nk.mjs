@@ -17,7 +17,7 @@ const WAIT = Number(process.env.NK_WAIT || 600);
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-export async function get(url, { ttlDays = 30 } = {}) {
+export async function get(url, { ttlDays = 30, tries = 3 } = {}) {
   fs.mkdirSync(CACHE, { recursive: true });
   const key = crypto.createHash('sha1').update(url).digest('hex').slice(0, 24);
   const f = path.join(CACHE, key + '.html');
@@ -29,14 +29,14 @@ export async function get(url, { ttlDays = 30 } = {}) {
   if (gap < WAIT) await sleep(WAIT - gap);
   last = Date.now();
   let body = null;
-  for (let a = 0; a < 3; a++) {
+  for (let a = 0; a < tries; a++) {
     try {
       const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'ja' }, redirect: 'follow' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       body = DEC.decode(new Uint8Array(await res.arrayBuffer()));
       break;
     } catch (e) {
-      if (a === 2) throw e;
+      if (a === tries - 1) throw e;
       await sleep(1500 * (a + 1));
     }
   }

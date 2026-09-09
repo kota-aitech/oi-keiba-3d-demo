@@ -7,6 +7,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { get, ROOT } from './lib/nk.mjs';
 
+/* 開催前に取得した空ページを1年キャッシュしてしまうと、後から結果・払戻・オッズが
+   永久に取れなくなる。直近の日付は短い TTL にして取り直せるようにする。 */
+const freshTtl = (date, longDays = 365) => {
+  const age = (Date.now() - new Date(date + 'T00:00:00').getTime()) / 86400000;
+  return age < 4 ? 0.02 : longDays;
+};
+
 const BASE = 'https://www.nankankeiba.com';
 const OUT = path.join(ROOT, 'data', 'nankan', 'payouts.jsonl');
 const TRACKS = (process.env.NK_BT_TRACKS || '大井,川崎,船橋,浦和').split(',');
@@ -83,7 +90,7 @@ if (fs.existsSync(OUT)) for (const l of fs.readFileSync(OUT, 'utf8').split('\n')
 
 let added = 0;
 for (const [dayId, meta] of [...days].sort()) {
-  const html = await get(`${BASE}/repay/${dayId}.do`, { ttlDays: 365 });
+  const html = await get(`${BASE}/repay/${dayId}.do`, { ttlDays: freshTtl(meta.date) });
   const rs = parseDay(html);
   if (!rs.length) { console.error(`  ! ${meta.date} ${meta.track} 払戻が読めない`); continue; }
   for (const r of rs) {

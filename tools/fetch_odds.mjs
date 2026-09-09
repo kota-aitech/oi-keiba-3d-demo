@@ -10,6 +10,13 @@ import path from 'node:path';
 import { get, ROOT } from './lib/nk.mjs';
 import { parseOdds } from './lib/odds.mjs';
 
+/* 開催前に取得した空ページを1年キャッシュしてしまうと、後から結果・払戻・オッズが
+   永久に取れなくなる。直近の日付は短い TTL にして取り直せるようにする。 */
+const freshTtl = (date, longDays = 365) => {
+  const age = (Date.now() - new Date(date + 'T00:00:00').getTime()) / 86400000;
+  return age < 4 ? 0.02 : longDays;
+};
+
 const BASE = 'https://www.nankankeiba.com';
 const OUT = path.join(ROOT, 'data', 'nankan', 'odds.jsonl');
 const TRACKS = (process.env.NK_BT_TRACKS || '大井,川崎,船橋,浦和').split(',');
@@ -31,7 +38,7 @@ let added = 0, day = '', skipped = 0;
 for (const r of races.sort((a, b) => a.raceId.localeCompare(b.raceId))) {
   if (done.has(r.raceId)) continue;
   let o;
-  try { o = parseOdds(await get(`${BASE}/oddsJS/${r.raceId}.do?`, { ttlDays: 365 })); }
+  try { o = parseOdds(await get(`${BASE}/oddsJS/${r.raceId}.do?`, { ttlDays: freshTtl(r.date) })); }
   catch (e) { console.error(`  ! ${r.raceId} ${e.message}`); continue; }
   if (!o.live) { skipped++; continue; }             // 発売前・非公開
   fs.appendFileSync(OUT, JSON.stringify({ ...r, ...o }) + '\n');

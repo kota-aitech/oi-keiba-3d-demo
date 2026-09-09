@@ -67,7 +67,9 @@ for (const [dk, list] of Object.entries(X.D.days)) {
     if (list[i].grade) graded++;
     const marks = live.filter(x => x.mark).length;
     if (marks < Math.min(5, live.length)) { console.log(`  ! ${dk} ${r.r}R 印が ${marks} 個しかない`); bad++; }
-    if (!/class="uma/.test(h) || !/class="run"/.test(h)) { console.log(`  ! ${dk} ${r.r}R 馬柱/前走の描画が欠けている`); bad++; }
+    /* 新馬戦は前走が無いのが正しいので、前走コマの有無は「前走がある馬がいるとき」だけ見る */
+    const anyPast = live.some(x => x.past && x.past.length);
+    if (!/class="uma/.test(h) || (anyPast && !/class="run"/.test(h))) { console.log(`  ! ${dk} ${r.r}R 馬柱/前走の描画が欠けている`); bad++; }
     if (live.length !== r.n) { console.log(`  ! ${dk} ${r.r}R 頭数 ${r.n} ≠ 出走馬 ${live.length}`); bad++; }
     for (const x of live) {
       if (!x.jockey || !x.trainer) { console.log(`  ! ${dk} ${r.r}R ${x.name} 騎手/調教師が空`); bad++; }
