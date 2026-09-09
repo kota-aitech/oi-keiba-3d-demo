@@ -416,7 +416,7 @@
      "out": 0.05
     },
     "winTime": 53.834,
-    "oddsSrc": "暫定(発走36分前)",
+    "oddsSrc": "暫定(発走34分前)",
     "nPos": {
      "umaren": 1,
      "sanpuku": 4
@@ -492,7 +492,7 @@
      "out": 0
     },
     "winTime": 129.937,
-    "oddsSrc": "暫定(発走66分前)",
+    "oddsSrc": "暫定(発走64分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -655,7 +655,7 @@
      "out": 0.05
     },
     "winTime": 53.616,
-    "oddsSrc": "暫定(発走96分前)",
+    "oddsSrc": "暫定(発走94分前)",
     "nPos": {
      "umaren": 5,
      "sanpuku": 4
@@ -779,7 +779,7 @@
      "out": -0.08
     },
     "winTime": 88.367,
-    "oddsSrc": "暫定(発走126分前)",
+    "oddsSrc": "暫定(発走124分前)",
     "nPos": {
      "umaren": 4,
      "sanpuku": 1
@@ -896,7 +896,7 @@
      "out": -0.08
     },
     "winTime": 89.113,
-    "oddsSrc": "暫定(発走156分前)",
+    "oddsSrc": "暫定(発走154分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 4
@@ -1080,7 +1080,7 @@
      "out": 0
     },
     "winTime": 95.39,
-    "oddsSrc": "暫定(発走191分前)",
+    "oddsSrc": "暫定(発走189分前)",
     "nPos": {
      "umaren": 4,
      "sanpuku": 7
@@ -1195,7 +1195,7 @@
      "out": -0.08
     },
     "winTime": 88.225,
-    "oddsSrc": "暫定(発走226分前)",
+    "oddsSrc": "暫定(発走224分前)",
     "nPos": {
      "umaren": 3,
      "sanpuku": 1
@@ -1271,7 +1271,7 @@
      "out": 0.15
     },
     "winTime": 102.858,
-    "oddsSrc": "暫定(発走261分前)",
+    "oddsSrc": "暫定(発走259分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -1286,7 +1286,7 @@
     "date": "2026-09-09",
     "raceId": "2026090921070311",
     "night": false,
-    "oddsSrc": "暫定(発走301分前)",
+    "oddsSrc": "暫定(発走299分前)",
     "conf": 0.079,
     "pTop": 0.17,
     "ev": {
@@ -1423,7 +1423,7 @@
      "out": 0
     },
     "winTime": 96.283,
-    "oddsSrc": "暫定(発走341分前)",
+    "oddsSrc": "暫定(発走339分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -2151,7 +2151,7 @@
      "out": 0
     },
     "winTime": 94.993,
-    "oddsSrc": "暫定(発走1741分前)",
+    "oddsSrc": "暫定(発走1739分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
