@@ -1,7 +1,7 @@
 {
  "track": "川崎",
  "meta": {
-  "builtAt": "2026-09-09T09:47:13.262Z",
+  "builtAt": "2026-09-09T09:55:38.653Z",
   "leading": {
    "leading": "2023+2024+2025+2026（暦年）",
    "recent": "直近1年",
@@ -32,7 +32,7 @@
     "r": 1,
     "time": "14:45",
     "dist": 1500,
-    "n": 14,
+    "n": 13,
     "cls": "梟（ふくろう）賞 ３歳(二)",
     "date": "2026-09-09",
     "raceId": "2026090921070301",
@@ -40,7 +40,7 @@
    },
    {
     "r": 2,
-    "time": "15:15",
+    "time": "15:18",
     "dist": 1400,
     "n": 8,
     "cls": "川崎ヴィーナスシリーズ 花朝月夕（かちょうげっせき）賞 ２歳 未格付選定牝馬",
@@ -50,7 +50,7 @@
    },
    {
     "r": 3,
-    "time": "15:45",
+    "time": "15:47",
     "dist": 900,
     "n": 12,
     "cls": "川崎スプリントシリーズ 激雷（げきらい）賞 Ｃ２ 選定馬",
@@ -60,7 +60,7 @@
    },
    {
     "r": 4,
-    "time": "16:15",
+    "time": "16:17",
     "dist": 2000,
     "n": 14,
     "cls": "川崎２０００シリーズ ペルセポネ賞 Ｃ２Ｃ３ 選定馬",
@@ -70,7 +70,7 @@
    },
    {
     "r": 5,
-    "time": "16:45",
+    "time": "16:46",
     "dist": 900,
     "n": 12,
     "cls": "川崎スプリントシリーズ 裂空（れっくう）賞 Ｃ１ 選定馬",
@@ -102,7 +102,7 @@
     "r": 8,
     "time": "18:20",
     "dist": 1500,
-    "n": 14,
+    "n": 12,
     "cls": "川崎ジャンプアップシリーズ 軍配（ぐんばい）賞 Ｃ１ 選定馬",
     "date": "2026-09-09",
     "raceId": "2026090921070308",
@@ -447,7 +447,13 @@
      "diff": -0.9,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 447,
+     "diff": 4,
+     "avg": 440,
+     "dev": 7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.6,
@@ -510,7 +516,13 @@
      "diff": -0.8,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 443,
+     "diff": 3,
+     "avg": 443,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -564,7 +576,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 398,
+     "diff": -5,
+     "avg": 400,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.06,
@@ -618,7 +636,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 427,
+     "diff": 2,
+     "avg": 428,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.48,
@@ -681,7 +705,13 @@
      "diff": 4.6,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 435,
+     "diff": 5,
+     "avg": 442,
+     "dev": -7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -744,7 +774,13 @@
      "diff": -2.5,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 468,
+     "diff": 3,
+     "avg": 461,
+     "dev": 7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.53,
@@ -807,7 +843,13 @@
      "diff": -2.5,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 507,
+     "diff": -4,
+     "avg": 511,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -861,7 +903,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 503,
+     "diff": -4,
+     "avg": 503,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0,
@@ -924,7 +972,13 @@
      "diff": 7.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 433,
+     "diff": -9,
+     "avg": 438,
+     "dev": -5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -987,7 +1041,13 @@
      "diff": -0.2,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 471,
+     "diff": 7,
+     "avg": 466,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.5,
@@ -1050,7 +1110,13 @@
      "diff": 2.9,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 500,
+     "diff": -3,
+     "avg": 504,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -1061,66 +1127,6 @@
     "pWin": null,
     "pTop3": null,
     "mark": ""
-   },
-   {
-    "no": 12,
-    "name": "キューティパエトン",
-    "gate": 7,
-    "style": "先行",
-    "epos": 0.23,
-    "ability": 0.58,
-    "close": 0.33,
-    "stamina": 0.64,
-    "wet": 0.8,
-    "jockey": "櫻井光輔",
-    "jockeyBase": "川崎",
-    "trainer": "田邊陽",
-    "trainerBase": "川崎",
-    "owner": "ホンベホールディングス（株）",
-    "jIdx": -0.33,
-    "tIdx": -0.17,
-    "cIdx": -0.24,
-    "bond": 0.08,
-    "cN": 88,
-    "cW": 3,
-    "cRate": 0.03,
-    "oIdx": 0.03,
-    "oAgg": -0.18,
-    "oN": 10,
-    "prevJockey": "野畑凌",
-    "jUp": -0.74,
-    "spot": 0,
-    "away": 0,
-    "shobu": -0.46,
-    "hIdx": -0.78,
-    "sire": "サンダースノー",
-    "damSire": "マンハッタンカフェ",
-    "sIdx": 0.3,
-    "sN": 921,
-    "sDist": -0.21,
-    "sDistN": 120,
-    "bmsIdx": -0.01,
-    "bmsN": 2474,
-    "bIdx": 0.05,
-    "bConf": 0.25,
-    "shiken": {
-     "date": "2026-07-10",
-     "track": "川崎",
-     "time": 57,
-     "pass": "合格",
-     "bw": 505,
-     "jockey": "澤田龍",
-     "diff": 4.4,
-     "fast": false
-    },
-    "body": null,
-    "jform": {
-     "n": 60,
-     "form": 0.29,
-     "rides30": 62,
-     "label": "好調"
-    },
-    "memo": "【近走】前走 川崎1400重 1人気逃げて1着／近3走 1-1-7（3着内2）【人】櫻井光輔×田邊陽／櫻井光輔は直近60騎乗が好調／コンビ88走3勝／騎手弱化"
    },
    {
     "no": 13,
@@ -1173,7 +1179,13 @@
      "diff": -1.6,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 427,
+     "diff": -2,
+     "avg": 422,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -1236,7 +1248,13 @@
      "diff": 0.4,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 514,
+     "diff": 5,
+     "avg": 511,
+     "dev": 3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.25,
@@ -1292,7 +1310,13 @@
     "bIdx": 0.02,
     "bConf": 0.25,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 440,
+     "diff": 3,
+     "avg": 441,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -1346,7 +1370,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 425,
+     "diff": -3,
+     "avg": 428,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -1400,7 +1430,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 490,
+     "diff": 9,
+     "avg": 476,
+     "dev": 14,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -1463,7 +1499,13 @@
      "diff": -1,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 488,
+     "diff": -1,
+     "avg": 491,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.53,
@@ -1517,7 +1559,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 416,
+     "diff": -3,
+     "avg": 412,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.25,
@@ -1571,7 +1619,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 459,
+     "diff": -10,
+     "avg": 462,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -1634,7 +1688,13 @@
      "diff": -1,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 433,
+     "diff": -2,
+     "avg": 435,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.21,
@@ -1697,7 +1757,13 @@
      "diff": -1.5,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 455,
+     "diff": 2,
+     "avg": 453,
+     "dev": 2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -1753,7 +1819,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 430,
+     "diff": 3,
+     "avg": 427,
+     "dev": 3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.16,
@@ -1807,7 +1879,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 429,
+     "diff": -4,
+     "avg": 430,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -1861,7 +1939,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 467,
+     "diff": 11,
+     "avg": 464,
+     "dev": 3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.23,
@@ -1924,7 +2008,13 @@
      "diff": 3.8,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 493,
+     "diff": 12,
+     "avg": 485,
+     "dev": 8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -1978,7 +2068,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 491,
+     "diff": -6,
+     "avg": 493,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.05,
@@ -2041,7 +2137,13 @@
      "diff": -0.2,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 438,
+     "diff": -4,
+     "avg": 445,
+     "dev": -7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -2095,7 +2197,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 464,
+     "diff": 9,
+     "avg": 465,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -2149,7 +2257,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 490,
+     "diff": 6,
+     "avg": 473,
+     "dev": 17,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.1,
@@ -2203,7 +2317,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 425,
+     "diff": 2,
+     "avg": 427,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.26,
@@ -2266,7 +2386,13 @@
      "diff": 1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 481,
+     "diff": 1,
+     "avg": 475,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.53,
@@ -2329,7 +2455,13 @@
      "diff": 4.2,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 507,
+     "diff": -13,
+     "avg": 516,
+     "dev": -9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -2383,7 +2515,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 407,
+     "diff": 11,
+     "avg": 397,
+     "dev": 10,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": -0.22,
@@ -2439,7 +2577,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 502,
+     "diff": 6,
+     "avg": 511,
+     "dev": -9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -2493,7 +2637,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 422,
+     "diff": 1,
+     "avg": 423,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.22,
@@ -2547,7 +2697,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 465,
+     "diff": 1,
+     "avg": 459,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -2569,27 +2725,27 @@
     "close": 0.32,
     "stamina": 0.67,
     "wet": 0.43,
-    "jockey": "町田直希",
-    "jockeyBase": "川崎",
+    "jockey": "笹川翼",
+    "jockeyBase": "大井",
     "trainer": "内田勝",
     "trainerBase": "川崎",
     "owner": "成塚清志",
-    "jIdx": 0.22,
+    "jIdx": 0.99,
     "tIdx": 0.22,
-    "cIdx": 0.16,
-    "bond": 0.27,
-    "cN": 443,
-    "cW": 57,
-    "cRate": 0.13,
+    "cIdx": -0.3,
+    "bond": 0.03,
+    "cN": 52,
+    "cW": 5,
+    "cRate": 0.1,
     "oIdx": -0.04,
     "oAgg": -0.12,
     "oN": 150,
     "prevJockey": "町田直希",
-    "jUp": 0,
-    "spot": 0,
-    "away": 0,
-    "shobu": -0.04,
-    "hIdx": 0.5,
+    "jUp": 0.76,
+    "spot": 1,
+    "away": 0.5,
+    "shobu": 0.79,
+    "hIdx": 0.9,
     "sire": "サトノクラウン",
     "damSire": "ノヴェリスト",
     "sIdx": -0.4,
@@ -2601,14 +2757,20 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 466,
+     "diff": 1,
+     "avg": 470,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
-     "form": 0.53,
-     "rides30": 77,
-     "label": "好調"
+     "form": -0.38,
+     "rides30": 107,
+     "label": "不振"
     },
-    "memo": "【近走】前走 川崎2000 1人気逃げて3着／近5走 3-2-11-5-3（3着内3）【人】町田直希×内田勝／町田直希は直近60騎乗が好調／コンビ443走57勝・準主戦",
+    "memo": "【近走】前走 川崎2000 1人気逃げて3着／近5走 3-2-11-5-3（3着内3）【人】笹川翼×内田勝／笹川翼は直近60騎乗が不振／コンビ52走5勝／騎手強化／スポット起用",
     "pWin": null,
     "pTop3": null,
     "mark": "△"
@@ -2655,7 +2817,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 499,
+     "diff": 6,
+     "avg": 495,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.25,
@@ -2709,7 +2877,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 455,
+     "diff": 2,
+     "avg": 450,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.23,
@@ -2763,7 +2937,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 479,
+     "diff": 13,
+     "avg": 466,
+     "dev": 13,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -2826,7 +3006,13 @@
      "diff": 4.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 491,
+     "diff": null,
+     "avg": 493,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -2880,7 +3066,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 435,
+     "diff": -1,
+     "avg": 437,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -2943,7 +3135,13 @@
      "diff": -0.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 468,
+     "diff": -3,
+     "avg": 472,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.6,
@@ -2997,7 +3195,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 438,
+     "diff": 6,
+     "avg": 427,
+     "dev": 11,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -3060,7 +3264,13 @@
      "diff": 7.3,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 541,
+     "diff": 2,
+     "avg": 550,
+     "dev": -9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.06,
@@ -3114,7 +3324,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 501,
+     "diff": -7,
+     "avg": 509,
+     "dev": -8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -3168,7 +3384,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 445,
+     "diff": 6,
+     "avg": 440,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.16,
@@ -3233,7 +3455,13 @@
      "diff": -2.3,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 441,
+     "diff": 3,
+     "avg": 440,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.23,
@@ -3287,7 +3515,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 492,
+     "diff": 4,
+     "avg": 491,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.65,
@@ -3350,7 +3584,13 @@
      "diff": -0.4,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 469,
+     "diff": 3,
+     "avg": 464,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.21,
@@ -3404,7 +3644,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 465,
+     "diff": 4,
+     "avg": 474,
+     "dev": -9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -3458,7 +3704,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 457,
+     "diff": 3,
+     "avg": 461,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.36,
@@ -3512,7 +3764,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 469,
+     "diff": -8,
+     "avg": 479,
+     "dev": -10,
+     "note": "普段より絞れている"
+    },
     "jform": {
      "n": 60,
      "form": 0.12,
@@ -3534,27 +3792,27 @@
     "close": 0.54,
     "stamina": 0.61,
     "wet": 0.7,
-    "jockey": "町田直希",
+    "jockey": "藤江渉",
     "jockeyBase": "川崎",
     "trainer": "平田正",
     "trainerBase": "川崎",
     "owner": "日下部勝徳",
-    "jIdx": 0.22,
+    "jIdx": -0.58,
     "tIdx": -0.09,
-    "cIdx": 0.4,
-    "bond": 0.22,
-    "cN": 258,
-    "cW": 41,
-    "cRate": 0.16,
+    "cIdx": -0.08,
+    "bond": 0.14,
+    "cN": 163,
+    "cW": 6,
+    "cRate": 0.04,
     "oIdx": 0.53,
     "oAgg": 0.2,
     "oN": 378,
     "prevJockey": "町田直希",
-    "jUp": 0,
+    "jUp": -0.8,
     "spot": 0,
     "away": 0,
-    "shobu": 0.06,
-    "hIdx": 0.63,
+    "shobu": -0.38,
+    "hIdx": -0.62,
     "sire": "スマートファルコン",
     "damSire": "キングカメハメハ",
     "sIdx": -0.17,
@@ -3575,14 +3833,20 @@
      "diff": 6,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 496,
+     "diff": -1,
+     "avg": 497,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
-     "form": 0.53,
-     "rides30": 77,
-     "label": "好調"
+     "form": 0.16,
+     "rides30": 22,
+     "label": "平常"
     },
-    "memo": "【近走】前走 川崎900 6人気前で5着／近5走 5-5-1-5-6（3着内1）【人】町田直希×平田正／町田直希は直近60騎乗が好調／コンビ258走41勝・準主戦",
+    "memo": "【近走】前走 川崎900 6人気前で5着／近5走 5-5-1-5-6（3着内1）【人】藤江渉×平田正／コンビ163走6勝・準主戦／騎手弱化",
     "pWin": null,
     "pTop3": null,
     "mark": ""
@@ -3638,7 +3902,13 @@
      "diff": -0.8,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 406,
+     "diff": null,
+     "avg": 395,
+     "dev": 11,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.06,
@@ -3692,7 +3962,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 444,
+     "diff": 1,
+     "avg": 439,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.23,
@@ -3746,7 +4022,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 464,
+     "diff": 5,
+     "avg": 460,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -3809,7 +4091,13 @@
      "diff": 4.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 523,
+     "diff": 9,
+     "avg": 520,
+     "dev": 3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -3863,7 +4151,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 446,
+     "diff": null,
+     "avg": 442,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.02,
@@ -3928,7 +4222,13 @@
      "diff": 0.2,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 460,
+     "diff": null,
+     "avg": 459,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -3982,7 +4282,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 431,
+     "diff": 5,
+     "avg": 426,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -4036,7 +4342,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 415,
+     "diff": -1,
+     "avg": 417,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -4090,7 +4402,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 444,
+     "diff": 4,
+     "avg": 439,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.12,
@@ -4112,27 +4430,27 @@
     "close": 0.5,
     "stamina": 0.42,
     "wet": 0.42,
-    "jockey": "町田直希",
-    "jockeyBase": "川崎",
+    "jockey": "西啓太",
+    "jockeyBase": "大井",
     "trainer": "山崎尋",
     "trainerBase": "川崎",
     "owner": "吉田千津",
-    "jIdx": 0.22,
+    "jIdx": 0.08,
     "tIdx": -0.31,
-    "cIdx": 0.11,
-    "bond": 0.04,
-    "cN": 73,
-    "cW": 7,
-    "cRate": 0.1,
+    "cIdx": -0.13,
+    "bond": 0.03,
+    "cN": 52,
+    "cW": 3,
+    "cRate": 0.06,
     "oIdx": 0.27,
     "oAgg": 0.16,
     "oN": 149,
     "prevJockey": "佐々木大輔",
-    "jUp": 0.23,
+    "jUp": 0.09,
     "spot": 0,
-    "away": 0,
-    "shobu": 0.18,
-    "hIdx": 0.15,
+    "away": 0.5,
+    "shobu": 0.16,
+    "hIdx": -0.21,
     "sire": "レッドファルクス",
     "damSire": "オルフェーヴル",
     "sIdx": 0.08,
@@ -4144,14 +4462,20 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 416,
+     "diff": 10,
+     "avg": 410,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
-     "form": 0.53,
-     "rides30": 77,
-     "label": "好調"
+     "form": 0.23,
+     "rides30": 91,
+     "label": "平常"
     },
-    "memo": "【近走】前走 函館1000 2人気前で10着／近5走 10-3-4-16-4（3着内1）【人】町田直希×山崎尋／町田直希は直近60騎乗が好調／コンビ73走7勝",
+    "memo": "【近走】前走 函館1000 2人気前で10着／近5走 10-3-4-16-4（3着内1）【人】西啓太×山崎尋／コンビ52走3勝",
     "pWin": null,
     "pTop3": null,
     "mark": "△"
@@ -4198,7 +4522,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 470,
+     "diff": 1,
+     "avg": 474,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 48,
      "form": -0.82,
@@ -4261,7 +4591,13 @@
      "diff": 4.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 531,
+     "diff": 1,
+     "avg": 520,
+     "dev": 11,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.21,
@@ -4315,7 +4651,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 476,
+     "diff": 2,
+     "avg": 479,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.16,
@@ -4369,7 +4711,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 438,
+     "diff": null,
+     "avg": 445,
+     "dev": -7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.1,
@@ -4423,7 +4771,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 487,
+     "diff": -2,
+     "avg": 488,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.41,
@@ -4477,7 +4831,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 486,
+     "diff": 2,
+     "avg": 480,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -4540,7 +4900,13 @@
      "diff": 1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 465,
+     "diff": -1,
+     "avg": 457,
+     "dev": 8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.02,
@@ -4605,7 +4971,13 @@
      "diff": 6.3,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 486,
+     "diff": 4,
+     "avg": 478,
+     "dev": 8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.01,
@@ -4659,7 +5031,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 454,
+     "diff": -9,
+     "avg": 470,
+     "dev": -16,
+     "note": "普段より絞れている"
+    },
     "jform": {
      "n": 60,
      "form": -0.31,
@@ -4722,7 +5100,13 @@
      "diff": -1.6,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 457,
+     "diff": 6,
+     "avg": 453,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.25,
@@ -4776,7 +5160,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 529,
+     "diff": -5,
+     "avg": 534,
+     "dev": -5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.21,
@@ -4839,7 +5229,13 @@
      "diff": -1,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 488,
+     "diff": 7,
+     "avg": 483,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -4893,7 +5289,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 510,
+     "diff": 3,
+     "avg": 503,
+     "dev": 7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.02,
@@ -4956,7 +5358,13 @@
      "diff": -1.5,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 455,
+     "diff": -1,
+     "avg": 454,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.41,
@@ -5010,7 +5418,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 464,
+     "diff": -1,
+     "avg": 462,
+     "dev": 2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -5064,7 +5478,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 452,
+     "diff": -2,
+     "avg": 453,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.1,
@@ -5118,7 +5538,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 461,
+     "diff": -8,
+     "avg": 476,
+     "dev": -15,
+     "note": "普段より絞れている"
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -5172,7 +5598,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 430,
+     "diff": 4,
+     "avg": 424,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.06,
@@ -5226,7 +5658,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 454,
+     "diff": 4,
+     "avg": 439,
+     "dev": 15,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.36,
@@ -5282,7 +5720,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 461,
+     "diff": null,
+     "avg": 463,
+     "dev": -2,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -5336,7 +5780,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 459,
+     "diff": 6,
+     "avg": 453,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.16,
@@ -5390,7 +5840,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 539,
+     "diff": -1,
+     "avg": 534,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -5444,7 +5900,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 460,
+     "diff": 2,
+     "avg": 456,
+     "dev": 4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.28,
@@ -5498,7 +5960,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 477,
+     "diff": null,
+     "avg": 478,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.5,
@@ -5552,7 +6020,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 488,
+     "diff": 14,
+     "avg": 480,
+     "dev": 8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0,
@@ -5606,7 +6080,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 538,
+     "diff": -6,
+     "avg": 549,
+     "dev": -11,
+     "note": "普段より絞れている"
+    },
     "jform": {
      "n": 60,
      "form": -0.22,
@@ -5617,108 +6097,6 @@
     "pWin": null,
     "pTop3": null,
     "mark": ""
-   },
-   {
-    "no": 8,
-    "name": "エイシンゾディアク",
-    "gate": 5,
-    "style": "差し",
-    "epos": 0.61,
-    "ability": 0.49,
-    "close": 0.5,
-    "stamina": 0.56,
-    "wet": 0.42,
-    "jockey": "室陽一朗",
-    "jockeyBase": "浦和",
-    "trainer": "横山保",
-    "trainerBase": "浦和",
-    "owner": "北原大史",
-    "jIdx": -0.48,
-    "tIdx": -0.12,
-    "cIdx": 0.73,
-    "bond": 0.14,
-    "cN": 87,
-    "cW": 13,
-    "cRate": 0.15,
-    "oIdx": -0.31,
-    "oAgg": -0.34,
-    "oN": 3213,
-    "prevJockey": "室陽一朗",
-    "jUp": 0,
-    "spot": 0,
-    "away": 1,
-    "shobu": 0.02,
-    "hIdx": 0.19,
-    "sire": "ハービンジャー",
-    "damSire": "Tale of Ekati",
-    "sIdx": -0.22,
-    "sN": 467,
-    "sDist": -0.35,
-    "sDistN": 77,
-    "bmsIdx": 0.13,
-    "bmsN": 22,
-    "bIdx": 0,
-    "bConf": 0,
-    "shiken": null,
-    "body": null,
-    "jform": {
-     "n": 60,
-     "form": 0.73,
-     "rides30": 23,
-     "label": "好調"
-    },
-    "memo": "【近走】前走 浦和1400 5人気中団2着／近5走 2-8-9-7-2（3着内2）【人】室陽一朗×横山保／室陽一朗は直近60騎乗が好調／コンビ87走13勝・準主戦"
-   },
-   {
-    "no": 9,
-    "name": "ダイゴホマレリュウ",
-    "gate": 6,
-    "style": "差し",
-    "epos": 0.67,
-    "ability": 0.39,
-    "close": 0.36,
-    "stamina": 0.64,
-    "wet": 0.68,
-    "jockey": "藤江渉",
-    "jockeyBase": "川崎",
-    "trainer": "山田質",
-    "trainerBase": "川崎",
-    "owner": "会田裕一",
-    "jIdx": -0.58,
-    "tIdx": -0.27,
-    "cIdx": 0.33,
-    "bond": 0.23,
-    "cN": 262,
-    "cW": 17,
-    "cRate": 0.07,
-    "oIdx": 0.32,
-    "oAgg": 0.07,
-    "oN": 490,
-    "prevJockey": "張田昂",
-    "jUp": -0.82,
-    "spot": 0,
-    "away": 0,
-    "shobu": -0.43,
-    "hIdx": -0.41,
-    "sire": "デクラレーションオブウォー",
-    "damSire": "サウスヴィグラス",
-    "sIdx": 0.3,
-    "sN": 686,
-    "sDist": 0.26,
-    "sDistN": 77,
-    "bmsIdx": 0.48,
-    "bmsN": 2714,
-    "bIdx": 0,
-    "bConf": 0,
-    "shiken": null,
-    "body": null,
-    "jform": {
-     "n": 60,
-     "form": 0.16,
-     "rides30": 22,
-     "label": "平常"
-    },
-    "memo": "【近走】前走 船橋1800 8人気後方9着／近5走 9-11-5-5-1（3着内1）【人】藤江渉×山田質／コンビ262走17勝・準主戦／騎手弱化"
    },
    {
     "no": 10,
@@ -5762,7 +6140,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 496,
+     "diff": 4,
+     "avg": 490,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -5825,7 +6209,13 @@
      "diff": 4.4,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 502,
+     "diff": -4,
+     "avg": 506,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.6,
@@ -5879,7 +6269,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 491,
+     "diff": 6,
+     "avg": 486,
+     "dev": 5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.21,
@@ -5933,7 +6329,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 519,
+     "diff": 9,
+     "avg": 508,
+     "dev": 11,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.2,
@@ -5987,7 +6389,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 473,
+     "diff": -15,
+     "avg": 485,
+     "dev": -12,
+     "note": "普段より絞れている"
+    },
     "jform": {
      "n": 60,
      "form": 0.23,
@@ -6052,7 +6460,13 @@
      "diff": 2.7,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 478,
+     "diff": 9,
+     "avg": 471,
+     "dev": 7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.02,
@@ -6106,7 +6520,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 464,
+     "diff": -5,
+     "avg": 465,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -6160,7 +6580,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 486,
+     "diff": 2,
+     "avg": 487,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.21,
@@ -6223,7 +6649,13 @@
      "diff": -1.9,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 462,
+     "diff": null,
+     "avg": 461,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -6277,7 +6709,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 470,
+     "diff": 5,
+     "avg": 464,
+     "dev": 6,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.23,
@@ -6331,7 +6769,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 540,
+     "diff": null,
+     "avg": 531,
+     "dev": 9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.16,
@@ -6385,7 +6829,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 458,
+     "diff": -11,
+     "avg": 463,
+     "dev": -5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -6448,7 +6898,13 @@
      "diff": -1.8,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 526,
+     "diff": 6,
+     "avg": 517,
+     "dev": 9,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.25,
@@ -6502,7 +6958,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 521,
+     "diff": 11,
+     "avg": 508,
+     "dev": 13,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -6565,7 +7027,13 @@
      "diff": -0.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 423,
+     "diff": -1,
+     "avg": 426,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.39,
@@ -6587,27 +7055,27 @@
     "close": 0.56,
     "stamina": 0.68,
     "wet": 0.67,
-    "jockey": "町田直希",
-    "jockeyBase": "川崎",
+    "jockey": "笹川翼",
+    "jockeyBase": "大井",
     "trainer": "平田正",
     "trainerBase": "川崎",
     "owner": "吉岡寛行",
-    "jIdx": 0.22,
+    "jIdx": 0.99,
     "tIdx": -0.09,
-    "cIdx": 0.4,
-    "bond": 0.22,
-    "cN": 258,
-    "cW": 41,
-    "cRate": 0.16,
+    "cIdx": -0.25,
+    "bond": 0.02,
+    "cN": 21,
+    "cW": 1,
+    "cRate": 0.05,
     "oIdx": 0.42,
     "oAgg": 0.16,
     "oN": 96,
     "prevJockey": "町田直希",
-    "jUp": 0,
-    "spot": 0,
-    "away": 0,
-    "shobu": 0.05,
-    "hIdx": 0.6,
+    "jUp": 0.76,
+    "spot": 1,
+    "away": 0.5,
+    "shobu": 0.87,
+    "hIdx": 0.82,
     "sire": "パイロ",
     "damSire": "サウスヴィグラス",
     "sIdx": 0.22,
@@ -6628,14 +7096,20 @@
      "diff": 4.8,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 500,
+     "diff": -6,
+     "avg": 500,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
-     "form": 0.53,
-     "rides30": 77,
-     "label": "好調"
+     "form": -0.38,
+     "rides30": 107,
+     "label": "不振"
     },
-    "memo": "【近走】前走 川崎1400稍重 1人気後方4着／近5走 4-2-1-3-2（3着内4）【人】町田直希×平田正／町田直希は直近60騎乗が好調／コンビ258走41勝・準主戦",
+    "memo": "【近走】前走 川崎1400稍重 1人気後方4着／近5走 4-2-1-3-2（3着内4）【人】笹川翼×平田正／笹川翼は直近60騎乗が不振／コンビ21走1勝／騎手強化／スポット起用",
     "pWin": null,
     "pTop3": null,
     "mark": ""
@@ -6682,7 +7156,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 495,
+     "diff": -9,
+     "avg": 500,
+     "dev": -5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -6747,7 +7227,13 @@
      "diff": 4.6,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 443,
+     "diff": -2,
+     "avg": 444,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.12,
@@ -6810,7 +7296,13 @@
      "diff": 3.9,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 521,
+     "diff": 21,
+     "avg": 524,
+     "dev": -3,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.6,
@@ -6864,7 +7356,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 485,
+     "diff": null,
+     "avg": 493,
+     "dev": -8,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.5,
@@ -6927,7 +7425,13 @@
      "diff": 4.2,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 467,
+     "diff": 2,
+     "avg": 467,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.15,
@@ -6990,7 +7494,13 @@
      "diff": -0.1,
      "fast": false
     },
-    "body": null,
+    "body": {
+     "bw": 520,
+     "diff": 2,
+     "avg": 521,
+     "dev": -1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.2,
@@ -7044,7 +7554,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 497,
+     "diff": 15,
+     "avg": 487,
+     "dev": 10,
+     "note": "普段より重め"
+    },
     "jform": {
      "n": 60,
      "form": 0.14,
@@ -7098,7 +7614,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 476,
+     "diff": -8,
+     "avg": 481,
+     "dev": -5,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.33,
@@ -7152,7 +7674,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 479,
+     "diff": -4,
+     "avg": 478,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.01,
@@ -7206,7 +7734,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 507,
+     "diff": 2,
+     "avg": 507,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.21,
@@ -7260,7 +7794,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 485,
+     "diff": 3,
+     "avg": 478,
+     "dev": 7,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.29,
@@ -7314,7 +7854,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 449,
+     "diff": 1,
+     "avg": 448,
+     "dev": 1,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.73,
@@ -7368,7 +7914,13 @@
     "bIdx": 0,
     "bConf": 0,
     "shiken": null,
-    "body": null,
+    "body": {
+     "bw": 503,
+     "diff": 1,
+     "avg": 503,
+     "dev": 0,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": 0.29,
@@ -7431,7 +7983,13 @@
      "diff": -1.6,
      "fast": true
     },
-    "body": null,
+    "body": {
+     "bw": 469,
+     "diff": -6,
+     "avg": 473,
+     "dev": -4,
+     "note": ""
+    },
     "jform": {
      "n": 60,
      "form": -0.38,
@@ -8013,27 +8571,27 @@
     "close": 0.53,
     "stamina": 0.52,
     "wet": 0.64,
-    "jockey": "町田直希",
-    "jockeyBase": "川崎",
+    "jockey": "張田昂",
+    "jockeyBase": "船橋",
     "trainer": "林正人",
     "trainerBase": "船橋",
     "owner": "澤風哉",
-    "jIdx": 0.22,
+    "jIdx": 0.24,
     "tIdx": 0.01,
-    "cIdx": 0.43,
-    "bond": 0.03,
-    "cN": 37,
-    "cW": 8,
-    "cRate": 0.22,
+    "cIdx": -0.04,
+    "bond": 0,
+    "cN": 2,
+    "cW": 0,
+    "cRate": 0,
     "oIdx": 0.7,
     "oAgg": 0.18,
     "oN": 65,
     "prevJockey": "町田直希",
-    "jUp": 0,
+    "jUp": 0.02,
     "spot": 0,
-    "away": 0.5,
-    "shobu": 0.11,
-    "hIdx": 0.79,
+    "away": 1,
+    "shobu": 0.19,
+    "hIdx": 0.35,
     "sire": "ゴールドアクター",
     "damSire": "ブラックタイド",
     "sIdx": -0.18,
@@ -8048,11 +8606,11 @@
     "body": null,
     "jform": {
      "n": 60,
-     "form": 0.53,
-     "rides30": 77,
-     "label": "好調"
+     "form": 0.12,
+     "rides30": 59,
+     "label": "平常"
     },
-    "memo": "【近走】前走 大井1800不良 8人気後方7着／近5走 7-2-2-2-4（3着内3）【人】町田直希×林正人／町田直希は直近60騎乗が好調／コンビ37走8勝",
+    "memo": "【近走】前走 大井1800不良 8人気後方7着／近5走 7-2-2-2-4（3着内3）【人】張田昂×林正人／コンビ2走のみ",
     "pWin": null,
     "pTop3": null,
     "mark": ""
