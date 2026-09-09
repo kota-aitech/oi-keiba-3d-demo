@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T09:35:32.116Z",
+ "builtAt": "2026-09-09T09:37:46.020Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -1494,7 +1494,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走20分前)",
+      "oddsSrc": "暫定(発走18分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -1622,7 +1622,7 @@
         "top3": null,
         "style": "逃げ",
         "jockey": "Ｆ．ゴンサルベス",
-        "odds": 7
+        "odds": 6.1
        },
        {
         "no": 2,
@@ -1633,7 +1633,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "新原周馬",
-        "odds": 24.7
+        "odds": 25.1
        },
        {
         "no": 3,
@@ -1644,7 +1644,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "古岡勇樹",
-        "odds": 54.9
+        "odds": 44
        },
        {
         "no": 4,
@@ -1655,7 +1655,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "矢野貴之",
-        "odds": 3.6
+        "odds": 3.5
        }
       ]
      },
@@ -1678,7 +1678,7 @@
        "sanpuku": 0
       },
       "pace": "M",
-      "oddsSrc": "暫定(発走55分前)",
+      "oddsSrc": "暫定(発走53分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -1812,7 +1812,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "張田昂",
-        "odds": 10.9
+        "odds": 11
        },
        {
         "no": 2,
@@ -1823,7 +1823,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "増田充宏",
-        "odds": 28.7
+        "odds": 28.8
        },
        {
         "no": 3,
@@ -1868,7 +1868,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走95分前)",
+      "oddsSrc": "暫定(発走93分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2008,7 +2008,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "岡村健司",
-        "odds": 77.8
+        "odds": 82.3
        },
        {
         "no": 2,
@@ -2019,7 +2019,7 @@
         "top3": null,
         "style": "追込",
         "jockey": "木間塚龍馬",
-        "odds": 70.1
+        "odds": 71.7
        },
        {
         "no": 3,
@@ -2030,7 +2030,7 @@
         "top3": null,
         "style": "逃げ",
         "jockey": "野畑凌",
-        "odds": 19.4
+        "odds": 20.2
        },
        {
         "no": 4,
@@ -2041,7 +2041,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "御神本訓史",
-        "odds": 35.6
+        "odds": 38.2
        }
       ]
      },
@@ -2064,7 +2064,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走135分前)",
+      "oddsSrc": "暫定(発走133分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2226,7 +2226,7 @@
         "top3": null,
         "style": "逃げ",
         "jockey": "増田充宏",
-        "odds": 4.2
+        "odds": 4.3
        },
        {
         "no": 4,
@@ -2237,7 +2237,7 @@
         "top3": null,
         "style": "追込",
         "jockey": "中越琉世",
-        "odds": 47.6
+        "odds": 47.8
        }
       ]
      }
@@ -4000,7 +4000,7 @@
        "sanpuku": 0
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走1535分前)",
+      "oddsSrc": "暫定(発走1533分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -4122,7 +4122,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "野畑凌",
-        "odds": 8.4
+        "odds": 10.2
        },
        {
         "no": 2,
@@ -4133,7 +4133,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "本田正重",
-        "odds": 4.6
+        "odds": 5.6
        },
        {
         "no": 3,
@@ -4144,7 +4144,7 @@
         "top3": null,
         "style": "先行",
         "jockey": "木間塚龍馬",
-        "odds": 75.8
+        "odds": 91.8
        },
        {
         "no": 4,
@@ -4155,7 +4155,7 @@
         "top3": null,
         "style": "差し",
         "jockey": "中越琉世",
-        "odds": 94.8
+        "odds": 114.8
        }
       ]
      },
@@ -6376,10 +6376,10 @@
   "fund": {
    "label": "第1段 オッズなし",
    "races": 957,
-   "logloss": 1.8571,
-   "top1": 0.3511,
-   "winnerInTop3": 0.6708,
-   "top3Exact": 0.094
+   "logloss": 1.8593,
+   "top1": 0.3521,
+   "winnerInTop3": 0.6677,
+   "top3Exact": 0.0951
   },
   "pub": {
    "label": "単勝人気だけ",
@@ -6392,10 +6392,10 @@
   "final": {
    "label": "第2段 合成",
    "races": 956,
-   "logloss": 1.6659,
-   "top1": 0.4132,
-   "winnerInTop3": 0.7615,
-   "top3Exact": 0.1192
+   "logloss": 1.6666,
+   "top1": 0.41,
+   "winnerInTop3": 0.7605,
+   "top3Exact": 0.1182
   }
  },
  "record": {
