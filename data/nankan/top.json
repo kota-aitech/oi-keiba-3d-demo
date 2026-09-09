@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-09T03:44:59.175Z",
+ "builtAt": "2026-09-09T03:47:05.433Z",
  "tracks": {
   "oi": {
    "track": "大井",
@@ -17,29 +17,39 @@
       "cls": "梟（ふくろう）賞 ３歳(二)",
       "date": "2026-09-09",
       "grade": "C",
-      "conf": 0.16,
-      "pTop": 0.321,
+      "conf": 0.168,
+      "pTop": 0.329,
       "ev": {
        "umaren": 0.99,
-       "sanpuku": 1.1
+       "sanpuku": 1.15
       },
       "nPos": {
        "umaren": 0,
-       "sanpuku": 1
+       "sanpuku": 2
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走120分前)",
+      "oddsSrc": "暫定(発走119分前)",
       "bets": {
        "umaren": [],
        "sanpuku": [
+        {
+         "c": [
+          6,
+          11,
+          14
+         ],
+         "p": 0.0107,
+         "odds": 107.7,
+         "ev": 1.15
+        },
         {
          "c": [
           5,
           11,
           14
          ],
-         "p": 0.0196,
-         "odds": 56.2,
+         "p": 0.0197,
+         "odds": 55.6,
          "ev": 1.1
         }
        ]
@@ -169,44 +179,44 @@
         "gate": 7,
         "name": "ヴェロオスキュラス",
         "mark": "◎",
-        "win": 0.321,
-        "top3": 0.73,
+        "win": 0.329,
+        "top3": 0.741,
         "style": "逃げ",
         "jockey": "野畑凌",
-        "odds": 2.4
+        "odds": 2.3
        },
        {
         "no": 2,
         "gate": 2,
         "name": "オンナユメラク",
         "mark": "○",
-        "win": 0.14,
-        "top3": 0.434,
+        "win": 0.142,
+        "top3": 0.441,
         "style": "先行",
         "jockey": "矢野貴之",
-        "odds": 4.8
+        "odds": 4.7
        },
        {
         "no": 5,
         "gate": 4,
         "name": "セイカンサンラン",
         "mark": "▲",
-        "win": 0.123,
-        "top3": 0.392,
+        "win": 0.124,
+        "top3": 0.396,
         "style": "先行",
         "jockey": "笹川翼",
-        "odds": 7.1
+        "odds": 7
        },
        {
         "no": 13,
         "gate": 8,
         "name": "テンノウズアイル",
         "mark": "△",
-        "win": 0.075,
-        "top3": 0.255,
+        "win": 0.073,
+        "top3": 0.251,
         "style": "差し",
         "jockey": "中山遥人",
-        "odds": 10.2
+        "odds": 10.5
        }
       ]
      },
@@ -229,7 +239,7 @@
        "sanpuku": 11
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走150分前)",
+      "oddsSrc": "暫定(発走149分前)",
       "bets": {
        "umaren": [
         {
@@ -478,7 +488,7 @@
        "sanpuku": 5
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走180分前)",
+      "oddsSrc": "暫定(発走179分前)",
       "bets": {
        "umaren": [
         {
@@ -732,7 +742,7 @@
        "sanpuku": 10
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走210分前)",
+      "oddsSrc": "暫定(発走209分前)",
       "bets": {
        "umaren": [
         {
@@ -1219,7 +1229,7 @@
        "sanpuku": 10
       },
       "pace": "M",
-      "oddsSrc": "暫定(発走270分前)",
+      "oddsSrc": "暫定(発走269分前)",
       "bets": {
        "umaren": [
         {
@@ -1519,7 +1529,7 @@
        "sanpuku": 3
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走300分前)",
+      "oddsSrc": "暫定(発走299分前)",
       "bets": {
        "umaren": [],
        "sanpuku": [
@@ -1909,7 +1919,7 @@
        "sanpuku": 5
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走370分前)",
+      "oddsSrc": "暫定(発走369分前)",
       "bets": {
        "umaren": [
         {
@@ -2353,7 +2363,7 @@
        "sanpuku": 0
       },
       "pace": "S",
-      "oddsSrc": "暫定(発走445分前)",
+      "oddsSrc": "暫定(発走444分前)",
       "bets": {
        "umaren": [],
        "sanpuku": []
@@ -2549,7 +2559,7 @@
        "sanpuku": 1
       },
       "pace": "H",
-      "oddsSrc": "暫定(発走485分前)",
+      "oddsSrc": "暫定(発走484分前)",
       "bets": {
        "umaren": [],
        "sanpuku": [
