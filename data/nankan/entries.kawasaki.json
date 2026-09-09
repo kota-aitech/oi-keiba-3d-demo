@@ -1036,7 +1036,7 @@
      "out": -0.08
     },
     "winTime": 88.225,
-    "oddsSrc": "暫定(発走29分前)",
+    "oddsSrc": "暫定(発走28分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 1
@@ -1122,7 +1122,7 @@
      "out": 0.15
     },
     "winTime": 102.858,
-    "oddsSrc": "暫定(発走64分前)",
+    "oddsSrc": "暫定(発走63分前)",
     "nPos": {
      "umaren": 1,
      "sanpuku": 0
@@ -1137,7 +1137,7 @@
     "date": "2026-09-09",
     "raceId": "2026090921070311",
     "night": false,
-    "oddsSrc": "暫定(発走104分前)",
+    "oddsSrc": "暫定(発走103分前)",
     "conf": 0.103,
     "pTop": 0.163,
     "ev": {
@@ -1284,7 +1284,7 @@
      "out": 0
     },
     "winTime": 96.283,
-    "oddsSrc": "暫定(発走144分前)",
+    "oddsSrc": "暫定(発走143分前)",
     "nPos": {
      "umaren": 0,
      "sanpuku": 0
@@ -2091,7 +2091,7 @@
      "out": 0
     },
     "winTime": 94.993,
-    "oddsSrc": "暫定(発走1544分前)",
+    "oddsSrc": "暫定(発走1543分前)",
     "nPos": {
      "umaren": 3,
      "sanpuku": 5
