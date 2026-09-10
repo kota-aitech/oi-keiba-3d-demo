@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ボートレースの直前情報と締切8分前のオッズを自動で拾う launchd 設定。
+  1分おきに tools/fetch_live.mjs を1周回だけ動かす（BT_LIVE_ONCE）。
+  開催がない日・時間帯は「本日のレース」を見て何もせずに終わるので、常に登録したままでよい。
+  多重起動は fetch_live.mjs 側の .live.lock が防ぐ。
+
+  導入は tools/launchd/install.sh がまとめて行う（__REPO__ / __NODE__ を置き換えて登録）。
+  止めるとき
+       launchctl unload ~/Library/LaunchAgents/com.boat.live.plist
+  ログ
+       tail -f __REPO__/data/boat/live.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.boat.live</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/tools/fetch_live.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>BT_LIVE_ONCE</key><string>1</string>
+    <key>BT_LEAD</key><string>8</string>
+    <key>BT_LIVE_MAX</key><string>12</string>
+  </dict>
+  <key>StartInterval</key><integer>60</integer>
+  <key>StandardOutPath</key><string>__REPO__/data/boat/live.log</string>
+  <key>StandardErrorPath</key><string>__REPO__/data/boat/live.log</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

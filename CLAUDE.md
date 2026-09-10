@@ -812,6 +812,11 @@ node tools/backtest_boat.mjs                               # 検証
 BT_LIVE_MAX=12 node tools/fetch_live.mjs                   # 当日（締切8分前のオッズと直前情報）
 ```
 
+**当日ぶんは launchd で自動化してある**（`sh tools/launchd/install.sh` が南関の2つと一緒に `com.boat.live` を登録する）。
+1分おきに `fetch_live.mjs` を1周回だけ動かし、開催のない日・時間帯は「本日のレース」を見て何もせず終わる。
+第2段（オッズとの合成）と期待値ベースの買い方は、ここで貯まる `odds_live.jsonl`（締切8分前の3連単120通り）
+が無いと検証できないので、**止めない**こと。ログは `data/boat/live.log`、多重起動は `.live.lock` が防ぐ。
+
 | 変数 | 既定 | 意味 |
 |------|------|------|
 | `BT_WAIT` | 900 | 取得間隔(ms) |

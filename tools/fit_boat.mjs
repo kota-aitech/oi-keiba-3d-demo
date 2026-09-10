@@ -7,9 +7,8 @@
    pre（番組表だけ）と ex（直前情報あり）の2レベルを同時に出す。
      BT_FIT_SPLIT … 学習と検証を切る日付（既定 20260601）
    出力: data/boat/model.json */
-import fs from 'node:fs';
-import path from 'node:path';
-import { ROOT, readJSON, writeJSON } from './lib/bt.mjs';
+import { readJSON, writeJSON } from './lib/bt.mjs';
+import { loadRaces } from './lib/bload.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
 
 const SPLIT = process.env.BT_FIT_SPLIT || '20260601';
@@ -17,38 +16,29 @@ const EPOCH = Number(process.env.BT_FIT_EPOCH || 60);
 const L2 = Number(process.env.BT_FIT_L2 || 2e-4);
 const LR = Number(process.env.BT_FIT_LR || 0.05);
 const DB = readJSON(process.env.BT_FIT_DB || 'data/boat/index.json');
+/* 切り分け用。BT_FIT_DROP に特徴量名をカンマ区切りで書くと、その列を 0 にして当てはめる。
+   「足した特徴量が本当に効いているか」は、外して同じ手続きで比べないと分からない。 */
+const DROP = new Set((process.env.BT_FIT_DROP || '').split(',').map(s => s.trim()).filter(Boolean));
+const LEVELS = (process.env.BT_FIT_LEVELS || 'pre,ex').split(',').map(s => s.trim()).filter(Boolean);
 const ST = readJSON('data/boat/stadium.json');
 
-/* ---- レースを組み立てる（K に B の番組表を突き合わせる）---- */
+/* ---- レースを組み立てる（lib/bload.mjs が K と B を突き合わせ、
+   モーターの世代と2連率の伸びを付ける）---- */
 console.error('データを読む…');
-const prog = new Map();
-for (const line of fs.readFileSync(path.join(ROOT, 'data/boat/programs.jsonl'), 'utf8').split('\n')) {
-  if (!line) continue;
-  const o = JSON.parse(line);
-  prog.set(`${o.date}|${o.jcd}|${o.r}`, o);
-}
-const races = [];
-for (const line of fs.readFileSync(path.join(ROOT, 'data/boat/results.jsonl'), 'utf8').split('\n')) {
-  if (!line) continue;
-  const k = JSON.parse(line);
-  const b = prog.get(`${k.date}|${k.jcd}|${k.r}`);
-  if (!b) continue;
-  const byLane = new Map(b.boats.map(x => [x.lane, x]));
-  const boats = k.entries.map(e => ({ ...byLane.get(e.lane), ...e, lane: e.lane }));
-  if (boats.length !== 6 || boats.some(x => x.toban == null || x.natWin == null)) continue;
-  /* 着順。失格・欠場は「3着より下」として扱い、1〜3着の並びだけを尤度に使う */
-  const order = [1, 2, 3].map(p => boats.findIndex(x => Number(x.pos) === p));
-  if (order.some(i => i < 0)) continue;
-  races.push({ ...k, boats, order });
-}
+const races = loadRaces({ base: DB.base });
 console.error(`  ${races.length} レース（${races[0].date} 〜 ${races.at(-1).date}）`);
 
 const tr = races.filter(r => r.date < SPLIT), te = races.filter(r => r.date >= SPLIT);
 console.error(`  学習 ${tr.length}R（〜${SPLIT}）／検証 ${te.length}R`);
 
 /* ---- Plackett–Luce ---- */
+const DROPI = [...DROP].map(k => FEATS.indexOf(k)).filter(i => i >= 0);
 function pack(rs, level) {
-  return rs.map(r => ({ X: raceFeatures(r, r.boats, DB, ST, { level }), order: r.order }));
+  return rs.map(r => {
+    const X = raceFeatures(r, r.boats, DB, ST, { level });
+    if (DROPI.length) for (const x of X) for (const i of DROPI) x[i] = 0;
+    return { X, order: r.order };
+  });
 }
 function probs(X, beta) {
   const u = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
@@ -114,8 +104,8 @@ function evaluate(data, beta) {
   return { logloss: ll / n, hit1: hit1 / n, in3: in3 / n, n, cal: cal.map(b => b.n ? { p: +(b.p / b.n).toFixed(3), y: +(b.y / b.n).toFixed(3), n: b.n } : null) };
 }
 
-const out = { meta: { built: new Date().toISOString().slice(0, 10), split: SPLIT, feats: FEATS, train: tr.length, test: te.length, from: races[0].date, to: races.at(-1).date } };
-for (const level of ['pre', 'ex']) {
+const out = { meta: { drop: [...DROP], built: new Date().toISOString().slice(0, 10), split: SPLIT, feats: FEATS, train: tr.length, test: te.length, from: races[0].date, to: races.at(-1).date } };
+for (const level of LEVELS) {
   console.error(`第1段（${level}）を当てはめる…`);
   const trd = pack(tr, level), ted = pack(te, level);
   const beta = fit(trd, level);
@@ -125,10 +115,10 @@ for (const level of ['pre', 'ex']) {
   console.error('  係数（絶対値の大きい順）: ' + [...beta].map((v, i) => [FEATS[i], v]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 12).map(([k, v]) => `${k} ${v.toFixed(3)}`).join(' / '));
 }
 /* 参考：進入コースだけ（＝枠なり前提の基準）でどこまで当たるか */
-{
+if (LEVELS.includes('ex')) {
   const ted = pack(te, 'ex');
   const b = new Float64Array(NF); b[FEATS.indexOf('cz')] = 1;
   out.courseOnly = evaluate(ted, b);
   console.error(`  コースだけ: logloss ${out.courseOnly.logloss.toFixed(3)}／1着的中 ${(out.courseOnly.hit1 * 100).toFixed(1)}%／上位3艇 ${(out.courseOnly.in3 * 100).toFixed(1)}%`);
 }
-writeJSON('data/boat/model.json', out);
+writeJSON(process.env.BT_FIT_OUT || 'data/boat/model.json', out);

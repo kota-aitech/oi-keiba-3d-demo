@@ -4,9 +4,8 @@
      BT_BT_FROM / BT_BT_TO … 検証期間（既定は model.json の検証期間）
      BT_BT_LEVEL … pre | ex（既定 ex）
    1点100円。出力: data/boat/backtest.json */
-import fs from 'node:fs';
-import path from 'node:path';
-import { ROOT, readJSON, writeJSON, VNAME } from './lib/bt.mjs';
+import { readJSON, writeJSON, VNAME } from './lib/bt.mjs';
+import { loadRaces } from './lib/bload.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
 
 const DB = readJSON(process.env.BT_BT_DB || 'data/boat/index.train.json');
@@ -17,24 +16,8 @@ const FROM = process.env.BT_BT_FROM || M.meta.split;
 const TO = process.env.BT_BT_TO || '99999999';
 const beta = Float64Array.from(M[LEVEL].beta);
 
-const prog = new Map();
-for (const l of fs.readFileSync(path.join(ROOT, 'data/boat/programs.jsonl'), 'utf8').split('\n')) {
-  if (l) { const o = JSON.parse(l); prog.set(`${o.date}|${o.jcd}|${o.r}`, o); }
-}
-const races = [];
-for (const l of fs.readFileSync(path.join(ROOT, 'data/boat/results.jsonl'), 'utf8').split('\n')) {
-  if (!l) continue;
-  const k = JSON.parse(l);
-  if (k.date < FROM || k.date > TO) continue;
-  const b = prog.get(`${k.date}|${k.jcd}|${k.r}`);
-  if (!b) continue;
-  const byLane = new Map(b.boats.map(x => [x.lane, x]));
-  const boats = k.entries.map(e => ({ ...byLane.get(e.lane), ...e, lane: e.lane }));
-  if (boats.length !== 6 || boats.some(x => x.natWin == null)) continue;
-  const fin = [1, 2, 3].map(p => boats.find(x => Number(x.pos) === p));
-  if (fin.some(x => !x)) continue;
-  races.push({ ...k, boats, fin: fin.map(x => x.lane) });
-}
+const races = loadRaces({ from: FROM, to: TO === '99999999' ? '' : TO, base: DB.base });
+
 console.error(`検証 ${races.length} レース（${LEVEL}、${races[0]?.date} 〜 ${races.at(-1)?.date}）`);
 
 const softmax = X => {

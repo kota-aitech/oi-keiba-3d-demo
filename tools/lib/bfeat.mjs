@@ -28,7 +28,13 @@ export const FEATS = [
   'setuAvg', 'setuN',
   'motor2', 'motorIdx', 'boat2',
   'fRate', 'makuri', 'inGain',
-  'windC', 'waveC', 'windAbs', 'waveAbs',
+  'windC', 'waveC',            // windAbs/waveAbs は全艇で同じ値になり、条件付きロジットでは
+                               // 構造的に係数0になるので置かない
+  'wDir', 'wSpd', 'wWave',     // 場ごとに実測した「この条件でこのコースが得か損か」
+  'tune', 'mUp',               // 整備力と、モーター2連率の直近の伸び
+  'form', 'formN',             // 直近90日の調子（そのレースより前だけで計算）
+  'mForm',                     // モーターの直近45日の調子
+  'setuST', 'setuEx', 'setuRuns',  // 今節のここまでのST・展示タイム
   'exDev', 'exRank',           // ex レベルのみ（pre では 0）
 ];
 export const NF = FEATS.length;
@@ -68,6 +74,16 @@ export function raceFeatures(race, boats, DB, ST, { level = 'pre' } = {}) {
   const exMean = exs.length ? exs.reduce((a, b) => a + b, 0) / exs.length : null;
   const exSorted = [...exs].sort((a, b) => a - b);
   const wind = race.wind ?? 0, wave = race.wave ?? 0;
+  /* 場ごとに実測した水面条件の効き（index.json の cond）。
+     風向は絶対方位で来るので、場の向きを人手で入れずにここで吸収する。 */
+  const CD = DB.cond?.[jcd] || {};
+  const spdB = wind <= 0 ? '0' : wind <= 2 ? '1-2' : wind <= 4 ? '3-4' : wind <= 6 ? '5-6' : '7+';
+  const wavB = wave <= 2 ? '0-2' : wave <= 5 ? '3-5' : wave <= 9 ? '6-9' : '10+';
+  const dirB = (wind >= 3 && race.windDir && race.windDir !== '無風') ? race.windDir : null;
+  const condShift = (kind, bucket, cp) => {
+    const t = bucket && CD[kind]?.[bucket];
+    return t ? cp.reduce((a, p, i) => a + p * (t[i + 1] ?? 0), 0) : 0;
+  };
 
   return boats.map(b => {
     const r = DB.racer?.[b.toban] || null;
@@ -111,8 +127,21 @@ export function raceFeatures(race, boats, DB, ST, { level = 'pre' } = {}) {
     /* 風・波はコースによって効き方が変わる。中心（3.5コース）からのズレに掛ける */
     set('windC', wind * (cMid - 3.5) / 10);
     set('waveC', wave * (cMid - 3.5) / 100);
-    set('windAbs', wind / 10);
-    set('waveAbs', wave / 100);
+    set('wDir', condShift('dir', dirB, cp));
+    set('wSpd', condShift('spd', spdB, cp));
+    set('wWave', condShift('wav', wavB, cp));
+
+    set('tune', r?.tune ?? 0);
+    set('mUp', b.mUp != null ? b.mUp / 5 : 0);
+
+    /* 時点つきの指標（lib/bload.mjs が「そのレースより前」だけで作る） */
+    set('form', (b.form ?? 0) * 4);
+    set('formN', Math.min(1, (b.formN ?? 0) / 25));
+    set('mForm', (b.mForm ?? 0) * 4);
+    /* 今節のST。本人の平常値より速ければ + */
+    set('setuST', b.setuST != null && r?.st != null ? (r.st - b.setuST) * 10 : 0);
+    set('setuEx', b.setuEx != null ? b.setuEx * 20 : 0);
+    set('setuRuns', Math.min(1, (b.setuRuns ?? 0) / 6));
 
     if (level === 'ex' && b.ex != null && exMean != null) {
       set('exDev', (exMean - b.ex) * 20);                          // 速いほど +

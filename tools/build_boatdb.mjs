@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, VENUES, VNAME, writeJSON, readJSON } from './lib/bt.mjs';
+import { makeGen } from './lib/bload.mjs';
 
 const KFILE = path.join(ROOT, 'data', 'boat', 'results.jsonl');
 const BFILE = path.join(ROOT, 'data', 'boat', 'programs.jsonl');
@@ -138,10 +139,12 @@ console.error(`  ${bRaces} レース、プロフィール ${prof.size} 人`);
 const binsOf = (m, kind, f = k => k) => [...m].map(([k, v]) => ({ z: (p0z[f(k)] || { [kind]: logit(kind === 'win' ? 1 / 6 : kind === 'top2' ? 2 / 6 : 3 / 6) })[kind], n: v.n, w: v[kind === 'win' ? 'w' : kind === 'top2' ? 'w2' : 'w3'] }));
 
 const racers = {};
+const racersRaw = new Map();                              // toban -> idx（整備力の期待値に使う）
 const stAll = [...R.values()].reduce((a, x) => a + x.st, 0) / [...R.values()].reduce((a, x) => a + x.stn, 0);
 for (const x of R.values()) {
   if (x.n < 20) continue;                                 // 20走未満は指数を出さない
   const idx = fitTheta(binsOf(x.byCC, 'win'), SD);
+  racersRaw.set(x.toban, idx);
   const idx2 = fitTheta(binsOf(x.byCC, 'top2'), SD);
   const idx3 = fitTheta(binsOf(x.byCC, 'top3'), SD);
   /* コース別・場別は本人の idx を事前分布に置いて縮小する（南関の byTrack と同じ考え方） */
@@ -173,21 +176,18 @@ for (const x of R.values()) {
 }
 console.error(`  指数を出した選手 ${Object.keys(racers).length} 人（20走以上）`);
 
-/* ---------- 3. モーター（場×番号×年度） ---------- */
-/* モーターは場ごとに年1回入れ替わる。番号だけでは別individualが混ざるので年度で割る。
-   年度の境目は場によって違うため、番号ごとに「40日以上あいたら別individual」で切る。 */
+/* ---------- 3. モーター（場×番号×世代） ---------- */
+/* モーターは場ごとに年1回入れ替わる。番号だけでは別個体が混ざるので
+   「40日以上あいたら別世代」で切る（lib/bload.mjs と同じ規則）。 */
 const M = new Map();
-const seen = new Map();                                   // 'jcd|no' -> {gen, last}
+const genOf = makeGen();
+const useLog = new Map();                                 // 'jcd|no|gen' -> [{date, toban, jcd, course, win}]
 for (const r of races) {
   for (const e of r.entries) {
     if (!e.motor) continue;
-    const kk = r.jcd + '|' + e.motor;
-    const s = seen.get(kk);
-    const t = new Date(`${r.date.slice(0, 4)}-${r.date.slice(4, 6)}-${r.date.slice(6, 8)}`).getTime();
-    let gen = 1;
-    if (s) { gen = (t - s.last) / 86400000 > 40 ? s.gen + 1 : s.gen; }
-    seen.set(kk, { gen, last: t });
-    const k2 = kk + '|' + gen;
+    const gen = genOf(r.jcd, e.motor, r.date);
+    e._gen = gen;
+    const k2 = r.jcd + '|' + e.motor + '|' + gen;
     let v = M.get(k2);
     if (!v) M.set(k2, v = { jcd: r.jcd, no: e.motor, gen, n: 0, w: 0, w2: 0, w3: 0, from: r.date, to: r.date, bins: new Map() });
     const p = Number(e.pos), ok = p >= 1 && p <= 6;
@@ -196,6 +196,7 @@ for (const r of races) {
     if (p <= 2 && ok) v.w2++;
     if (p <= 3 && ok) v.w3++;
     if (e.course) { const bk = key(r.jcd, e.course); const b = v.bins.get(bk) || { n: 0, w: 0, w2: 0 }; b.n++; if (p === 1) b.w++; if (p <= 2 && ok) b.w2++; v.bins.set(bk, b); }
+    if (e.course) { let a = useLog.get(k2); if (!a) useLog.set(k2, a = []); a.push({ date: r.date, toban: e.toban, jcd: r.jcd, course: e.course, win: p === 1 ? 1 : 0 }); }
   }
 }
 const motors = {};
@@ -210,6 +211,94 @@ for (const v of M.values()) {
   };
 }
 console.error(`  モーター ${Object.values(motors).reduce((a, o) => a + Object.keys(o).length, 0)} 基`);
+
+/* ---------- 3b. 水面条件ごとの、場×コースのズレ ---------- */
+/* 風向は絶対方位（北東など）で来る。1マークがどちら向きかは場ごとに違うので、
+   「この場でこの風向のとき、どのコースが得をするか」を実測から出す。
+   場の向きを人手で入力する必要がなく、24場ぶん同じ手続きで済む。
+   値は「その場のふつうのコース別勝率からの対数オッズ差」。0 が影響なし。 */
+const SD_COND = Number(process.env.BT_DB_SD_COND || 0.22);   // 効果は小さいはずなので強めに縮める
+const spdBucket = w => w == null ? null : w <= 0 ? '0' : w <= 2 ? '1-2' : w <= 4 ? '3-4' : w <= 6 ? '5-6' : '7+';
+const wavBucket = h => h == null ? null : h <= 2 ? '0-2' : h <= 5 ? '3-5' : h <= 9 ? '6-9' : '10+';
+
+const cond = new Map();                                   // 'jcd|種類|区分|コース' -> {n,w}
+const cbump = (jcd, kind, bucket, c, win) => {
+  if (bucket == null) return;
+  const k = `${jcd}|${kind}|${bucket}|${c}`;
+  let v = cond.get(k);
+  if (!v) cond.set(k, v = { n: 0, w: 0 });
+  v.n++; v.w += win;
+};
+for (const r of races) {
+  for (const e of r.entries) {
+    if (!e.course) continue;
+    const win = Number(e.pos) === 1 ? 1 : 0;
+    cbump(r.jcd, 'spd', spdBucket(r.wind), e.course, win);
+    cbump(r.jcd, 'wav', wavBucket(r.wave), e.course, win);
+    /* 風向は弱い風では意味が薄い。3m 以上のときだけ数える */
+    if (r.wind >= 3 && r.windDir && r.windDir !== '無風') cbump(r.jcd, 'dir', r.windDir, e.course, win);
+  }
+}
+const conds = {};
+for (const [k, v] of cond) {
+  if (v.n < 60) continue;                                 // 標本が薄い区分は出さない
+  const [jcd, kind, bucket, c] = k.split('|');
+  const th = fitTheta([{ z: p0z[key(jcd, c)].win, n: v.n, w: v.w }], SD_COND);
+  (((conds[jcd] ||= {})[kind] ||= {})[bucket] ||= {})[c] = round(th, 3);
+}
+console.error(`  水面条件 ${Object.keys(conds).length} 場ぶん（風向・風速・波高 × コース）`);
+
+/* ---------- 3c. 整備力 ---------- */
+/* 「部品交換」は公式Webの直前情報にしか無く、3年ぶんを取るには16万レース分の
+   リクエストが要るので現実的でない。代わりに K/B だけで作れる代理を2つ置く。
+     tune … その選手が使ったあと、次に乗った選手のところでモーターが
+             自分の平均より走ったか。整備を残せたかを見る（本人の腕とは切り離せる）
+     （もう一方の「今節でモーター2率をどれだけ上げたか」は日付順の計算が要るので
+       lib/bload.mjs の mUp で、レースごとの特徴量として作る）
+   節は「同じ選手が同じモーターで連続して使った区間」。3日以上あいたら別の節。 */
+const TUNE = new Map();                                   // toban -> {n, w, e}
+for (const [k2, log] of useLog) {
+  const mi = motors[k2.split('|')[0]]?.[k2.split('|')[1] + '#' + k2.split('|')[2]];
+  if (!mi) continue;
+  log.sort((a, b) => a.date < b.date ? -1 : 1);
+  /* 節に切る */
+  const segs = [];
+  for (const x of log) {
+    const last = segs.at(-1);
+    const t = new Date(`${x.date.slice(0, 4)}-${x.date.slice(4, 6)}-${x.date.slice(6, 8)}`).getTime() / 86400000;
+    if (last && last.toban === x.toban && t - last.lastDay <= 3) { last.rows.push(x); last.lastDay = t; }
+    else segs.push({ toban: x.toban, rows: [x], lastDay: t });
+  }
+  /* 節Aの次の節Bの成績を、A の「整備の置き土産」として数える。
+     期待値には選手の実力とモーター自身の指数を両方入れる（モーターの良し悪しで
+     全部の節が上振れするのを打ち消すため） */
+  for (let i = 0; i + 1 < segs.length; i++) {
+    const A = segs[i], B = segs[i + 1];
+    if (A.toban === B.toban) continue;
+    let n = 0, w = 0, e = 0;
+    for (const x of B.rows) {
+      const rb = racersRaw.get(x.toban);
+      const z = p0z[key(x.jcd, x.course)].win + (rb ?? 0) + (mi.idx ?? 0);
+      n++; w += x.win; e += sig(z);
+    }
+    if (!n) continue;
+    let t = TUNE.get(A.toban);
+    if (!t) TUNE.set(A.toban, t = { n: 0, w: 0, e: 0, segs: 0 });
+    t.n += n; t.w += w; t.e += e; t.segs++;
+  }
+}
+
+/* 整備力を選手に流し込む。標本が薄いので縮小推定（0＝ふつう） */
+let tuneN = 0;
+for (const [toban, t] of TUNE) {
+  const r = racers[toban];
+  if (!r || t.segs < 8) continue;
+  /* 期待勝利数 e に対する実績 w を、二項のリッジロジスティックで θ に直す */
+  r.tune = round(fitTheta([{ z: logit(t.e / t.n), n: t.n, w: t.w }], 0.30), 3);
+  r.tuneN = t.segs;
+  tuneN++;
+}
+console.error(`  整備力を出した選手 ${tuneN} 人（引き継ぎ8節以上）`);
 
 /* ---------- 4. 場（K データ実測。公式の stadium.json と照合できる） ---------- */
 const venues = {};
@@ -240,5 +329,5 @@ writeJSON(OUT, {
     sd: SD, sdSub: SD_SUB, kimari: KIMARI,
     note: '指数は「場×コースの基準勝率からの対数オッズ差」。0 が基準どおり、+0.7 でおよそ勝率2倍',
   },
-  base: p0, venues, racer: racers, motor: motors,
+  base: p0, cond: conds, venues, racer: racers, motor: motors,
 });
