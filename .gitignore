@@ -10,6 +10,9 @@ data/nankan/.refresh-stamp
 data/boat/results.jsonl
 data/boat/programs.jsonl
 data/boat/*.log
+data/jra/results.jsonl
+data/jra/cards.jsonl
+data/jra/*.log
 data/boat/.live.lock
 data/boat/.od2-stamp
 data/boat/.refresh-stamp

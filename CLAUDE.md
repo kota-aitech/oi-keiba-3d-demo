@@ -728,6 +728,48 @@ BOX の均等買いは期待値に関係なく全組み合わせを同じ額で�
 
 ---
 
+## JRA（中央競馬）版 — 2026-09-10 着手
+
+南関と同じ構成で作る（データ層 `data/jra/` ＋ ツール層 `tools/jra_*.mjs` ＋ 1ファイルのページ）。南関のコードとは混ぜない。
+指数の単位（対数オッズ差）、縮小推定、先読み回避、「モデルは1つ・検証も同じ式」の約束は南関・ボートと同じ。
+
+### データ元（netkeiba のレースページ。無料・UTF-8・JavaScript 不要）
+| 用途 | URL | 備考 |
+|---|---|---|
+| 開催日 | `race.netkeiba.com/top/calendar.html?year=&month=` | `kaisai_date=YYYYMMDD` を拾う |
+| レース一覧 | `race.netkeiba.com/top/race_list_sub.html?kaisai_date=` | `race_id`（12桁：年4 場2 回2 日2 R2） |
+| **馬柱（前5走つき）** | `race.netkeiba.com/race/shutuba_past.html?race_id=` | 父・母・母父・厩舎・脚質・間隔・騎手・斤量、前5走（場・距離・タイム・馬場・頭数・人気・通過順・上がり・馬体重・勝ち馬と着差） |
+| **結果・払戻** | `race.netkeiba.com/race/result.html?race_id=` | 着順・タイム・着差・人気・単勝オッズ・上がり3F・通過順・厩舎・馬体重、全券種の払戻と人気、コーナー通過順、200mラップとペース(S/M/H) |
+| オッズ(JSON) | `race.netkeiba.com/api/api_get_jra_odds.html?race_id=&type=1&action=init` | 発売前は `status:"yoso"`（予想オッズ）。Referer 必須 |
+
+場コード `01`札幌 `02`函館 `03`福島 `04`新潟 `05`東京 `06`中山 `07`中京 `08`京都 `09`阪神 `10`小倉。
+2023年9月の結果ページも同じ構造で取れることを確認済み（学習は3年ぶん・約1万レース）。
+
+**取れないもの**：`db.netkeiba.com` のリーディング（空応答）→ 騎手・調教師・種牡馬の指数は結果から自前で作る。
+追い切り（`oikiri.html`）は JavaScript 描画で本文が無い → 調教は使えない（南関と同じ）。馬主は馬柱に出ない。
+枠順は木〜金に確定するので、それより前の馬柱は枠・馬番が空。**枠順確定前は除外対象馬も並ぶ**（馬IDのリンクが無い行）ので落とす。
+
+**マナー**：`lib/jra.mjs` が 1.2秒間隔・単一スレッド・キャッシュ（`data/cache/jra/`）。並列取得はしない。
+直近4日のページは 30分で取り直す（結果が出る前の空ページを抱えない）。
+
+### ファイル
+```
+data/jra/results.jsonl   結果（.gitignore。1レース1行。キャッシュから作り直せる）
+data/jra/cards.jsonl     出馬表＋前5走（.gitignore）
+tools/lib/jra.mjs        取得共通（レート制限・キャッシュ・jsonl の差し替え追記）
+tools/lib/jrapage.mjs    パーサ（parseCalendar / parseRaceList / parseResult / parseShutubaPast）
+tools/jra_fetch_results.mjs  JRA_FROM/JRA_TO（YYYYMMDD）の結果を取る
+tools/jra_fetch_cards.mjs    今日〜3日後の出馬表を取る
+```
+
+### これから作るもの（南関の順に倣う）
+1. `jra_build_db.mjs` … 結果3年ぶんから 騎手／調教師／コンビ／種牡馬／母父／場×距離×馬場 の指数（`build_db.mjs` と同じ縮小ロジット）
+2. `lib/jfeat.mjs` … 馬柱の前5走＋指数から特徴量（南関の `feat.mjs` の項目を踏襲：近走の相対着順・上がり・テン・馬体重・斤量・クラス・間隔・脚質・枠・人的要因）
+3. `jra_fit.mjs` … 条件付きロジット（`lib/bpl.mjs` を共用。温度も入れる）／`jra_backtest.mjs`
+4. `jra.html` … 新聞配色の馬柱＋予想。TOP に3つ目のタブ「中央競馬」
+
+---
+
 ## ボートレース版
 
 競馬側とは別の競技だが、**方針は同じ**（1ファイル・依存ゼロで配る／データは `data/` + `tools/` に分ける／
