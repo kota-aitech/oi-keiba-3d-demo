@@ -52,7 +52,8 @@ const JA_PAY = [['tan', '単勝'], ['fuku', '複勝'], ['umaren', '馬連'], ['w
   ['umatan', '馬単'], ['wide', 'ワイド'], ['sanpuku', '三連複'], ['santan', '三連単']];
 
 for (const [jaName, key] of WANT) {
-  const mine = cards.filter(c => c.track === jaName && c.date < TODAY && results.has(c.raceId) && payouts.has(c.raceId));
+  /* 当日でも結果と払戻が取れていれば「終わったレース」として日別に入れる（夜に取り込んだ当日ぶん用） */
+  const mine = cards.filter(c => c.track === jaName && c.date <= TODAY && results.has(c.raceId) && payouts.has(c.raceId));
   const dates = [...new Set(mine.map(c => c.date))].sort().slice(-NDAYS);
   const days = {}, races = {};
   for (const date of dates) {
