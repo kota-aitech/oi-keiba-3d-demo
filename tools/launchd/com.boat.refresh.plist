@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ボートレース版の反映（tools/refresh_boat.mjs）。3分おきに、直前情報・オッズ・番組表が
+  変わっていれば予測を作り直して boat.html に埋め、commit / push する。
+  1時間に1回、昨日〜明日の番組表と成績も取り直す。
+  導入は tools/launchd/install.sh。止めるとき
+       launchctl unload ~/Library/LaunchAgents/com.boat.refresh.plist
+  ログ
+       tail -f __REPO__/data/boat/refresh.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.boat.refresh</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/tools/refresh_boat.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartInterval</key><integer>180</integer>
+  <key>StandardOutPath</key><string>__REPO__/data/boat/refresh.log</string>
+  <key>StandardErrorPath</key><string>__REPO__/data/boat/refresh.log</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

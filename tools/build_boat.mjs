@@ -1,0 +1,284 @@
+/* 今日（と明日）の全場のレースに index.json の指数と model.json のロジットを当てて、
+   boat.html に埋め込むデータ（data/boat/today.json）を作る。
+
+   - 番組表は programs.jsonl（od2 の B）。当日の直前情報とオッズは live.<date>.json（fetch_live）
+   - 予測は tools/lib/bfeat.mjs の特徴量 × model.json の係数。検証（backtest_boat）と同じ式
+   - 直前情報が出ているレースは ex（進入確定・展示タイムあり）、それ以外は pre
+   - 「そのレースより前」の調子・今節ST・展示は lib/bload.mjs の makeRolling に
+     直近100日の結果を流し込んで作る（学習時と同じ作り方）
+   - 1〜3着の並びの確率は Plackett–Luce を6艇120通りで厳密に足し上げる（モンテカルロ不要）
+
+     BT_TODAY  … 基準日（既定 今日）
+     BT_AHEAD  … 何日先まで載せるか（既定 1＝明日まで。番組表が出ていない日は飛ばす）
+   出力: data/boat/today.json */
+import fs from 'node:fs';
+import path from 'node:path';
+import { ROOT, readJSON, writeJSON, VENUES, VNAME, ymdOf } from './lib/bt.mjs';
+import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
+import { loadPrograms, loadRaces, makeRolling } from './lib/bload.mjs';
+import { windCompass } from './lib/web.mjs';
+
+const TODAY = process.env.BT_TODAY || ymdOf(new Date());
+const AHEAD = Number(process.env.BT_AHEAD ?? 1);
+const DB = readJSON('data/boat/index.json');
+const ST = readJSON('data/boat/stadium.json');
+const M = readJSON(process.env.BT_MODEL || 'data/boat/model.json');   // 係数（検証用に差し替え可）
+let BT = null;
+try { BT = readJSON('data/boat/backtest.json'); } catch { console.error('  (backtest.json なし。実績の並記は省く)'); }
+
+const addDays = (ymd, n) => { const d = new Date(`${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}T00:00:00`); d.setDate(d.getDate() + n); return ymdOf(d); };
+const round = (v, k = 3) => v == null || !Number.isFinite(v) ? null : Number(v.toFixed(k));
+
+/* ---- 係数は「名前」で合わせる。model.json と bfeat.mjs の特徴量が食い違っていたら止める ---- */
+function betaOf(level) {
+  const feats = M.meta.feats, src = M[level]?.beta;
+  if (!src) throw new Error(`model.json に ${level} が無い`);
+  const b = new Float64Array(NF);
+  const missing = [];
+  FEATS.forEach((k, i) => { const j = feats.indexOf(k); if (j < 0) missing.push(k); else b[i] = src[j]; });
+  const extra = feats.filter(k => !FEATS.includes(k));
+  if (missing.length || extra.length) {
+    throw new Error(`model.json の特徴量が bfeat.mjs と合わない（無い: ${missing.join(',') || '-'}／余分: ${extra.join(',') || '-'}）。fit_boat.mjs を回し直す`);
+  }
+  return b;
+}
+const BETA = { pre: betaOf('pre'), ex: betaOf('ex') };
+
+/* ---- 対象日 ---- */
+const dates = [];
+for (let i = 0; i <= AHEAD; i++) dates.push(addDays(TODAY, i));
+const last = dates.at(-1);
+
+/* ---- 番組表（直近100日ぶん。調子・今節の計算にも使う）---- */
+console.error('番組表と直近の結果を読む…');
+const P = loadPrograms({ from: addDays(TODAY, -100), to: last });
+const roll = makeRolling(DB.base);
+const past = loadRaces({ from: addDays(TODAY, -100), to: addDays(TODAY, -1), prog: P, base: DB.base, roll });
+console.error(`  直近100日 ${past.length}R を流し込んだ`);
+
+/* index.json のモーター世代は全期間で振ってあるので、番号ごとに一番新しい世代を使う */
+function motorGenOf(jcd, no) {
+  const t = DB.motor?.[jcd]; if (!t || no == null) return 1;
+  let best = null;
+  for (const k of Object.keys(t)) {
+    if (!k.startsWith(no + '#')) continue;
+    if (!best || t[k].to > t[best].to) best = k;
+  }
+  return best ? Number(best.split('#')[1]) : 1;
+}
+
+/* ---- Plackett–Luce（6艇120通りの厳密計算）---- */
+function plackettLuce(U) {
+  const n = U.length, mx = Math.max(...U);
+  const e = U.map(u => Math.exp(u - mx)), S = e.reduce((a, b) => a + b, 0);
+  const p1 = e.map(v => v / S), p2 = Array(n).fill(0), p3 = Array(n).fill(0), tri = [];
+  for (let a = 0; a < n; a++) {
+    const pa = e[a] / S;
+    for (let b = 0; b < n; b++) {
+      if (b === a) continue;
+      const pb = e[b] / (S - e[a]);
+      p2[b] += pa * pb;
+      for (let c = 0; c < n; c++) {
+        if (c === a || c === b) continue;
+        const p = pa * pb * e[c] / (S - e[a] - e[b]);
+        p3[c] += p;
+        tri.push([a, b, c, p]);
+      }
+    }
+  }
+  tri.sort((x, y) => y[3] - x[3]);
+  return { p1, top2: p1.map((v, i) => v + p2[i]), top3: p1.map((v, i) => v + p2[i] + p3[i]), tri };
+}
+
+/* ---- 係数×特徴量を「読める単位」にまとめる（根拠の表示用）---- */
+const GROUP = {
+  cz: 'コース', czTop2: 'コース',
+  rIdx: '実力', rIdxC: '実力', rIdxJ: '当地', natWin: '実力', nat2: '実力', locWin: '当地', loc2: '当地', gA1: '実力', gA2: '実力', gB1: '実力',
+  stFast: 'ST', stFastC: 'ST', setuST: 'ST',
+  motor2: 'モーター', motorIdx: 'モーター', boat2: 'モーター', mUp: 'モーター', mForm: 'モーター', tune: 'モーター',
+  form: '調子', formN: '調子', setuAvg: '調子', setuN: '調子', setuRuns: '調子', setuEx: '調子',
+  windC: '水面', waveC: '水面', wDir: '水面', wSpd: '水面', wWave: '水面',
+  exDev: '展示', exRank: '展示',
+  age: 'その他', weight: 'その他', fRate: 'その他', makuri: 'その他', inGain: 'その他',
+};
+const GROUPS = ['コース', '実力', '当地', 'ST', 'モーター', '調子', '水面', '展示', 'その他'];
+function contrib(x, beta) {
+  const g = Object.fromEntries(GROUPS.map(k => [k, 0]));
+  for (let i = 0; i < NF; i++) g[GROUP[FEATS[i]] || 'その他'] += beta[i] * x[i];
+  for (const k of GROUPS) g[k] = round(g[k], 2);
+  return g;
+}
+
+/* ---- 水面条件で、その場のどのコースが得か（読みのポイント用）---- */
+function condNote(jcd, wind, wave, windDir) {
+  const CD = DB.cond?.[jcd]; if (!CD || wind == null) return null;
+  const spdB = wind <= 0 ? '0' : wind <= 2 ? '1-2' : wind <= 4 ? '3-4' : wind <= 6 ? '5-6' : '7+';
+  const wavB = wave <= 2 ? '0-2' : wave <= 5 ? '3-5' : wave <= 9 ? '6-9' : '10+';
+  const sh = [0, 0, 0, 0, 0, 0];
+  const add = t => { if (t) for (let c = 1; c <= 6; c++) sh[c - 1] += t[c] ?? 0; };
+  add(CD.spd?.[spdB]); add(CD.wav?.[wavB]);
+  if (wind >= 3 && windDir && windDir !== '無風') add(CD.dir?.[windDir]);
+  const best = sh.map((v, i) => [v, i + 1]).sort((a, b) => b[0] - a[0]);
+  return { shift: sh.map(v => round(v, 2)), best: best[0], worst: best.at(-1) };
+}
+
+/* ---- 1レースぶん ---- */
+const NAT1 = (() => { let w = 0, n = 0; for (const v of Object.values(DB.venues || {})) { const c = v.course?.[0]; if (c) { w += c.win * c.n; n += c.n; } } return n ? w / n : 0.55; })();
+
+function buildRace(date, jcd, prog, live, venueWeather) {
+  const key = `${jcd}|${prog.r}`;
+  const lv = live?.races?.[key] || null;
+  const before = lv?.before?.published ? lv.before : null;
+  const stBy = new Map((before?.startEx || []).map(s => [s.lane, s]));
+  const bfBy = new Map((before?.boats || []).map(b => [b.lane, b]));
+
+  /* 気象：自分の直前情報 → 同じ場の最新の直前情報 → 不明 */
+  let wx = null, wxSrc = null;
+  if (before?.weather) { wx = before.weather; wxSrc = 'own'; }
+  else if (venueWeather) { wx = venueWeather.weather; wxSrc = `${venueWeather.r}R`; }
+  const windDir = wx ? windCompass(jcd, wx.windDir) : null;
+  const raceW = { jcd, date, dist: prog.dist, wind: wx ? wx.wind : null, wave: wx ? wx.wave : null, windDir };
+
+  const boats = prog.boats.map(b => {
+    const r = DB.racer?.[b.toban] || null;
+    const bf = bfBy.get(b.lane), sx = stBy.get(b.lane);
+    const course = sx?.course || null;
+    const rolled = roll.read({ date, jcd }, { toban: b.toban, course, lane: b.lane, motor: b.motor, motorGen: b.motorGen });
+    const genIdx = motorGenOf(jcd, b.motor);
+    const mi = DB.motor?.[jcd]?.[b.motor + '#' + genIdx] || null;
+    return {
+      ...b, ...rolled, _p: undefined,
+      course, ex: bf?.ex ?? null, tilt: bf?.tilt ?? null, prop: bf?.prop ?? null, parts: bf?.parts || [], adjust: bf?.adjust ?? 0,
+      exST: sx ? (sx.f ? -Math.abs(sx.st) : sx.st) : null, exF: !!sx?.f,
+      motorGenIdx: genIdx,
+      racer: r ? {
+        idx: r.idx, byC: r.byC?.[course || b.lane] ?? null, byJ: r.byJ?.[jcd] ?? null, st: r.st, stDev: r.stDev,
+        fRate: r.fRate, kim: r.kim, inGain: r.inGain, tune: r.tune ?? null, tuneN: r.tuneN ?? 0, n: r.n, win: r.win, top2: r.top2,
+      } : null,
+      motorIdx: mi ? { idx: mi.idx, n: mi.n, win: mi.win } : null,
+    };
+  });
+  for (const b of boats) delete b._p;
+
+  const feat = level => raceFeatures(raceW, boats.map(b => ({ ...b, motorGen: b.motorGenIdx })), DB, ST, { level });
+  const predict = level => {
+    const X = feat(level), beta = BETA[level];
+    const U = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
+    const pl = plackettLuce(U);
+    return { U: U.map(v => round(v)), p1: pl.p1.map(v => round(v, 4)), top2: pl.top2.map(v => round(v, 4)), top3: pl.top3.map(v => round(v, 4)), tri: pl.tri, c: X.map(x => contrib(x, beta)) };
+  };
+  const pre = predict('pre');
+  const ex = before ? predict('ex') : null;
+  const use = ex || pre, level = ex ? 'ex' : 'pre';
+
+  /* オッズ（締切前スナップショットがあればそれ、無ければ暫定）*/
+  let odds = null;
+  if (lv?.odds) {
+    const ex3 = new Map(Object.entries(lv.odds.ex3 || {}));            // '1-2-3' → 倍率
+    /* snap＝締切前スナップショット（発走直前の最終に近い値）、pre＝もっと前に取った暫定 */
+    odds = { win: lv.odds.win, place: lv.odds.place, at: lv.odds.at, left: lv.odds.left, kind: lv.snapAt ? 'snap' : 'pre', ex3 };
+  }
+  const lanes = boats.map(b => b.lane);
+  const tri = use.tri.slice(0, 12).map(([a, b, c, p]) => {
+    const k = `${lanes[a]}-${lanes[b]}-${lanes[c]}`;
+    const o = odds?.ex3.get(k) ?? null;
+    return { k, p: round(p, 4), o, ev: o ? round(p * o, 2) : null };
+  });
+  /* 3連複（同じ3艇の並び6通りの和）上位 */
+  const trioMap = new Map();
+  for (const [a, b, c, p] of use.tri) { const k = [lanes[a], lanes[b], lanes[c]].sort().join('-'); trioMap.set(k, (trioMap.get(k) || 0) + p); }
+  const trio = [...trioMap].sort((x, y) => y[1] - x[1]).slice(0, 6).map(([k, p]) => ({ k, p: round(p, 4) }));
+
+  const order = use.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+  const marks = {}; ['◎', '○', '▲', '△', '△'].forEach((m, i) => { if (order[i] != null) marks[lanes[order[i]]] = m; });
+
+  /* 読みのポイント */
+  const V = DB.venues?.[jcd], c1 = V?.course?.[0];
+  const pts = [];
+  if (c1) pts.push(`${VNAME[jcd]}の1コース1着率は ${(c1.win * 100).toFixed(1)}%（全国 ${(NAT1 * 100).toFixed(1)}%）。1コースの逃げ率 ${(c1.kim[0] * 100).toFixed(0)}%、2コースは差し ${(V.course[1].kim[2] * 100).toFixed(0)}%／まくり ${(V.course[1].kim[1] * 100).toFixed(0)}%。`);
+  if (before) {
+    const ent = [...stBy.values()].sort((a, b) => a.course - b.course).map(s => s.lane).join('');
+    const fast = boats.filter(b => b.ex != null).sort((a, b) => a.ex - b.ex)[0];
+    pts.push(`スタート展示の進入 ${ent.split('').join(' ')}${ent !== '123456' ? '（枠なりではない）' : '（枠なり）'}。展示タイム最速は ${fast ? `${fast.lane} ${fast.name}（${fast.ex.toFixed(2)}秒）` : '—'}。`);
+    const swapped = boats.filter(b => b.parts.length || b.prop);
+    if (swapped.length) pts.push(`部品交換：${swapped.map(b => `${b.lane} ${b.name}（${[...b.parts, b.prop ? 'ペラ新' : ''].filter(Boolean).join('・')}）`).join('、')}。`);
+  } else {
+    const mz = boats.filter(b => (b.racer?.inGain ?? 0) >= 0.3 && b.lane >= 3);
+    pts.push(`直前情報はまだ出ていない（番組表と気象だけの予測）。進入は枠なり前提${mz.length ? `。前づけ傾向：${mz.map(b => `${b.lane} ${b.name}`).join('、')}` : ''}。`);
+  }
+  const cn = wx ? condNote(jcd, wx.wind, wx.wave, windDir) : null;
+  if (wx) {
+    pts.push(`風 ${wx.wind}m${windDir && windDir !== '無風' ? `（${windDir}）` : ''}・波 ${wx.wave}cm${wxSrc !== 'own' ? `（同じ場の${wxSrc}の計測値）` : ''}${cn && Math.abs(cn.best[0]) >= 0.08 ? `：この条件の${VNAME[jcd]}では ${cn.best[1]}コースが得（${cn.best[0] >= 0 ? '+' : ''}${cn.best[0].toFixed(2)}）、${cn.worst[1]}コースが損（${cn.worst[0].toFixed(2)}）` : ''}。`);
+  }
+  const top = boats[order[0]], sec = boats[order[1]];
+  const reason = b => Object.entries(use.c[boats.indexOf(b)]).filter(([k]) => k !== 'コース').sort((a, b2) => b2[1] - a[1]).slice(0, 2).filter(([, v]) => v > 0.05).map(([k, v]) => `${k} +${v.toFixed(2)}`).join('・');
+  pts.push(`本命 <b>${top.lane} ${top.name}</b>（1着 ${(use.p1[order[0]] * 100).toFixed(1)}%${reason(top) ? `。強み：${reason(top)}` : ''}）、対抗 <b>${sec.lane} ${sec.name}</b>（${(use.p1[order[1]] * 100).toFixed(1)}%）。`);
+  if (tri[0]) pts.push(`3連単の本線は ${tri[0].k}（${(tri[0].p * 100).toFixed(1)}%${tri[0].o ? `・${odds.kind === 'snap' ? '締切前' : '暫定'}オッズ ${tri[0].o}倍・期待値 ${tri[0].ev}` : ''}）。`);
+  const fs_ = boats.filter(b => (b.racer?.fRate ?? 0) >= 0.02);
+  if (fs_.length) pts.push(`F率が高い：${fs_.map(b => `${b.lane} ${b.name}（${(b.racer.fRate * 100).toFixed(1)}%）`).join('、')}。スタートを控えると勢いが削がれる。`);
+
+  const stripTri = o => { const { tri: _t, ...rest } = o; return rest; };
+  return {
+    r: prog.r, cls: prog.cls, dist: prog.dist, close: prog.close || lv?.close || null, level,
+    weather: wx ? { ...wx, windDir, src: wxSrc } : null,
+    cond: cn ? cn.shift : null,                    // この条件でのコース別の得失（対数オッズ差）
+    boats: boats.map(b => ({
+      lane: b.lane, toban: b.toban, name: b.name, age: b.age, branch: b.branch, weight: b.weight, grade: b.grade,
+      natWin: b.natWin, nat2: b.nat2, locWin: b.locWin, loc2: b.loc2, motor: b.motor, motor2: b.motor2, boat: b.boat, boat2: b.boat2, setu: b.setu,
+      course: b.course, ex: b.ex, exST: b.exST, exF: b.exF, tilt: b.tilt, prop: b.prop, parts: b.parts, adjust: b.adjust,
+      form: round(b.form), formN: b.formN, mForm: round(b.mForm), setuST: round(b.setuST), setuEx: round(b.setuEx), setuRuns: b.setuRuns, mUp: round(b.mUp, 1),
+      racer: b.racer, motorIdx: b.motorIdx,
+    })),
+    pre: stripTri(pre), ex: ex ? stripTri(ex) : null,
+    marks, tri, trio,
+    odds: odds ? { win: odds.win, place: odds.place, at: odds.at, left: odds.left, kind: odds.kind } : null,
+    points: pts,
+  };
+}
+
+/* ---- 日ごと・場ごとに組む ---- */
+const out = {
+  meta: {
+    built: new Date().toISOString(), today: TODAY,
+    model: { built: M.meta.built, split: M.meta.split, train: M.meta.train, test: M.meta.test, pre: M.pre.test, ex: M.ex.test, courseOnly: M.courseOnly },
+    index: { from: DB.meta.from, to: DB.meta.to, races: DB.meta.races, racers: Object.keys(DB.racer || {}).length },
+    backtest: BT ? { level: BT.meta.level, from: BT.meta.from, to: BT.meta.to, races: BT.meta.races, table: BT.table } : null,
+    nat1: round(NAT1, 4),
+  },
+  days: [],
+};
+for (const date of dates) {
+  const progs = [...P.values()].filter(o => o.date === date);
+  if (!progs.length) { console.error(`  ${date}: 番組表なし`); continue; }
+  let live = null;
+  try { live = readJSON(`data/boat/live.${date}.json`); } catch { }
+  const byV = new Map();
+  for (const o of progs) (byV.get(o.jcd) || byV.set(o.jcd, []).get(o.jcd)).push(o);
+  const venues = [];
+  for (const jcd of [...byV.keys()].sort()) {
+    const rs = byV.get(jcd).sort((a, b) => a.r - b.r);
+    /* 同じ場の「最新の直前情報の気象」を、まだ直前情報が出ていないレースの推定に使う */
+    let latestWx = null;
+    const races = rs.map(p => {
+      const lv = live?.races?.[`${jcd}|${p.r}`];
+      const race = buildRace(date, jcd, p, live, latestWx);
+      if (lv?.before?.published && lv.before.weather) latestWx = { r: p.r, weather: lv.before.weather };
+      return race;
+    });
+    const V = DB.venues?.[jcd] || {}, S = ST[jcd] || {};
+    const vinfo = VENUES.find(v => v.jcd === jcd) || {};
+    venues.push({
+      jcd, name: VNAME[jcd], pref: vinfo.pref || V.pref || '', area: vinfo.area || V.area || '',
+      title: rs[0].title, day: rs[0].day,
+      course: (V.course || []).map(c => ({ n: c.n, win: round(c.win, 4), top2: round(c.top2, 4), top3: round(c.top3, 4), st: c.st, kim: c.kim })),
+      take: S.take || null, water: S.water || null, tide: S.tide || null, motorType: S.motorType || null,
+      closes: live?.closes?.[jcd] || rs.map(p => p.close),
+      exCount: races.filter(r => r.level === 'ex').length,
+      races,
+    });
+  }
+  out.days.push({ date, venues });
+  console.error(`  ${date}: ${venues.length}場 ${venues.reduce((a, v) => a + v.races.length, 0)}R（直前情報あり ${venues.reduce((a, v) => a + v.exCount, 0)}R）`);
+}
+writeJSON('data/boat/today.json', out);
+console.error(`-> data/boat/today.json (${(fs.statSync(path.join(ROOT, 'data/boat/today.json')).size / 1024).toFixed(0)} KB)`);

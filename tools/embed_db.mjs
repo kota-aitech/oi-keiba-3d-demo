@@ -5,6 +5,14 @@ import path from 'node:path';
 import { ROOT, readJSON } from './lib/nk.mjs';
 import { inject } from './lib/embed.mjs';
 
+/* ボートレース版（boat.html）。tools/build_boat.mjs の today.json を NKBOAT に埋める。
+   NK_EMBED_ONLY=boat なら南関側は触らずこれだけ行う（refresh_boat.mjs が使う） */
+function embedBoat() {
+  try { inject('boat.html', 'NKBOAT', 'NKBOAT', readJSON('data/boat/today.json')); }
+  catch (e) { console.error('  (boat.html はスキップ: ' + e.message + ')'); }
+}
+if (process.env.NK_EMBED_ONLY === 'boat') { embedBoat(); process.exit(0); }
+
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const out = {};
 for (const k of TRACKS) {
@@ -50,3 +58,4 @@ try {
   }
   inject('data.html', 'NKBT', 'NKBT', bt);
 } catch (e) { console.error('  (バックテストはスキップ: ' + e.message + ')'); }
+embedBoat();

@@ -11,6 +11,23 @@ const nn = v => {
 const tds = html => [...html.matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)].map(m => ({ a: m[1], v: text(m[2]) }));
 const tables = html => [...html.matchAll(/<table[\s\S]*?<\/table>/g)].map(m => m[0]);
 /* .06 → 0.06、F.01 → −0.01（フライング）、L.02 → 出遅れ */
+/* 直前情報の風向アイコン（is-wind1〜16、17＝無風）は水面図基準の相対方位で、
+   K ファイルの風向（北・北東… の絶対方位）とは場ごとに回転がずれている。
+   標本1,640レース（before.jsonl）で K の風向と突き合わせ、16方位のうち
+   もっとも一致する回転量を場ごとに求めた（一致率 69〜98%、風速2m以上で判定）。
+   compass16 = (code − 1 + offset) mod 16、0＝北で時計回り。 */
+export const WIND_OFFSET = {
+  '01': 10, '02': 10, '03': 4, '04': 5, '05': 1, '06': 11, '07': 13, '08': 1, '09': 2, '10': 12, '11': 11, '12': 11,
+  '13': 0, '14': 11, '15': 3, '16': 11, '17': 15, '18': 3, '19': 13, '20': 0, '21': 7, '22': 6, '23': 14, '24': 7,
+};
+const COMPASS8 = ['北', '北東', '東', '南東', '南', '南西', '西', '北西'];
+/* 風向コード → K と同じ8方位の文字列。無風・不明は '無風' */
+export function windCompass(jcd, code) {
+  if (!code || code >= 17 || WIND_OFFSET[jcd] == null) return '無風';
+  const c16 = (code - 1 + WIND_OFFSET[jcd]) % 16;
+  return COMPASS8[Math.round(c16 / 2) % 8];
+}
+
 export function stNum(s) {
   const m = String(s).trim().match(/^([FL])?\.?(\d{1,2})$|^([FL])?(\d\.\d\d)$/);
   if (!m) return { st: null, f: null, l: null };

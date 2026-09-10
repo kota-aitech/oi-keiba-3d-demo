@@ -43,7 +43,7 @@ marks.html              印別の単勝・複勝回収率 ※新聞配色
 index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）※ダーク配色
 race.html               出馬表（競馬新聞の馬柱。横型／縦型を切替。?track=…&day=…&r=…）※新聞配色
 data.html               データブラウザ（騎手・調教師・コンビ・馬主・種牡馬の一覧）※新聞配色
-boat.html               ボートレース版（別モデル。下の専用節を参照）
+boat.html               ボートレース版（全24場・今日と明日・条件付きロジット。下の専用節を参照）※ダーク配色
 render.yaml             Render Blueprint（SPA用の catch-all rewrite は置かないこと）
 
 data/
@@ -779,27 +779,35 @@ BOX の均等買いは期待値に関係なく全組み合わせを同じ額で�
 
 ### ファイル構成
 ```
-boat.html                    ボートレース版のアプリ（1ファイル・依存ゼロ）
+boat.html                    ボートレース版のアプリ（1ファイル・依存ゼロ。NKBOAT マーカーに today.json を埋め込む）
 data/boat/
   results.jsonl              K を1レース1行にしたもの（.gitignore。222MB。キャッシュから作り直せる）
   programs.jsonl             B を1レース1行にしたもの（.gitignore。247MB）
-  stadium.json               ★全24場の公式集計（コース別入着率・決まり手・枠→コース・季節別）— コミット対象
-  index.json                 ★選手・モーター・場の指数 — コミット対象
+  stadium.json               ★全24場の公式集計（コース別入着率・決まり手・枠→コース・季節別・水質）— コミット対象
+  index.json                 ★選手・モーター・場・水面条件の指数 — コミット対象
+  index.train.json           ★先読みを避けた学習用の指数（検証開始の前日まで）— コミット対象
   model.json                 ★条件付きロジットの係数と検証結果 — コミット対象
   backtest.json              ★的中率・回収率 — コミット対象
+  today.json                 ★今日・明日の全場のレースと予測（boat.html 埋め込み用）— コミット対象
   live.<日付>.json           ★当日の直前情報と最新オッズ — コミット対象
   odds_live.jsonl            ★締切前オッズの記録（追記のみ）— コミット対象
+  before.jsonl               ★過去の直前情報の無作為標本 1,640レース（部品交換などの検証用）— コミット対象
 tools/
   lib/bt.mjs                 取得共通（od2 の LZH 展開／Web のレート制限とキャッシュ／全24場の表）
   lib/od2.mjs                K・B のパーサ（bslice でバイト位置を切る）
-  lib/web.mjs                beforeinfo・oddstf・odds3t/3f のパーサ
+  lib/web.mjs                beforeinfo・oddstf・odds3t/3f のパーサ。風向コード→方位の対応表（WIND_OFFSET）
+  lib/bload.mjs              K と B の突き合わせ、モーター世代、「そのレースより前」だけで作る調子・今節の指標
   lib/bfeat.mjs              条件付きロジットの特徴量（pre / ex の2レベル）
   fetch_od2.mjs              K・B を日付範囲で取り込む
   fetch_stadium.mjs          全24場の場データ
-  fetch_live.mjs             当日の直前情報とオッズ
-  build_boatdb.mjs           選手・モーター・場の指数 → index.json
-  fit_boat.mjs               条件付きロジットの当てはめ → model.json
+  fetch_live.mjs             当日の直前情報とオッズ（launchd: com.boat.live が1分おきに呼ぶ）
+  fetch_before_hist.mjs      過去の直前情報を無作為標本で取る → before.jsonl
+  build_boatdb.mjs           選手・モーター・場・水面条件の指数 → index.json
+  fit_boat.mjs               条件付きロジットの当てはめ → model.json（BT_FIT_DROP で切り分け）
   backtest_boat.mjs          買い方ごとの的中率・回収率 → backtest.json
+  build_boat.mjs             今日・明日の全レースにモデルを当てる → today.json
+  refresh_boat.mjs           変化があれば build_boat → embed → commit/push（launchd: com.boat.refresh）
+  boat_check.mjs             DOM スタブで boat.html の全レースを描画して検査（ブラウザ不要）
 ```
 
 ### パイプライン
@@ -812,10 +820,27 @@ node tools/backtest_boat.mjs                               # 検証
 BT_LIVE_MAX=12 node tools/fetch_live.mjs                   # 当日（締切8分前のオッズと直前情報）
 ```
 
-**当日ぶんは launchd で自動化してある**（`sh tools/launchd/install.sh` が南関の2つと一緒に `com.boat.live` を登録する）。
-1分おきに `fetch_live.mjs` を1周回だけ動かし、開催のない日・時間帯は「本日のレース」を見て何もせず終わる。
+```bash
+# boat.html への反映（モデルと指数ができていれば数十秒）
+node tools/build_boat.mjs                                  # 今日・明日の全レースに予測を付ける → today.json
+NK_EMBED_ONLY=boat node tools/embed_db.mjs                 # boat.html の NKBOAT に埋め込む
+node tools/boat_check.mjs                                  # 全レースを DOM スタブで描画して検査
+NK_REFRESH_NOPUSH=1 NK_REFRESH_FORCE=1 node tools/refresh_boat.mjs   # 上の3つをまとめて（push なし）
+```
+
+**当日ぶんは launchd で自動化してある**（`sh tools/launchd/install.sh` が南関の2つと一緒に登録する）。
+- `com.boat.live` … 1分おきに `fetch_live.mjs` を1周回。開催のない日・時間帯は「本日のレース」を見て何もせず終わる
+- `com.boat.refresh` … 3分おきに `refresh_boat.mjs`。直前情報・オッズ・番組表が変わっていれば
+  `build_boat → embed_db(boat) → commit / push`。1時間に1回、昨日〜明日の K・B を od2 から取り直す
+  （B は前日夕方に順次公開されるので、明日の番組表はここで入ってくる）
+
 第2段（オッズとの合成）と期待値ベースの買い方は、ここで貯まる `odds_live.jsonl`（締切8分前の3連単120通り）
-が無いと検証できないので、**止めない**こと。ログは `data/boat/live.log`、多重起動は `.live.lock` が防ぐ。
+が無いと検証できないので、**止めない**こと。ログは `data/boat/live.log` / `refresh.log`、多重起動は `.live.lock` が防ぐ。
+
+**od2 のキャッシュの落とし穴**：`getOd2()` は 404 を「開催なし」として空ファイルで覚える。
+直近・未来の日付でこれをやると翌日の番組表が二度と取れなくなるので、直近4日は 30分で取り直す。
+当日の K は開催中に**途中までの内容**で公開されることがある（1.4KB の途中版を実際に抱えた）ので、
+中身があっても同じ扱い。
 
 | 変数 | 既定 | 意味 |
 |------|------|------|
@@ -901,18 +926,40 @@ BT_LIVE_MAX=12 node tools/fetch_live.mjs                   # 当日（締切8分
 南関側と同じく、段位は「買う・見送る」の機械的な根拠ではなく金額の強弱の参考値まで。
 なお実際の勝率が予測をやや上回っている（0.4〜0.5 区分で54%）ので、確率は少し控えめに出ている。
 
+### boat.html（載せ替え済み）
+`tools/build_boat.mjs` が今日・明日の全場のレースに **index.html と同じ考え方で「ツール側で計算した予測」**を付け、
+`embed_db.mjs` が `NKBOAT` マーカーに埋める。ページ側では確率を計算しない（`bfeat.mjs` の写しをブラウザに置かない）。
+
+- 日付タブ（今日／明日）→ 場タブ（開催中の全場。「直前n」はその場で直前情報が出たレース数）→ 1〜12R
+- 直前情報が出たレースは **ex**（進入確定・展示タイムあり）、それ以外は **pre**（番組表と気象だけ）。
+  左パネルの「予測の段階」で ex のレースを pre に切り替えて見比べられる
+- pre の気象は「同じ場の最新の直前情報」の値を推定として使う（出典を表示）。何も無ければ**気象の項は 0**
+  （`bfeat.mjs` は `race.wind == null` のとき水面条件の表を引かない。0m として引くと無風時の偏りが乗る）
+- 1〜3着の並びは Plackett–Luce を6艇120通りで厳密に足し上げる（`plackettLuce()`）。
+  3連単の上位12・3連複の上位6・各艇の1着/2連/3連率はここから
+- **3D 再生は同じモデルからの標本**。`sampleRace()` が `U_i + Gumbel` の大きい順で着順を引く（Gumbel-max は PL の標本）。
+  ST はスタート展示の値（無ければ平均ST）に揺らぎを足したもの。旧版の物理シミュレータ（`derive`/`simRace`）は廃止
+- オッズは締切前スナップショット（`snap`）を優先、無ければ暫定。3連単は120通りの実オッズで **期待値＝確率×オッズ** を出す
+- 「おすすめ」は `backtest.json` の表から **検証実績（的中率・回収率・1号艇買いとの比較）を必ず並記**する。
+  回収率100%の買い方は無いので、その但し書きを外さないこと
+- 「根拠」は係数×特徴量を コース／実力／当地／ST／モーター／調子／水面／展示／その他 に束ねた値（`build_boat` の `contrib()`）
+- `node tools/boat_check.mjs` が全日・全場・全レースの描画と「勝率の和＝1」「艇数6」を見る
+
+### 風向の対応表（`lib/web.mjs` の `WIND_OFFSET`）
+直前情報の風向アイコン（`is-wind1〜16`、17＝無風）は**水面図基準の相対方位**で、K の風向（北・北東…の絶対方位）と
+場ごとに回転がずれている。標本1,640レースで突き合わせ、16方位のうち一致が最大になる回転量を場ごとに求めた
+（一致率 69〜98%、風速2m以上で判定）。`windCompass(jcd, code)` が K と同じ8方位文字列に直す。
+**この表が無いと、当日の予測で `wDir`（係数 0.39、全体8位）が効かない。** 標本を増やしたら求め直してよい。
+
 ### まだやっていないこと
 - **第2段（オッズとの合成）**。K ファイルには当たった組の配当しか無いので、
   過去データでは市場の評価を再現できない。`fetch_live.mjs` が貯める `odds_live.jsonl`
   （締切8分前の3連単120通り）がたまってから測る
 - **期待値ベースの買い方**。同上。ボートは3連単の全120通りのオッズが公式に出るので、
   貯まれば南関より正確に測れる
-- **整備力**。`beforeinfo` の部品交換欄を節を通して集め、交換後にモーターの成績が
-  どう動いたかを選手ごとに集計する
-- **風向**。K の風向は絶対方位（北東など）なので、場ごとに追い風・向かい風が変わる。
-  いまは風速だけを使っている。場×風向で学習させるのが次の一手
-- **boat.html への載せ替え**。いまのアプリは `KIRYU_0907` の手打ちデータのままで、
-  ここで作った指数・モデルにはつながっていない
+- **部品交換・チルト・調整重量の価値**。`before.jsonl`（標本1,640レース）で「モデルの予測に対する残差」を見る。
+  価値があれば本取り（3年ぶん16万リクエスト・40時間超）を検討する。それまで直前情報ページは当日ぶんしか取らない
+- 整備力（`tune`）と場×風向（`cond`）は特徴量として入れた。効き目は `BT_FIT_DROP` の切り分けで測る（結果は下に追記する）
 
 ### 守ること（ボート側）
 - **指数はコース補正後で持つ。** 素の勝率・2連対率をそのまま実力に使わない
@@ -924,3 +971,7 @@ BT_LIVE_MAX=12 node tools/fetch_live.mjs                   # 当日（締切8分
   「1列3セルか2セルか」を決める
 - **K ファイルには当たった組の配当しか載っていない。** 期待値ベースの買い方は
   当日の `odds3t` を貯めてからでないと検証できない
+- **model.json と bfeat.mjs の特徴量は名前で突き合わせる。** `build_boat.mjs` は並びが食い違っていたら
+  止まる（係数を位置で読むと、特徴量を足した直後に別の係数が当たる）。特徴量を変えたら必ず `fit_boat.mjs` を回し直す
+- **「そのレースより前」の指標は必ず読んでから足す。** `makeRolling` は `read()` → `push()` の順。
+  逆にすると当日の結果が当日の予測に入る（先読み）

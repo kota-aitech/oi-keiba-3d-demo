@@ -26,7 +26,7 @@ export function makeGen() {
 }
 
 /* モーター2連率の直近の伸び。lookback 日以内でいちばん古い記録との差を返す */
-function makeTrend(lookback = 12) {
+export function makeTrend(lookback = 12) {
   const hist = new Map();                       // 'jcd|no|gen' -> [[day, v], ...] 直近だけ
   return (jcd, no, gen, date, v) => {
     if (no == null || v == null) return null;
@@ -78,7 +78,7 @@ export function loadPrograms({ from = '', to = '' } = {}) {
      mForm   … そのモーターの直近45日の上振れ */
 const FORM_DAYS = 90, MOTOR_DAYS = 45, SETU_GAP = 3;
 const FORM_K = 25, MFORM_K = 20;
-function makeRolling(base) {
+export function makeRolling(base) {
   const bz = (jcd, c) => base?.[jcd + '|' + c]?.win ?? [0, .55, .13, .13, .11, .06, .03][c] ?? 1 / 6;
   const R = new Map(), MO = new Map(), SE = new Map();
   const trim = (a, t, days) => { while (a.length && t - a[0][0] > days) a.shift(); };
@@ -121,10 +121,14 @@ function makeRolling(base) {
 }
 
 /* K と B を突き合わせる。6艇そろって1〜3着が確定しているレースだけ返す。
-   base（index.json の base）を渡すと、時点つきの指標も一緒に作る。 */
-export function loadRaces({ from = '', to = '', prog = null, base = null } = {}) {
+   base（index.json の base）を渡すと、時点つきの指標も一緒に作る。
+   roll を渡すと、その makeRolling() に結果を流し込む（build_boat が「今日のレース」を
+   読むために、昨日までの結果を食わせた状態を受け取る用途）。 */
+export function loadRaces({ from = '', to = '', prog = null, base = null, roll = null, keys = null } = {}) {
+  /* keys（'date|jcd|r' の Set）を渡すと、返すのはその中のレースだけ。
+     時点つきの指標は全レースを流さないと合わないので、読み込み自体は省かない */
   const P = prog || loadPrograms({ from, to });
-  const roll = makeRolling(base);
+  roll = roll || makeRolling(base);
   const out = [];
   for (const k of jsonl('data/boat/results.jsonl', from, to)) {
     const b = P.get(`${k.date}|${k.jcd}|${k.r}`);
@@ -141,6 +145,7 @@ export function loadRaces({ from = '', to = '', prog = null, base = null } = {})
     for (const b of boats) roll.push(k, b, b._p, exMean != null && b.ex != null ? exMean - b.ex : null);
     for (const b of boats) delete b._p;
     if (!keep) continue;
+    if (keys && !keys.has(`${k.date}|${k.jcd}|${k.r}`)) continue;
     out.push({ ...k, boats, order: fin, fin: fin.map(i => boats[i].lane) });
   }
   return out;

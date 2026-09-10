@@ -73,12 +73,15 @@ export function raceFeatures(race, boats, DB, ST, { level = 'pre' } = {}) {
   const exs = boats.map(b => (level === 'ex' ? b.ex : null)).filter(v => v != null);
   const exMean = exs.length ? exs.reduce((a, b) => a + b, 0) / exs.length : null;
   const exSorted = [...exs].sort((a, b) => a - b);
+  /* 気象が未発表（当日の pre で直前情報がまだ無い）なら 0＝影響なし にする。
+     null を 0m として「無風の表」を引くと、無風のときの偏りが乗ってしまう */
+  const known = race.wind != null;
   const wind = race.wind ?? 0, wave = race.wave ?? 0;
   /* 場ごとに実測した水面条件の効き（index.json の cond）。
      風向は絶対方位で来るので、場の向きを人手で入れずにここで吸収する。 */
   const CD = DB.cond?.[jcd] || {};
-  const spdB = wind <= 0 ? '0' : wind <= 2 ? '1-2' : wind <= 4 ? '3-4' : wind <= 6 ? '5-6' : '7+';
-  const wavB = wave <= 2 ? '0-2' : wave <= 5 ? '3-5' : wave <= 9 ? '6-9' : '10+';
+  const spdB = !known ? null : wind <= 0 ? '0' : wind <= 2 ? '1-2' : wind <= 4 ? '3-4' : wind <= 6 ? '5-6' : '7+';
+  const wavB = !known ? null : wave <= 2 ? '0-2' : wave <= 5 ? '3-5' : wave <= 9 ? '6-9' : '10+';
   const dirB = (wind >= 3 && race.windDir && race.windDir !== '無風') ? race.windDir : null;
   const condShift = (kind, bucket, cp) => {
     const t = bucket && CD[kind]?.[bucket];

@@ -54,9 +54,15 @@ export async function getOd2(kind, ymd) {          // kind: 'K' | 'B', ymd: 'YYY
   const dir = path.join(CACHE, 'od2');
   fs.mkdirSync(dir, { recursive: true });
   const txt = path.join(dir, kind + yy + '.txt');
+  /* 空ファイル＝「開催なし」として覚えてある。ただし直近・未来の日付は
+     「まだ公開されていない」だけの可能性が高い（B は前日夕方、K は当日夜に出る）ので、
+     30分だけ覚えて取り直す。永久に覚えると翌日の番組表が二度と取れなくなる */
+  /* 当日の K は開催中に途中までの内容で公開されることがある（実際に 1.4KB の
+     途中版を抱えた）ので、直近の日付は中身があっても 30分で取り直す */
   if (fs.existsSync(txt)) {
     const s = fs.readFileSync(txt, 'utf8');
-    return s === '' ? null : s;                     // 空＝開催なしとして覚えてある
+    const recent = freshTtl(ymd) < 1;
+    if (!recent || Date.now() - fs.statSync(txt).mtimeMs < 30 * 60000) return s === '' ? null : s;
   }
   const url = `https://www1.mbrace.or.jp/od2/${kind}/${ymd.slice(0, 6)}/${kind.toLowerCase()}${yy}.lzh`;
   const gap = Date.now() - last;
