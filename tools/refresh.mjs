@@ -66,8 +66,10 @@ try {
   } catch {
     /* 別の場所から push されていて弾かれた場合。生成物は作り直せるので、
        リモートを正として rebase してから押し直す。手が入ったコードは対象外なので安全。 */
+    /* 作業中の未コミット変更があっても止まらないよう autostash で退避する
+       （ボート側の refresh と同時に走って、実際に "You have unstaged changes" で止まった） */
     git(['fetch', '-q', 'origin', 'main']);
-    git(['rebase', '-q', 'origin/main']);
+    git(['rebase', '-q', '--autostash', 'origin/main']);
     git(['push', 'origin', 'main']);
     console.error(`${stamp} リモートが先行していたので rebase して push しました`);
   }

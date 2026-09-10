@@ -237,9 +237,16 @@ function buildRace(date, jcd, prog, live, venueWeather) {
 }
 
 /* ---- 日ごと・場ごとに組む ---- */
+/* built は「データの時点」にする（現在時刻にすると、中身が同じでも today.json が毎回変わって
+   refresh_boat が空のコミットを積み続ける） */
+const dataAt = (() => {
+  let t = fs.statSync(path.join(ROOT, 'data/boat/programs.jsonl')).mtime.toISOString();
+  for (const d of dates) { try { const a = readJSON(`data/boat/live.${d}.json`).at; if (a && a > t) t = a; } catch { } }
+  return t;
+})();
 const out = {
   meta: {
-    built: new Date().toISOString(), today: TODAY,
+    built: dataAt, today: TODAY,
     model: { built: M.meta.built, split: M.meta.split, train: M.meta.train, test: M.meta.test, pre: M.pre.test, ex: M.ex.test, courseOnly: M.courseOnly },
     index: { from: DB.meta.from, to: DB.meta.to, races: DB.meta.races, racers: Object.keys(DB.racer || {}).length },
     backtest: BT ? { level: BT.meta.level, from: BT.meta.from, to: BT.meta.to, races: BT.meta.races, table: BT.table } : null,

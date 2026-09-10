@@ -82,8 +82,9 @@ try {
     '-m', 'tools/refresh_boat.mjs による自動コミット（直前情報・オッズ更新 → 予測の再生成）']);
   try { git(['push', 'origin', 'main']); }
   catch {
+    /* 作業中の未コミット変更（tools/ など）があっても止まらないよう autostash で退避する */
     git(['fetch', '-q', 'origin', 'main']);
-    git(['rebase', '-q', 'origin/main']);
+    git(['rebase', '-q', '--autostash', 'origin/main']);
     git(['push', 'origin', 'main']);
     console.error(`${stamp} リモートが先行していたので rebase して push しました`);
   }

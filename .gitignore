@@ -11,3 +11,5 @@ data/boat/results.jsonl
 data/boat/programs.jsonl
 data/boat/*.log
 data/boat/.live.lock
+data/boat/.od2-stamp
+data/boat/.refresh-stamp
