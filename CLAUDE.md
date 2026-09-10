@@ -38,7 +38,9 @@
 
 ## ファイル構成
 ```
-top.html                **トップ**。おすすめレース（本命BOX・段位・期待値・自信度）※新聞配色
+top.html                **トップ**（サイトの `/` はこれに rewrite）。競馬／ボートの切替タブを持ち、
+                        競馬面＝おすすめレース（本命BOX・段位・期待値・自信度）、ボート面＝本命の強い順・締切順・場ごと。
+                        選んだ競技は localStorage と `?sport=` に残す ※新聞配色
 marks.html              印別の単勝・複勝回収率 ※新聞配色
 index.html              予想シミュレーション＋3D（?track=oi / ?track=kawasaki）※ダーク配色
 race.html               出馬表（競馬新聞の馬柱。横型／縦型を切替。?track=…&day=…&r=…）※新聞配色
@@ -303,7 +305,7 @@ hx   = clamp(hIdx, -1.6, 2.6) × cond.human      // cond.human は左パネル�
 | `index.html` | `NKDB` | `races.*.json` + `trend.*.json` | 約525KB |
 | `race.html` | `NKRACE` | `entries.*.json`（前5走・予想印こみ） | 約1.0MB |
 | `data.html` | `NKBROWSE` + `NKBT` | `browse.json` + `backtest.json` | 約1.1MB |
-| `top.html` | `NKTOP` | `top.json` | 約45KB |
+| `top.html` | `NKTOP` ＋ `NKBOATTOP` | `top.json`（南関）＋ `data/boat/top.json`（ボート） | 約155KB |
 | `marks.html` | `NKMR` | `marksrec.json` | 約15KB |
 
 ### 見た目の方針
@@ -944,6 +946,10 @@ NK_REFRESH_NOPUSH=1 NK_REFRESH_FORCE=1 node tools/refresh_boat.mjs   # 上の3�
   回収率100%の買い方は無いので、その但し書きを外さないこと
 - 「根拠」は係数×特徴量を コース／実力／当地／ST／モーター／調子／水面／展示／その他 に束ねた値（`build_boat` の `contrib()`）
 - `node tools/boat_check.mjs` が全日・全場・全レースの描画と「勝率の和＝1」「艇数6」を見る
+- スマホ（900px以下）は下タブ 3D／予想／条件。**最初に開くのは「予想」**（3D は選んで見る）。
+  `?tab=pred|cond|3d` で指定でき、レースを切り替えると URL に残す。予想表は級と展示の列を落として6列にする
+- TOP（`top.html`）のボート面は `build_boat.mjs` が同時に書く `data/boat/top.json`（1レース数百バイト）を
+  `NKBOATTOP` に埋める。`refresh_boat.mjs` は `top.html` もコミット対象に含める
 
 ### 風向の対応表（`lib/web.mjs` の `WIND_OFFSET`）
 直前情報の風向アイコン（`is-wind1〜16`、17＝無風）は**水面図基準の相対方位**で、K の風向（北・北東…の絶対方位）と

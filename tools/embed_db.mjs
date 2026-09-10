@@ -10,6 +10,9 @@ import { inject } from './lib/embed.mjs';
 function embedBoat() {
   try { inject('boat.html', 'NKBOAT', 'NKBOAT', readJSON('data/boat/today.json')); }
   catch (e) { console.error('  (boat.html はスキップ: ' + e.message + ')'); }
+  /* TOP のボート面。南関の NKTOP とは別のマーカーなので、どちらの refresh が先に書いても壊れない */
+  try { inject('top.html', 'NKBOATTOP', 'NKBT2', readJSON('data/boat/top.json')); }
+  catch (e) { console.error('  (top.html のボート面はスキップ: ' + e.message + ')'); }
 }
 if (process.env.NK_EMBED_ONLY === 'boat') { embedBoat(); process.exit(0); }
 

@@ -69,7 +69,7 @@ const gitRetry = (args, n = 4) => {
 };
 const stamp = new Date().toLocaleString('ja-JP', { hour12: false }).replace(/\//g, '-');
 if (process.env.NK_REFRESH_NOPUSH) { console.error(`${stamp} 反映完了（${secs}秒・push なし）`); process.exit(0); }
-const TARGETS = ['boat.html', 'data/boat/today.json', 'data/boat/odds_live.jsonl',
+const TARGETS = ['boat.html', 'top.html', 'data/boat/today.json', 'data/boat/top.json', 'data/boat/odds_live.jsonl',
   `data/boat/live.${TODAY}.json`, `data/boat/live.${addDays(TODAY, 1)}.json`];
 try {
   const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);

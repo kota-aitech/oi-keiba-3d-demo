@@ -289,3 +289,29 @@ for (const date of dates) {
 }
 writeJSON('data/boat/today.json', out);
 console.error(`-> data/boat/today.json (${(fs.statSync(path.join(ROOT, 'data/boat/today.json')).size / 1024).toFixed(0)} KB)`);
+
+/* ---- TOP（top.html）用のたたんだ版。1レースあたり数百バイトに抑える ---- */
+const PICK = ['◎単勝', '◎複勝', '本命3艇BOX 3連複', '◎○の2連単1点', '［基準］1号艇の単勝', '［基準］1号艇の複勝', '［基準］123の3連複'];
+const top = {
+  builtAt: out.meta.built, today: TODAY, nat1: out.meta.nat1,
+  model: out.meta.model ? { hit1: out.meta.model.ex?.hit1, in3: out.meta.model.ex?.in3, courseOnly: out.meta.model.courseOnly?.hit1, test: out.meta.model.test } : null,
+  backtest: BT ? { races: BT.meta.races, from: BT.meta.from, to: BT.meta.to, table: Object.fromEntries(PICK.filter(k => BT.table[k]).map(k => [k, { hit: BT.table[k].hit, roi: BT.table[k].roi }])) } : null,
+  days: out.days.map(d => ({
+    date: d.date,
+    venues: d.venues.map(v => ({
+      jcd: v.jcd, name: v.name, title: v.title, day: v.day, exCount: v.exCount, win1: v.course?.[0]?.win ?? null,
+      races: v.races.map(r => {
+        const P = r.ex || r.pre;
+        const ord = P.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
+        return {
+          r: r.r, close: r.close, cls: r.cls, level: r.level, oddsKind: r.odds?.kind || null,
+          top: ord.map(([p, i]) => ({ lane: r.boats[i].lane, name: r.boats[i].name, grade: r.boats[i].grade, p: round(p, 3), o: r.odds?.win?.[r.boats[i].lane] ?? null })),
+          tri: r.tri[0] ? { k: r.tri[0].k, p: r.tri[0].p, o: r.tri[0].o, ev: r.tri[0].ev } : null,
+          box3: ord.map(([, i]) => r.boats[i].lane).sort().join('-'),
+        };
+      }),
+    })),
+  })),
+};
+writeJSON('data/boat/top.json', top);
+console.error(`-> data/boat/top.json (${(fs.statSync(path.join(ROOT, 'data/boat/top.json')).size / 1024).toFixed(0)} KB)`);
