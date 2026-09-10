@@ -7,7 +7,7 @@
 import { readJSON, writeJSON, VNAME } from './lib/bt.mjs';
 import { loadRaces } from './lib/bload.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
-import { utilities, plackettLuce } from './lib/bpl.mjs';
+import { utilities, plackettLuce, pairProbs } from './lib/bpl.mjs';
 
 const DB = readJSON(process.env.BT_BT_DB || 'data/boat/index.train.json');
 const ST = readJSON('data/boat/stadium.json');
@@ -48,6 +48,14 @@ for (const r of races) {
      「1号艇を毎回買う」に勝てていなければモデルに賭ける価値はない。 */
   add('［基準］1号艇の単勝', 100, f1 === 1 ? payOf(r, 'win', '1') : 0, f1 === 1 ? 1 : 0);
   add('［基準］1号艇の複勝', 100, [f1, f2].includes(1) ? payOf(r, 'place', '1') : 0, [f1, f2].includes(1) ? 1 : 0);
+  /* AI の買い目：確率上位N点（build_boat の ai と同じ組み方。期待値組は当日オッズが要るのでここでは測れない） */
+  {
+    const lanes = r.boats.map(b => b.lane), w3 = `${f1}-${f2}-${f3}`, w2 = `${f1}-${f2}`;
+    const triK = PL.tri.slice(0, 8).map(t => `${lanes[t[0]]}-${lanes[t[1]]}-${lanes[t[2]]}`);
+    const exK = pairProbs(utilities(X, beta), TAU).slice(0, 5).map(t => `${lanes[t[0]]}-${lanes[t[1]]}`);
+    for (const n of [3, 5, 8]) { const hit = triK.slice(0, n).includes(w3); add(`AI 3連単 上位${n}点`, 100 * n, hit ? payOf(r, 'ex3', w3) : 0, hit ? 1 : 0); }
+    for (const n of [3, 5]) { const hit = exK.slice(0, n).includes(w2); add(`AI 2連単 上位${n}点`, 100 * n, hit ? payOf(r, 'ex2', w2) : 0, hit ? 1 : 0); }
+  }
   add('［基準］1-2-3の3連単', 100, (f1 === 1 && f2 === 2 && f3 === 3) ? payOf(r, 'ex3', '1-2-3') : 0, (f1 === 1 && f2 === 2 && f3 === 3) ? 1 : 0);
   add('［基準］123の3連複', 100, [f1, f2, f3].every(x => x <= 3) ? payOf(r, 'tri', '1-2-3') : 0, [f1, f2, f3].every(x => x <= 3) ? 1 : 0);
   add('［基準］1-2-3-4BOX 3連複', 400, [f1, f2, f3].every(x => x <= 4) ? payOf(r, 'tri', [f1, f2, f3].sort((a, b) => a - b).join('-')) : 0, [f1, f2, f3].every(x => x <= 4) ? 1 : 0);

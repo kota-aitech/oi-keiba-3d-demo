@@ -17,7 +17,7 @@ import { ROOT, readJSON, writeJSON, VENUES, VNAME, ymdOf } from './lib/bt.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
 import { loadPrograms, loadRaces, makeRolling } from './lib/bload.mjs';
 import { windCompass } from './lib/web.mjs';
-import { plackettLuce } from './lib/bpl.mjs';
+import { plackettLuce, pairProbs } from './lib/bpl.mjs';
 
 const TODAY = process.env.BT_TODAY || ymdOf(new Date());
 const AHEAD = Number(process.env.BT_AHEAD ?? 1);
@@ -146,7 +146,7 @@ function buildRace(date, jcd, prog, live, venueWeather) {
     const X = feat(level), beta = BETA[level];
     const U = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
     const pl = plackettLuce(U, TAU[level]);
-    return { U: U.map(v => round(v)), tau: TAU[level], p1: pl.p1.map(v => round(v, 4)), top2: pl.top2.map(v => round(v, 4)), top3: pl.top3.map(v => round(v, 4)), tri: pl.tri, c: X.map(x => contrib(x, beta)) };
+    return { U: U.map(v => round(v)), tau: TAU[level], p1: pl.p1.map(v => round(v, 4)), top2: pl.top2.map(v => round(v, 4)), top3: pl.top3.map(v => round(v, 4)), tri: pl.tri, pairs: pairProbs(U, TAU[level]), c: X.map(x => contrib(x, beta)) };
   };
   const pre = predict('pre');
   const ex = before ? predict('ex') : null;
@@ -173,6 +173,17 @@ function buildRace(date, jcd, prog, live, venueWeather) {
   const order = use.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
   const marks = {}; ['◎', '○', '▲', '△', '△'].forEach((m, i) => { if (order[i] != null) marks[lanes[order[i]]] = m; });
 
+  /* AI の買い目：印ではなく確率そのものから組む。締切時点のものを preds.jsonl に記録して回収率を精算する
+       3連単 確率上位 3／5／8点、2連単 確率上位 3／5点、3連単 期待値1.0超（オッズがあるときだけ・最大6点） */
+  const ex2 = use.pairs.slice(0, 8).map(([a, b, p]) => ({ k: `${lanes[a]}-${lanes[b]}`, p: round(p, 4) }));
+  const ai = {
+    tri3: tri.slice(0, 3).map(t => t.k), tri5: tri.slice(0, 5).map(t => t.k), tri8: tri.slice(0, 8).map(t => t.k),
+    ex3: ex2.slice(0, 3).map(t => t.k), ex5: ex2.slice(0, 5).map(t => t.k),
+    ev: odds ? tri.filter(t => t.ev != null && t.ev >= 1.0).slice(0, 6).map(t => ({ k: t.k, o: t.o, ev: t.ev })) : [],
+    triCum: [3, 5, 8].map(n => round(tri.slice(0, n).reduce((a, t) => a + t.p, 0), 3)),   // 上位N点の合計確率
+    ex2Cum: [3, 5].map(n => round(ex2.slice(0, n).reduce((a, t) => a + t.p, 0), 3)),
+  };
+
   /* 読みのポイント */
   const V = DB.venues?.[jcd], c1 = V?.course?.[0];
   const pts = [];
@@ -198,7 +209,7 @@ function buildRace(date, jcd, prog, live, venueWeather) {
   const fs_ = boats.filter(b => (b.racer?.fRate ?? 0) >= 0.02);
   if (fs_.length) pts.push(`F率が高い：${fs_.map(b => `${b.lane} ${b.name}（${(b.racer.fRate * 100).toFixed(1)}%）`).join('、')}。スタートを控えると勢いが削がれる。`);
 
-  const stripTri = o => { const { tri: _t, ...rest } = o; return rest; };
+  const stripTri = o => { const { tri: _t, pairs: _p, ...rest } = o; return rest; };
   return {
     r: prog.r, cls: prog.cls, dist: prog.dist, close: prog.close || lv?.close || null, level,
     weather: wx ? { ...wx, windDir, src: wxSrc } : null,
@@ -211,7 +222,7 @@ function buildRace(date, jcd, prog, live, venueWeather) {
       racer: b.racer, motorIdx: b.motorIdx,
     })),
     pre: stripTri(pre), ex: ex ? stripTri(ex) : null,
-    marks, tri, trio,
+    marks, tri, trio, ex2: ex2.slice(0, 6), ai,
     odds: odds ? { win: odds.win, place: odds.place, at: odds.at, left: odds.left, kind: odds.kind } : null,
     points: pts,
   };
@@ -263,13 +274,20 @@ function bandOf(firstClose) {
    モデルはオッズを使わないので、記録が締切の少し後になっても予想の中身は変わらない。
    ただし「いつ記録したか」（late＝締切から何分後か）は残す。BT_TODAY で過去日を再現したときは記録しない */
 const PREDS = path.join(ROOT, 'data/boat/preds.jsonl');
-const recorded = new Set();
-if (fs.existsSync(PREDS)) for (const l of fs.readFileSync(PREDS, 'utf8').split('\n')) if (l) { try { const o = JSON.parse(l); recorded.add(`${o.date}|${o.jcd}|${o.r}`); } catch { } }
+const recorded = new Map();                                  // key -> 記録済みの行（ai の後付け用）
+if (fs.existsSync(PREDS)) for (const l of fs.readFileSync(PREDS, 'utf8').split('\n')) if (l) { try { const o = JSON.parse(l); recorded.set(`${o.date}|${o.jcd}|${o.r}`, o); } catch { } }
+let predsDirty = false;
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 function recordPred(date, jcd, race) {
   if (process.env.BT_TODAY || date !== ymdOf(new Date()) || !race.close) return;
   const key = `${date}|${jcd}|${race.r}`;
-  if (recorded.has(key)) return;
+  const old = recorded.get(key);
+  if (old) {
+    /* AI の買い目を追加する前に記録した行には、同じ入力から作った買い目を後付けする
+       （モデルはオッズを使わず、期待値組のオッズも live.json に残っているので中身は同じ） */
+    if (!old.ai && race.ai) { old.ai = race.ai; predsDirty = true; }
+    return;
+  }
   const [h, m] = race.close.split(':').map(Number), late = nowMin() - (h * 60 + m);
   if (late < -1) return;                                     // まだ締切前
   const P = race.ex || race.pre;
@@ -279,10 +297,12 @@ function recordPred(date, jcd, race) {
     top: order, p1: Object.fromEntries(race.boats.map((b, i) => [b.lane, P.p1[i]])),
     tri1: race.tri[0]?.k || null, tri1p: race.tri[0]?.p ?? null, tri1o: race.tri[0]?.o ?? null,
     win1o: race.odds?.win?.[order[0]] ?? null,
+    ai: race.ai,                                            // AI の買い目（締切時点）
   };
   fs.appendFileSync(PREDS, JSON.stringify(rec) + '\n');
-  recorded.add(key);
+  recorded.set(key, rec);
 }
+process.on('exit', () => { if (predsDirty) fs.writeFileSync(PREDS, [...recorded.values()].map(o => JSON.stringify(o)).join('\n') + '\n'); });
 /* 前回までに集計した成績（build_boat_results.mjs の出力）を場のブロックに添える */
 let REC = null;
 try { REC = readJSON('data/boat/results.json'); } catch { }
@@ -363,6 +383,7 @@ const top = {
           top: ord.map(([p, i]) => ({ lane: r.boats[i].lane, name: r.boats[i].name, grade: r.boats[i].grade, p: round(p, 3), o: r.odds?.win?.[r.boats[i].lane] ?? null })),
           tri: r.tri[0] ? { k: r.tri[0].k, p: r.tri[0].p, o: r.tri[0].o, ev: r.tri[0].ev } : null,
           box3: ord.map(([, i]) => r.boats[i].lane).sort().join('-'),
+          ai: { tri3: r.ai.tri3, ex3: r.ai.ex3, cum3: r.ai.triCum[0], ev: r.ai.ev.map(x => x.k) },
         };
       }),
     })),
@@ -391,6 +412,7 @@ for (const d of out.days) for (const v of d.venues) for (const r of v.races) {
   r.pre = packPred(r.pre); r.ex = packPred(r.ex);
   r.tri = r.tri.map(t => ({ k: t.k, p: r3(t.p), o: t.o, ev: t.ev }));
   r.trio = r.trio.map(t => ({ k: t.k, p: r3(t.p) }));
+  r.ex2 = r.ex2.map(t => ({ k: t.k, p: r3(t.p) }));
   if (r.cond) r.cond = r.cond.map(r2);
 }
 writeJSON('data/boat/today.json', out);

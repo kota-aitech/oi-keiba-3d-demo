@@ -46,6 +46,16 @@ export function plackettLuce(U, tau = [1, 1]) {
   return { p1, top2: p1.map((v, i) => v + p2[i]), top3: p1.map((v, i) => v + p2[i] + p3[i]), tri };
 }
 
+/* 2連単（1着→2着）の確率。[a, b, p] を確率の高い順に返す */
+export function pairProbs(U, tau = [1, 1]) {
+  const n = U.length, m = Math.max(...U);
+  const e1 = U.map(u => Math.exp(tau[0] * (u - m))), S1 = e1.reduce((a, b) => a + b, 0);
+  const e2 = U.map(u => Math.exp(tau[1] * (u - m))), S2 = e2.reduce((a, b) => a + b, 0);
+  const out = [];
+  for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) if (a !== b) out.push([a, b, (e1[a] / S1) * e2[b] / (S2 - e2[a])]);
+  return out.sort((x, y) => y[2] - x[2]);
+}
+
 /* 温度の当てはめ。data: [{U, order}] */
 function golden(f, lo, hi, iters = 40) {
   const g = (Math.sqrt(5) - 1) / 2;
