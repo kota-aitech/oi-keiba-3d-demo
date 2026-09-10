@@ -10,8 +10,12 @@
 import { readJSON, writeJSON } from './lib/bt.mjs';
 import { loadRaces } from './lib/bload.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
+import { utilities, plWin, fitTau } from './lib/bpl.mjs';
 
 const SPLIT = process.env.BT_FIT_SPLIT || '20260601';
+/* BT_FIT_BETA=<model.json> を渡すと β はそこから読み、Adam を回さずに温度と検証だけやり直す
+   （β を変えずに較正だけ足すとき用。全体で数分） */
+const REUSE = process.env.BT_FIT_BETA ? readJSON(process.env.BT_FIT_BETA) : null;
 const EPOCH = Number(process.env.BT_FIT_EPOCH || 60);
 const L2 = Number(process.env.BT_FIT_L2 || 2e-4);
 const LR = Number(process.env.BT_FIT_LR || 0.05);
@@ -39,13 +43,6 @@ function pack(rs, level) {
     if (DROPI.length) for (const x of X) for (const i of DROPI) x[i] = 0;
     return { X, order: r.order };
   });
-}
-function probs(X, beta) {
-  const u = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
-  const m = Math.max(...u);
-  const e = u.map(v => Math.exp(v - m));
-  const s = e.reduce((a, b) => a + b, 0);
-  return e.map(v => v / s);
 }
 /* 1〜3着の並びの対数尤度と勾配 */
 function gradOne(X, order, beta, g) {
@@ -88,11 +85,11 @@ function fit(data, label) {
   }
   return beta;
 }
-function evaluate(data, beta) {
+function evaluate(data, beta, tau = [1, 1]) {
   let ll = 0, hit1 = 0, in3 = 0, n = 0;
   const cal = Array.from({ length: 10 }, () => ({ p: 0, y: 0, n: 0 }));
   for (const d of data) {
-    const p = probs(d.X, beta);
+    const p = plWin(utilities(d.X, beta), tau[0]);
     const w = d.order[0];
     ll -= Math.log(Math.max(1e-9, p[w]));
     const rank = p.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
@@ -108,10 +105,21 @@ const out = { meta: { drop: [...DROP], built: new Date().toISOString().slice(0, 
 for (const level of LEVELS) {
   console.error(`第1段（${level}）を当てはめる…`);
   const trd = pack(tr, level), ted = pack(te, level);
-  const beta = fit(trd, level);
-  const ev = evaluate(ted, beta);
-  out[level] = { beta: [...beta].map(v => +v.toFixed(4)), test: ev };
+  let beta;
+  if (REUSE) {
+    const feats = REUSE.meta.feats, src = REUSE[level].beta;
+    beta = new Float64Array(NF);
+    FEATS.forEach((k, i) => { const j = feats.indexOf(k); if (j < 0) throw new Error(`${process.env.BT_FIT_BETA} に ${k} が無い`); beta[i] = src[j]; });
+    console.error(`  β は ${process.env.BT_FIT_BETA} を再利用`);
+  } else beta = fit(trd, level);
+  /* 着順の段階ごとの温度（lib/bpl.mjs）。学習データで決め、検証は温度つきで測る */
+  const raw = evaluate(ted, beta);
+  const tau = fitTau(trd.map(d => ({ U: utilities(d.X, beta), order: d.order })));
+  const ev = evaluate(ted, beta, tau);
+  out[level] = { beta: [...beta].map(v => +v.toFixed(4)), tau, test: ev, testRaw: { logloss: raw.logloss, hit1: raw.hit1, in3: raw.in3, cal: raw.cal } };
+  console.error(`  ${level}: 温度 τ1 ${tau[0]}／τ2 ${tau[1]}（較正前 logloss ${raw.logloss.toFixed(3)}）`);
   console.error(`  ${level}: logloss ${ev.logloss.toFixed(3)}／1着的中 ${(ev.hit1 * 100).toFixed(1)}%／上位3艇に勝ち艇 ${(ev.in3 * 100).toFixed(1)}%`);
+  console.error('  較正（予測→実際）: ' + ev.cal.filter(Boolean).map(b => `${(b.p * 100).toFixed(0)}→${(b.y * 100).toFixed(0)}`).join(' '));
   console.error('  係数（絶対値の大きい順）: ' + [...beta].map((v, i) => [FEATS[i], v]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 12).map(([k, v]) => `${k} ${v.toFixed(3)}`).join(' / '));
 }
 /* 参考：進入コースだけ（＝枠なり前提の基準）でどこまで当たるか */

@@ -7,6 +7,7 @@
 import { readJSON, writeJSON, VNAME } from './lib/bt.mjs';
 import { loadRaces } from './lib/bload.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
+import { utilities, plackettLuce } from './lib/bpl.mjs';
 
 const DB = readJSON(process.env.BT_BT_DB || 'data/boat/index.train.json');
 const ST = readJSON('data/boat/stadium.json');
@@ -20,16 +21,14 @@ const races = loadRaces({ from: FROM, to: TO === '99999999' ? '' : TO, base: DB.
 
 console.error(`検証 ${races.length} レース（${LEVEL}、${races[0]?.date} 〜 ${races.at(-1)?.date}）`);
 
-const softmax = X => {
-  const u = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
-  const m = Math.max(...u), e = u.map(v => Math.exp(v - m)), s = e.reduce((a, b) => a + b, 0);
-  return e.map(v => v / s);
-};
-/* 1着確率から Plackett–Luce で組の確率を出す */
-function triProb(p, a, b, c) {  // 期待値の検証用（当日オッズが貯まったら使う）
-  const i = a - 1, j = b - 1, k = c - 1;
-  const s1 = 1, s2 = s1 - p[i], s3 = s2 - p[j];
-  return s3 > 1e-9 ? p[i] * (p[j] / s2) * (p[k] / s3) : 0;
+/* 確率は lib/bpl.mjs の Plackett–Luce（着順の段階ごとの温度つき）。build_boat と同じ式 */
+const TAU = M[LEVEL].tau || [1, 1];
+if (!M[LEVEL].tau) console.error('  (model.json に温度 tau が無い。fit_boat.mjs を回し直すと較正される)');
+/* 3連単の組の確率（期待値の検証用。当日オッズが貯まったら使う）。pl は plackettLuce() の戻り値、a/b/c は艇番 */
+function triProb(pl, lanes, a, b, c) {
+  const i = lanes.indexOf(a), j = lanes.indexOf(b), k = lanes.indexOf(c);
+  const t = pl.tri.find(x => x[0] === i && x[1] === j && x[2] === k);
+  return t ? t[3] : 0;
 }
 const payOf = (r, kind, code) => { const a = r.pay?.[kind]; const h = a?.find(x => x.c === code); return h ? h.y : 0; };
 
@@ -39,7 +38,8 @@ const byDay = {}, byVenue = {};
 
 for (const r of races) {
   const X = raceFeatures(r, r.boats, DB, ST, { level: LEVEL });
-  const p = softmax(X);
+  const PL = plackettLuce(utilities(X, beta), TAU);
+  const p = PL.p1;
   const rank = p.map((v, i) => [v, r.boats[i].lane]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
   const pl = Object.fromEntries(r.boats.map((b, i) => [b.lane, p[i]]));
   const [f1, f2, f3] = r.fin;

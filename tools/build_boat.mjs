@@ -17,6 +17,7 @@ import { ROOT, readJSON, writeJSON, VENUES, VNAME, ymdOf } from './lib/bt.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
 import { loadPrograms, loadRaces, makeRolling } from './lib/bload.mjs';
 import { windCompass } from './lib/web.mjs';
+import { plackettLuce } from './lib/bpl.mjs';
 
 const TODAY = process.env.BT_TODAY || ymdOf(new Date());
 const AHEAD = Number(process.env.BT_AHEAD ?? 1);
@@ -43,6 +44,9 @@ function betaOf(level) {
   return b;
 }
 const BETA = { pre: betaOf('pre'), ex: betaOf('ex') };
+/* 着順の段階ごとの温度（fit_boat が学習データで決める。無ければ 1＝素の PL） */
+const TAU = { pre: M.pre.tau || [1, 1], ex: M.ex.tau || [1, 1] };
+if (!M.pre.tau) console.error('  (model.json に温度 tau が無い。fit_boat.mjs を回し直すと較正される)');
 
 /* ---- 対象日 ---- */
 const dates = [];
@@ -65,29 +69,6 @@ function motorGenOf(jcd, no) {
     if (!best || t[k].to > t[best].to) best = k;
   }
   return best ? Number(best.split('#')[1]) : 1;
-}
-
-/* ---- Plackett–Luce（6艇120通りの厳密計算）---- */
-function plackettLuce(U) {
-  const n = U.length, mx = Math.max(...U);
-  const e = U.map(u => Math.exp(u - mx)), S = e.reduce((a, b) => a + b, 0);
-  const p1 = e.map(v => v / S), p2 = Array(n).fill(0), p3 = Array(n).fill(0), tri = [];
-  for (let a = 0; a < n; a++) {
-    const pa = e[a] / S;
-    for (let b = 0; b < n; b++) {
-      if (b === a) continue;
-      const pb = e[b] / (S - e[a]);
-      p2[b] += pa * pb;
-      for (let c = 0; c < n; c++) {
-        if (c === a || c === b) continue;
-        const p = pa * pb * e[c] / (S - e[a] - e[b]);
-        p3[c] += p;
-        tri.push([a, b, c, p]);
-      }
-    }
-  }
-  tri.sort((x, y) => y[3] - x[3]);
-  return { p1, top2: p1.map((v, i) => v + p2[i]), top3: p1.map((v, i) => v + p2[i] + p3[i]), tri };
 }
 
 /* ---- 係数×特徴量を「読める単位」にまとめる（根拠の表示用）---- */
@@ -164,8 +145,8 @@ function buildRace(date, jcd, prog, live, venueWeather) {
   const predict = level => {
     const X = feat(level), beta = BETA[level];
     const U = X.map(x => { let s = 0; for (let k = 0; k < NF; k++) s += beta[k] * x[k]; return s; });
-    const pl = plackettLuce(U);
-    return { U: U.map(v => round(v)), p1: pl.p1.map(v => round(v, 4)), top2: pl.top2.map(v => round(v, 4)), top3: pl.top3.map(v => round(v, 4)), tri: pl.tri, c: X.map(x => contrib(x, beta)) };
+    const pl = plackettLuce(U, TAU[level]);
+    return { U: U.map(v => round(v)), tau: TAU[level], p1: pl.p1.map(v => round(v, 4)), top2: pl.top2.map(v => round(v, 4)), top3: pl.top3.map(v => round(v, 4)), tri: pl.tri, c: X.map(x => contrib(x, beta)) };
   };
   const pre = predict('pre');
   const ex = before ? predict('ex') : null;

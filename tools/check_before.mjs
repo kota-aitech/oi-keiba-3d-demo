@@ -11,6 +11,7 @@ import path from 'node:path';
 import { ROOT, readJSON } from './lib/bt.mjs';
 import { FEATS, NF, raceFeatures } from './lib/bfeat.mjs';
 import { loadRaces } from './lib/bload.mjs';
+import { utilities, plWin } from './lib/bpl.mjs';
 
 const DB = readJSON(process.env.BT_CB_DB || 'data/boat/index.train.json');
 const ST = readJSON('data/boat/stadium.json');
@@ -30,14 +31,13 @@ console.log(`K と突き合わせできた ${races.length} レース`);
 const rows = [];
 for (const r of races) {
   const X = raceFeatures(r, r.boats, DB, ST, { level: 'ex' });
-  const u = X.map(x => { let s = 0; for (let i = 0; i < NF; i++) s += beta[i] * x[i]; return s; });
-  const m = Math.max(...u), e = u.map(v => Math.exp(v - m)), s = e.reduce((a, b) => a + b, 0);
+  const pw = plWin(utilities(X, beta), (M.ex.tau || [1])[0]);
   const bi = B.get(`${r.date}|${r.jcd}|${r.r}`);
   const byLane = new Map(bi.boats.map(x => [x.lane, x]));
   r.boats.forEach((b, i) => {
     const z = byLane.get(b.lane);
     if (!z) return;
-    rows.push({ p: e[i] / s, win: Number(b.pos) === 1 ? 1 : 0, top2: Number(b.pos) <= 2 ? 1 : 0,
+    rows.push({ p: pw[i], win: Number(b.pos) === 1 ? 1 : 0, top2: Number(b.pos) <= 2 ? 1 : 0,
       parts: z.parts.length, prop: z.prop ? 1 : 0, tilt: z.tilt, adjust: z.adjust, lane: b.lane, course: b.course });
   });
 }
