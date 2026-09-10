@@ -143,27 +143,50 @@ for (const [jaName, key] of WANT) {
     }
     if (!days[dk].length) delete days[dk];
   }
-  /* 実績のまとめ。画面に「この買い方は実際どうだったか」を必ず出すため */
-  const tally = {};
-  const add = (k, b) => { const e = tally[k] ||= { races: 0, cost: 0, ret: 0, hits: 0, pts: 0 };
+  /* 実績のまとめ。画面に「この買い方は実際どうだったか」を必ず出すため。
+     全期間ぶんと、日ごとの両方を持つ。 */
+  const tally = {}, byDay = {};
+  const bump2 = (acc, k, b) => { const e = acc[k] ||= { races: 0, cost: 0, ret: 0, hits: 0, pts: 0 };
     e.races++; e.cost += b.cost; e.ret += b.ret; e.pts += b.pts; if (b.hit) e.hits++; };
   let nR = 0, nWin = 0, nT3 = 0;
-  for (const l of Object.values(days)) for (const x of l) {
-    nR++; if (x.hit.win) nWin++; if (x.hit.winInTop3) nT3++;
-    const b = x.betResult || {};
-    if (b.umaren) add('ev_umaren', b.umaren);
-    if (b.sanpuku) add('ev_sanpuku', b.sanpuku);
-    for (const k of [3, 4]) if (b[`box${k}`]) { add(`box${k}_umaren`, b[`box${k}`].umaren); add(`box${k}_sanpuku`, b[`box${k}`].sanpuku); }
+  for (const [dk, l] of Object.entries(days)) {
+    const D = byDay[dk] ||= { date: l[0] ? l[0].date : '', races: 0, win: 0, top3: 0, tally: {}, oddsSrc: {} };
+    for (const x of l) {
+      nR++; D.races++;
+      if (x.hit.win) { nWin++; D.win++; }
+      if (x.hit.winInTop3) { nT3++; D.top3++; }
+      const src = x.oddsSrc ? (x.oddsSrc.startsWith('締切前') ? '締切前' : x.oddsSrc.startsWith('暫定') ? '暫定' : '最終') : 'なし';
+      D.oddsSrc[src] = (D.oddsSrc[src] || 0) + 1;
+      const b = x.betResult || {};
+      if (b.umaren) { bump2(tally, 'ev_umaren', b.umaren); bump2(D.tally, 'ev_umaren', b.umaren); }
+      if (b.sanpuku) { bump2(tally, 'ev_sanpuku', b.sanpuku); bump2(D.tally, 'ev_sanpuku', b.sanpuku); }
+      for (const k of [3, 4]) if (b[`box${k}`]) {
+        bump2(tally, `box${k}_umaren`, b[`box${k}`].umaren); bump2(D.tally, `box${k}_umaren`, b[`box${k}`].umaren);
+        bump2(tally, `box${k}_sanpuku`, b[`box${k}`].sanpuku); bump2(D.tally, `box${k}_sanpuku`, b[`box${k}`].sanpuku);
+      }
+    }
   }
-  for (const e of Object.values(tally)) {
+  const fin2 = t => { for (const e of Object.values(t)) {
     e.roi = e.cost ? +(e.ret / e.cost).toFixed(4) : 0;
     e.hitRate = e.races ? +(e.hits / e.races).toFixed(4) : 0;
     e.avgPts = e.races ? +(e.pts / e.races).toFixed(1) : 0;
+  } return t; };
+  fin2(tally);
+  for (const D of Object.values(byDay)) {
+    fin2(D.tally);
+    D.winRate = D.races ? +(D.win / D.races).toFixed(4) : 0;
+    D.top3Rate = D.races ? +(D.top3 / D.races).toFixed(4) : 0;
   }
-  const summary = { races: nR, winRate: nR ? +(nWin / nR).toFixed(4) : 0, winInTop3: nR ? +(nT3 / nR).toFixed(4) : 0, tally };
+  const summary = { races: nR, winRate: nR ? +(nWin / nR).toFixed(4) : 0, winInTop3: nR ? +(nT3 / nR).toFixed(4) : 0, tally, byDay };
   const meta = { builtAt: new Date().toISOString(), model: MDL ? MODELFILE : null, payLabels: JA_PAY, summary };
   writeJSON(`data/nankan/results.${key}.json`, { track: jaName, meta, days, races });
   console.error(`${jaName}: ${Object.keys(days).length}日 ${nR}レース ／ ◎的中 ${(summary.winRate * 100).toFixed(0)}% ／ 上位3頭に勝ち馬 ${(summary.winInTop3 * 100).toFixed(0)}%`);
+  console.error('  日別  R  ◎的中 上位3頭 三連複4頭BOX 馬連4頭BOX  オッズ');
+  for (const [dk, D] of Object.entries(byDay)) {
+    const f = k => { const e = D.tally[k]; return e ? `${(e.roi * 100).toFixed(0).padStart(4)}%/${(e.hitRate * 100).toFixed(0).padStart(2)}%` : '   —  '; };
+    const src = Object.entries(D.oddsSrc).map(([k, v]) => `${k}${v}`).join(' ');
+    console.error(`  ${dk.slice(0, 8).padEnd(9)} ${String(D.races).padStart(2)}  ${(D.winRate * 100).toFixed(0).padStart(4)}%  ${(D.top3Rate * 100).toFixed(0).padStart(4)}%     ${f('box4_sanpuku')}   ${f('box4_umaren')}  ${src}`);
+  }
   for (const [k, e] of Object.entries(tally))
     console.error(`   ${k.padEnd(14)} 回収率 ${(e.roi * 100).toFixed(0).padStart(3)}%  的中 ${(e.hitRate * 100).toFixed(0).padStart(2)}%  平均${e.avgPts}点`);
 }
