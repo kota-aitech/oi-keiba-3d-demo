@@ -6,3 +6,8 @@ data/nankan/cards.jsonl
 # launchd が書くログと実行状態（マシンごとの一時ファイル）
 data/nankan/*.log
 data/nankan/.refresh-stamp
+# ボート：公式ダウンロードデータの展開結果（od2 のキャッシュから作り直せる。各220MB超）
+data/boat/results.jsonl
+data/boat/programs.jsonl
+data/boat/*.log
+data/boat/.live.lock
