@@ -46,6 +46,7 @@ const sandbox = {
   window: { devicePixelRatio: 1, addEventListener: noop, matchMedia: () => ({ matches: false }), innerWidth: 1200, innerHeight: 800 },
   localStorage: { getItem: () => null, setItem: noop, removeItem: noop },
   performance: { now: () => Date.now() }, requestAnimationFrame: noop, cancelAnimationFrame: noop, setTimeout: (f) => { f(); return 0; }, clearTimeout: noop,
+  setInterval: () => 0, clearInterval: noop, history: { replaceState: noop },
   alert: m => { throw new Error('alert: ' + m); },
   navigator: { userAgent: 'node' },
 };

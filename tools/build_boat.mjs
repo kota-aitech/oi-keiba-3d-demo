@@ -217,6 +217,48 @@ function buildRace(date, jcd, prog, live, venueWeather) {
   };
 }
 
+/* ---- 当日の結果（od2 の K は開催中に途中まで公開される）から、場ごとの「本日の傾向」を出す ---- */
+const TODAY_RES = new Map();                      // 'date|jcd' -> [{r, c1, tri}]
+{
+  const f = path.join(ROOT, 'data/boat/results.jsonl');
+  const tag = dates.map(d => `"date":"${d}"`);
+  for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
+    if (!line || !tag.some(t => line.includes(t))) continue;
+    const k = JSON.parse(line);
+    const w = k.entries.find(e => Number(e.pos) === 1);
+    if (!w) continue;
+    const tri = k.pay?.ex3?.[0]?.y ?? null;        // K の ex3 が3連単（tri は3連複）
+    (TODAY_RES.get(`${k.date}|${k.jcd}`) || TODAY_RES.set(`${k.date}|${k.jcd}`, []).get(`${k.date}|${k.jcd}`)).push({ r: k.r, c1: w.course === 1, tri });
+  }
+}
+/* 傾向。結果が3レース以上あれば実測（1コース勝率・3連単平均配当・万舟率）、無ければ予想の本命勝率の平均 */
+function trendOf(date, jcd, races, baseC1) {
+  const res = (TODAY_RES.get(`${date}|${jcd}`) || []).sort((a, b) => a.r - b.r);
+  const fav = races.map(r => Math.max(...(r.ex || r.pre).p1));
+  const expect = fav.reduce((a, b) => a + b, 0) / (fav.length || 1);
+  const out = { n: res.length, expect: round(expect, 3), baseC1: round(baseC1, 3) };
+  if (res.length >= 3) {
+    const c1 = res.filter(x => x.c1).length, tris = res.map(x => x.tri).filter(v => v != null);
+    const avgTri = tris.length ? tris.reduce((a, b) => a + b, 0) / tris.length : null;
+    const man = tris.length ? tris.filter(v => v >= 10000).length / tris.length : 0;
+    const c1Rate = c1 / res.length;
+    const score = (c1Rate < 0.42 ? 1 : 0) + (avgTri != null && avgTri > 8000 ? 1 : 0) + (man >= 0.3 ? 1 : 0);
+    const label = score >= 2 ? '荒れ気味' : (c1Rate >= 0.65 && (avgTri == null || avgTri < 5000)) ? '堅め' : 'ふつう';
+    Object.assign(out, { src: 'result', c1, c1Rate: round(c1Rate, 3), avgTri: avgTri != null ? Math.round(avgTri) : null, man: round(man, 2), label });
+    out.text = `本日${res.length}R消化：1コース${c1}勝（${(c1Rate * 100).toFixed(0)}%・ふだん${(baseC1 * 100).toFixed(0)}%）${avgTri != null ? `・3連単平均 ${Math.round(avgTri).toLocaleString()}円・万舟${(man * 100).toFixed(0)}%` : ''} → ${label}`;
+  } else {
+    const label = expect >= 0.6 ? '堅め' : expect <= 0.47 ? '荒れ含み' : 'ふつう';
+    Object.assign(out, { src: 'model', label });
+    out.text = `${res.length ? `本日${res.length}R消化（判定には3R必要）。` : ''}予想の本命勝率の平均 ${(expect * 100).toFixed(0)}% → ${label}`;
+  }
+  return out;
+}
+/* 開催の時間帯。1Rの締切で分ける（モーニング≒8:30〜、日中≒10:30〜、ナイター≒15:00〜） */
+function bandOf(firstClose) {
+  const t = firstClose ? Number(firstClose.split(':')[0]) * 60 + Number(firstClose.split(':')[1]) : 12 * 60;
+  return t < 10 * 60 + 30 ? 'morning' : t >= 14 * 60 + 30 ? 'night' : 'day';
+}
+
 /* ---- 日ごと・場ごとに組む ---- */
 /* built は「データの時点」にする（現在時刻にすると、中身が同じでも today.json が毎回変わって
    refresh_boat が空のコミットを積み続ける） */
@@ -255,9 +297,12 @@ for (const date of dates) {
     });
     const V = DB.venues?.[jcd] || {}, S = ST[jcd] || {};
     const vinfo = VENUES.find(v => v.jcd === jcd) || {};
+    const closes0 = live?.closes?.[jcd] || rs.map(p => p.close);
     venues.push({
       jcd, name: VNAME[jcd], pref: vinfo.pref || V.pref || '', area: vinfo.area || V.area || '',
       title: rs[0].title, day: rs[0].day,
+      band: bandOf(closes0?.[0]),
+      trend: trendOf(date, jcd, races, V.course?.[0]?.win ?? NAT1),
       course: (V.course || []).map(c => ({ n: c.n, win: round(c.win, 4), top2: round(c.top2, 4), top3: round(c.top3, 4), st: c.st, kim: c.kim })),
       take: S.take || null, water: S.water || null, tide: S.tide || null, motorType: S.motorType || null,
       closes: live?.closes?.[jcd] || rs.map(p => p.close),
@@ -281,6 +326,7 @@ const top = {
     date: d.date,
     venues: d.venues.map(v => ({
       jcd: v.jcd, name: v.name, title: v.title, day: v.day, exCount: v.exCount, win1: v.course?.[0]?.win ?? null,
+      band: v.band, trend: { label: v.trend.label, text: v.trend.text, src: v.trend.src },
       races: v.races.map(r => {
         const P = r.ex || r.pre;
         const ord = P.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
