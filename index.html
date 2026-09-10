@@ -470,7 +470,8 @@ function monteCarlo(race,cond,N){
 /* ============================================================
    5. 状態
    ============================================================ */
-const state={dayKey:Object.keys(DAYS)[TK.defaults.dayIdx]||Object.keys(DAYS)[0],raceIdx:TK.defaults.raceIdx,race:null,cond:{baba:TK.defaults.baba,weather:TK.defaults.weather,wind:0,front:0.45,out:TK.defaults.out,recent:0.6,human:1},
+const DAY0=Object.keys(DAYS)[TK.defaults.dayIdx]||Object.keys(DAYS)[0];
+const state={dayKey:DAY0,raceIdx:Math.min(TK.defaults.raceIdx,DAYS[DAY0].length-1),race:null,cond:{baba:TK.defaults.baba,weather:TK.defaults.weather,wind:0,front:0.45,out:TK.defaults.out,recent:0.6,human:1},
   mc:null,rec:null,playing:false,playT:0,speed:1,cam:'俯瞰',seedAlt:0,manualBias:false};
 
 function combinedTrend(dist){
