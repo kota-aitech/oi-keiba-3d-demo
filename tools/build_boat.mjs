@@ -313,9 +313,6 @@ for (const date of dates) {
   out.days.push({ date, venues });
   console.error(`  ${date}: ${venues.length}場 ${venues.reduce((a, v) => a + v.races.length, 0)}R（直前情報あり ${venues.reduce((a, v) => a + v.exCount, 0)}R）`);
 }
-writeJSON('data/boat/today.json', out);
-console.error(`-> data/boat/today.json (${(fs.statSync(path.join(ROOT, 'data/boat/today.json')).size / 1024).toFixed(0)} KB)`);
-
 /* ---- TOP（top.html）用のたたんだ版。1レースあたり数百バイトに抑える ---- */
 const PICK = ['◎単勝', '◎複勝', '本命3艇BOX 3連複', '◎○の2連単1点', '［基準］1号艇の単勝', '［基準］1号艇の複勝', '［基準］123の3連複'];
 const top = {
@@ -342,3 +339,28 @@ const top = {
 };
 writeJSON('data/boat/top.json', top);
 console.error(`-> data/boat/top.json (${(fs.statSync(path.join(ROOT, 'data/boat/top.json')).size / 1024).toFixed(0)} KB)`);
+
+/* ---- boat.html 埋め込み用に軽くする ----
+   艇は「列名＋配列」にしてキー名の繰り返しを消し、使わない項目を落とし、桁を丸める。
+   boat.html は読み込み時に boatCols を使って元のオブジェクトに戻す（unpackBoats）。
+   1日ぶんで 3MB → 1MB 台。蓄積するのは data/ 側であって、ページは常に今日・明日だけ */
+const BOAT_COLS = ['lane', 'toban', 'name', 'age', 'branch', 'weight', 'grade', 'natWin', 'nat2', 'locWin', 'loc2', 'motor', 'motor2', 'setu',
+  'course', 'ex', 'exST', 'exF', 'tilt', 'prop', 'parts', 'adjust', 'form', 'formN', 'mForm', 'setuST', 'setuEx', 'setuRuns', 'mUp',
+  'r_idx', 'r_byC', 'r_byJ', 'r_st', 'r_stDev', 'r_fRate', 'r_inGain', 'r_tune', 'r_n', 'm_idx', 'm_n'];
+const r2 = v => v == null ? null : Number(v.toFixed(2)), r3 = v => v == null ? null : Number(v.toFixed(3));
+const packPred = P => P && ({ U: P.U.map(r2), tau: P.tau, p1: P.p1.map(r3), top2: P.top2.map(r3), top3: P.top3.map(r3), c: P.c.map(g => GROUPS.map(k => g[k] || 0)) });
+out.boatCols = BOAT_COLS;
+out.groups = GROUPS;
+for (const d of out.days) for (const v of d.venues) for (const r of v.races) {
+  r.boats = r.boats.map(b => {
+    const flat = { ...b, r_idx: b.racer?.idx ?? null, r_byC: b.racer?.byC ?? null, r_byJ: b.racer?.byJ ?? null, r_st: b.racer?.st ?? null, r_stDev: b.racer?.stDev ?? null,
+      r_fRate: b.racer?.fRate ?? null, r_inGain: b.racer?.inGain ?? null, r_tune: b.racer?.tune ?? null, r_n: b.racer?.n ?? null, m_idx: b.motorIdx?.idx ?? null, m_n: b.motorIdx?.n ?? null };
+    return BOAT_COLS.map(k => { const v = flat[k]; return v === undefined ? null : (Array.isArray(v) && !v.length ? 0 : v); });
+  });
+  r.pre = packPred(r.pre); r.ex = packPred(r.ex);
+  r.tri = r.tri.map(t => ({ k: t.k, p: r3(t.p), o: t.o, ev: t.ev }));
+  r.trio = r.trio.map(t => ({ k: t.k, p: r3(t.p) }));
+  if (r.cond) r.cond = r.cond.map(r2);
+}
+writeJSON('data/boat/today.json', out);
+console.error(`-> data/boat/today.json (${(fs.statSync(path.join(ROOT, 'data/boat/today.json')).size / 1024).toFixed(0)} KB)`);

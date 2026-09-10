@@ -953,6 +953,9 @@ NK_REFRESH_NOPUSH=1 NK_REFRESH_FORCE=1 node tools/refresh_boat.mjs   # 上の3�
 - `node tools/boat_check.mjs` が全日・全場・全レースの描画と「勝率の和＝1」「艇数6」を見る
 - スマホ（900px以下）は下タブ 3D／予想／条件。**最初に開くのは「予想」**（3D は選んで見る）。
   `?tab=pred|cond|3d` で指定でき、レースを切り替えると URL に残す。予想表は級と展示の列を落として6列にする
+- **埋め込みは軽く保つ。** 艇は `boatCols`（列名）＋配列で持ち、`boat.html` の `unpackBoats()` が読み込み時に
+  オブジェクトへ戻す。使わない項目（艇番号・母集団の勝率・決まり手の内訳など）は落とし、確率は3桁・指数は2桁に丸める。
+  1日ぶん（今日＋明日、約240R）で boat.html 約820KB。蓄積するのは `data/boat/` 側で、ページは常に今日・明日だけ
 - TOP（`top.html`）のボート面は `build_boat.mjs` が同時に書く `data/boat/top.json`（1レース数百バイト）を
   `NKBOATTOP` に埋める。`refresh_boat.mjs` は `top.html` もコミット対象に含める
 
