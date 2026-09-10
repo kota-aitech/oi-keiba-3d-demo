@@ -408,7 +408,7 @@ function brender(){
       let soon=null;d.venues.forEach(v=>{const r=nxOf(v);if(r&&isT&&(soon==null||hm(r.close)<soon.t))soon={jcd:v.jcd,t:hm(r.close)};});
       h+=`<h2>${fmtD(d.date)} <small>${d.venues.length}場</small></h2>`;
       for(const [b,lab] of BANDS){const list=d.venues.filter(v=>(v.band||'day')===b);if(!list.length)continue;
-        h+=`<details open><summary style="cursor:pointer;font-family:var(--mincho);font-weight:700;font-size:14px;margin:8px 0 6px">▼ ${lab} <small style="font-family:var(--gothic);font-weight:400;color:var(--sub)">${list.length}場</small></summary><div class="vgrid">`+list.map(v=>{
+        h+=`<details open><summary style="cursor:pointer;font-family:var(--mincho);font-weight:700;font-size:14px;margin:8px 0 6px">${lab} <small style="font-family:var(--gothic);font-weight:400;color:var(--sub)">${list.length}場</small></summary><div class="vgrid">`+list.map(v=>{
           const nx=nxOf(v);const w=nx&&nx.top&&nx.top[0];const isSoon=soon&&soon.jcd===v.jcd;
           return `<div class="vbox"><div class="vn">${esc(v.name)} <span class="vs">${esc(v.title||'')}${v.day?'・'+v.day:''}</span></div>
             <div class="vs">1コース1着率 ${v.win1!=null?(v.win1*100).toFixed(1)+'%':'—'}・直前情報あり ${v.exCount}R</div>
