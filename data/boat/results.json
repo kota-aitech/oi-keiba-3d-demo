@@ -1,5 +1,5 @@
 {
- "built": "2026-09-10T10:24:53.082Z",
+ "built": "2026-09-10T10:28:07.292Z",
  "bets": [
   "◎単勝",
   "◎複勝",
@@ -16,7 +16,13 @@
   "3連単 ◎○▲(1点)",
   "3連単 ◎1着流し(6点)",
   "3連単 4艇BOX(24点)",
-  "3連単 ◎○→▲△(4点)"
+  "3連単 ◎○→▲△(4点)",
+  "AI 3連単 上位3点",
+  "AI 3連単 上位5点",
+  "AI 3連単 上位8点",
+  "AI 2連単 上位3点",
+  "AI 2連単 上位5点",
+  "AI 3連単 期待値1.0超"
  ],
  "days": [
   {
@@ -141,6 +147,48 @@
        "bet": 4800,
        "ret": 1220,
        "roi": 0.254
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -263,6 +311,48 @@
        "bet": 4800,
        "ret": 2610,
        "roi": 0.544
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -385,6 +475,48 @@
        "bet": 4800,
        "ret": 2900,
        "roi": 0.604
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -507,6 +639,48 @@
        "bet": 4800,
        "ret": 9200,
        "roi": 1.917
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -629,6 +803,48 @@
        "bet": 4800,
        "ret": 1410,
        "roi": 0.294
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -751,6 +967,48 @@
        "bet": 4800,
        "ret": 0,
        "roi": 0
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -873,6 +1131,48 @@
        "bet": 4800,
        "ret": 4060,
        "roi": 0.846
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     },
@@ -995,6 +1295,48 @@
        "bet": 4800,
        "ret": 5200,
        "roi": 1.083
+      },
+      "AI 3連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 上位8点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位3点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 2連単 上位5点": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
+      },
+      "AI 3連単 期待値1.0超": {
+       "n": 0,
+       "hit": null,
+       "bet": 0,
+       "ret": 0,
+       "roi": null
       }
      }
     }
@@ -1114,6 +1456,48 @@
      "bet": 38400,
      "ret": 26600,
      "roi": 0.693
+    },
+    "AI 3連単 上位3点": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
+    },
+    "AI 3連単 上位5点": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
+    },
+    "AI 3連単 上位8点": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
+    },
+    "AI 2連単 上位3点": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
+    },
+    "AI 2連単 上位5点": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
+    },
+    "AI 3連単 期待値1.0超": {
+     "n": 0,
+     "hit": null,
+     "bet": 0,
+     "ret": 0,
+     "roi": null
     }
    }
   }
@@ -1234,6 +1618,48 @@
     "bet": 38400,
     "ret": 26600,
     "roi": 0.693
+   },
+   "AI 3連単 上位3点": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
+   },
+   "AI 3連単 上位5点": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
+   },
+   "AI 3連単 上位8点": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
+   },
+   "AI 2連単 上位3点": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
+   },
+   "AI 2連単 上位5点": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
+   },
+   "AI 3連単 期待値1.0超": {
+    "n": 0,
+    "hit": null,
+    "bet": 0,
+    "ret": 0,
+    "roi": null
    }
   }
  },
