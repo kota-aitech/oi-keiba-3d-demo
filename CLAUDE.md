@@ -86,6 +86,7 @@ tools/
   fetch_odds.mjs        単勝・複勝オッズ取得（/oddsJS の軽い JS）→ odds.jsonl
   watch_odds.mjs        締切前・暫定のオッズを自動で拾う → odds_live.jsonl / odds_pre.json
   refresh.mjs           オッズが変わったら印・期待値・買い目・TOPを作り直して各ページへ反映
+  nightly_results.mjs   夜にその日の結果・払戻・最終オッズを取り込み、日別の成績を更新して push（launchd: com.nankan.results）
   odds_drift.mjs        締切前と最終オッズのズレを測る
   launchd/              締切前オッズ取得を macOS に登録する plist と install.sh
   fit_model.mjs         条件付きロジットの当てはめ → model.json
@@ -355,6 +356,9 @@ HTML も index.html に書き換わりうる）。
 
 ### 日別の成績（`top.html` の「日別の成績」）
 `build_results.mjs` が `summary.byDay` を作り、TOPに開催日ごとの表を出す。
+**結果の取り込みは夜に自動**（launchd `com.nankan.results` → `tools/nightly_results.mjs`。21:20／23:00／翌06:30 に
+昨日〜今日の 払戻・結果・最終オッズ を取って `build_results → build_top → embed_db → commit/push`）。
+当日でも結果と払戻が取れていれば日別に入る（`c.date <= TODAY`）。ログは `data/nankan/results.log`。
 ◎的中／上位3頭に勝ち馬／各BOXの回収率と的中率／**その日に使ったオッズの種類**を並べる。
 
 **「使ったオッズ」の列を必ず見ること。**「最終」の日はレース後に確定したオッズで予想を再現しており、

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  南関のその日の結果を夜に取り込む（tools/nightly_results.mjs）。
+  21:20（最終レース後）／23:00（取り漏れの再試行）／翌 06:30（念のため）の3回。
+  対象は昨日〜今日なので、どの回でも取り漏れを拾える。
+  導入は tools/launchd/install.sh。止めるとき
+       launchctl unload ~/Library/LaunchAgents/com.nankan.results.plist
+  ログ
+       tail -f __REPO__/data/nankan/results.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nankan.results</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>__REPO__/tools/nightly_results.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+  </array>
+  <key>StandardOutPath</key><string>__REPO__/data/nankan/results.log</string>
+  <key>StandardErrorPath</key><string>__REPO__/data/nankan/results.log</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

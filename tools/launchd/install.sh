@@ -4,12 +4,13 @@
 #   com.nankan.refresh   … 2分おきに、オッズが変わっていれば各ページへ反映する
 #   com.boat.live        … 1分おきにボートの直前情報と締切前オッズを拾う
 #   com.boat.refresh     … 3分おきに、変化があればボートの予測を作り直して boat.html に反映・push
+#   com.nankan.results   … 21:20 / 23:00 / 06:30 に南関のその日の結果・払戻・最終オッズを取り込み、日別の成績を更新・push
 # 引数に Label を並べると、そのぶんだけ登録し直す（例: sh tools/launchd/install.sh com.boat.live）
 set -e
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 NODE=$(command -v node)
 mkdir -p "$HOME/Library/LaunchAgents"
-LABELS=${*:-"com.nankan.oddswatch com.nankan.refresh com.boat.live com.boat.refresh"}
+LABELS=${*:-"com.nankan.oddswatch com.nankan.refresh com.boat.live com.boat.refresh com.nankan.results"}
 for LABEL in $LABELS; do
   PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
   sed -e "s|__REPO__|$REPO|g" -e "s|__NODE__|$NODE|g" "$REPO/tools/launchd/$LABEL.plist" > "$PLIST"
