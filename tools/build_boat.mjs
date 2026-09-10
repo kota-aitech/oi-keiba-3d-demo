@@ -259,6 +259,34 @@ function bandOf(firstClose) {
   return t < 10 * 60 + 30 ? 'morning' : t >= 14 * 60 + 30 ? 'night' : 'day';
 }
 
+/* ---- 締切が過ぎたレースの予想を記録する（回収率の算出用。build_boat_results.mjs が読む）----
+   モデルはオッズを使わないので、記録が締切の少し後になっても予想の中身は変わらない。
+   ただし「いつ記録したか」（late＝締切から何分後か）は残す。BT_TODAY で過去日を再現したときは記録しない */
+const PREDS = path.join(ROOT, 'data/boat/preds.jsonl');
+const recorded = new Set();
+if (fs.existsSync(PREDS)) for (const l of fs.readFileSync(PREDS, 'utf8').split('\n')) if (l) { try { const o = JSON.parse(l); recorded.add(`${o.date}|${o.jcd}|${o.r}`); } catch { } }
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+function recordPred(date, jcd, race) {
+  if (process.env.BT_TODAY || date !== ymdOf(new Date()) || !race.close) return;
+  const key = `${date}|${jcd}|${race.r}`;
+  if (recorded.has(key)) return;
+  const [h, m] = race.close.split(':').map(Number), late = nowMin() - (h * 60 + m);
+  if (late < -1) return;                                     // まだ締切前
+  const P = race.ex || race.pre;
+  const order = P.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map(x => race.boats[x[1]].lane);
+  const rec = {
+    date, jcd, r: race.r, at: new Date().toISOString(), late, level: race.level, oddsKind: race.odds?.kind || null,
+    top: order, p1: Object.fromEntries(race.boats.map((b, i) => [b.lane, P.p1[i]])),
+    tri1: race.tri[0]?.k || null, tri1p: race.tri[0]?.p ?? null, tri1o: race.tri[0]?.o ?? null,
+    win1o: race.odds?.win?.[order[0]] ?? null,
+  };
+  fs.appendFileSync(PREDS, JSON.stringify(rec) + '\n');
+  recorded.add(key);
+}
+/* 前回までに集計した成績（build_boat_results.mjs の出力）を場のブロックに添える */
+let REC = null;
+try { REC = readJSON('data/boat/results.json'); } catch { }
+
 /* ---- 日ごと・場ごとに組む ---- */
 /* built は「データの時点」にする（現在時刻にすると、中身が同じでも today.json が毎回変わって
    refresh_boat が空のコミットを積み続ける） */
@@ -293,8 +321,10 @@ for (const date of dates) {
       const lv = live?.races?.[`${jcd}|${p.r}`];
       const race = buildRace(date, jcd, p, live, latestWx);
       if (lv?.before?.published && lv.before.weather) latestWx = { r: p.r, weather: lv.before.weather };
+      recordPred(date, jcd, race);
       return race;
     });
+    const recV = REC?.days?.find(d => d.date === date)?.venues?.find(v => v.jcd === jcd) || null;
     const V = DB.venues?.[jcd] || {}, S = ST[jcd] || {};
     const vinfo = VENUES.find(v => v.jcd === jcd) || {};
     const closes0 = live?.closes?.[jcd] || rs.map(p => p.close);
@@ -303,6 +333,7 @@ for (const date of dates) {
       title: rs[0].title, day: rs[0].day,
       band: bandOf(closes0?.[0]),
       trend: trendOf(date, jcd, races, V.course?.[0]?.win ?? NAT1),
+      rec: recV ? { races: recV.races, hit1: recV.hit1, in3: recV.in3, bets: recV.bets } : null,   // 本日ここまでの成績
       course: (V.course || []).map(c => ({ n: c.n, win: round(c.win, 4), top2: round(c.top2, 4), top3: round(c.top3, 4), st: c.st, kim: c.kim })),
       take: S.take || null, water: S.water || null, tide: S.tide || null, motorType: S.motorType || null,
       closes: live?.closes?.[jcd] || rs.map(p => p.close),
@@ -323,7 +354,7 @@ const top = {
     date: d.date,
     venues: d.venues.map(v => ({
       jcd: v.jcd, name: v.name, title: v.title, day: v.day, exCount: v.exCount, win1: v.course?.[0]?.win ?? null,
-      band: v.band, trend: { label: v.trend.label, text: v.trend.text, src: v.trend.src },
+      band: v.band, trend: { label: v.trend.label, text: v.trend.text, src: v.trend.src }, rec: v.rec,
       races: v.races.map(r => {
         const P = r.ex || r.pre;
         const ord = P.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);

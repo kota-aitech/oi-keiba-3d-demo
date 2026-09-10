@@ -49,6 +49,8 @@ try { prev = fs.readFileSync(STAMP, 'utf8'); } catch { }
 if (sig === prev && !process.env.NK_REFRESH_FORCE) process.exit(0);
 
 const t0 = Date.now();
+/* 順番：成績の集計（前回までに記録した予想 × 最新の K）→ 予想の再生成（締切が過ぎたレースを記録）→ 埋め込み */
+run('build_boat_results.mjs');                                   // preds が無い初日は何もしない
 if (!run('build_boat.mjs')) process.exit(1);
 if (!run('embed_db.mjs', { NK_EMBED_ONLY: 'boat' })) process.exit(1);
 fs.writeFileSync(STAMP, sig);
@@ -70,6 +72,7 @@ const gitRetry = (args, n = 4) => {
 const stamp = new Date().toLocaleString('ja-JP', { hour12: false }).replace(/\//g, '-');
 if (process.env.NK_REFRESH_NOPUSH) { console.error(`${stamp} 反映完了（${secs}秒・push なし）`); process.exit(0); }
 const TARGETS = ['boat.html', 'top.html', 'data/boat/today.json', 'data/boat/top.json', 'data/boat/odds_live.jsonl',
+  'data/boat/preds.jsonl', 'data/boat/results.json',
   `data/boat/live.${TODAY}.json`, `data/boat/live.${addDays(TODAY, 1)}.json`];
 try {
   const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);

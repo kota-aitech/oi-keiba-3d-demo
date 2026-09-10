@@ -13,6 +13,8 @@ function embedBoat() {
   /* TOP のボート面。南関の NKTOP とは別のマーカーなので、どちらの refresh が先に書いても壊れない */
   try { inject('top.html', 'NKBOATTOP', 'NKBT2', readJSON('data/boat/top.json')); }
   catch (e) { console.error('  (top.html のボート面はスキップ: ' + e.message + ')'); }
+  try { inject('top.html', 'NKBOATREC', 'NKBR2', readJSON('data/boat/results.json')); }
+  catch (e) { console.error('  (top.html のボート成績はスキップ: ' + e.message + ')'); }
 }
 if (process.env.NK_EMBED_ONLY === 'boat') { embedBoat(); process.exit(0); }
 

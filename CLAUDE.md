@@ -791,6 +791,8 @@ data/boat/
   model.json                 ★条件付きロジットの係数と検証結果 — コミット対象
   backtest.json              ★的中率・回収率 — コミット対象
   today.json                 ★今日・明日の全場のレースと予測（boat.html 埋め込み用）— コミット対象
+  preds.jsonl                ★締切が過ぎたレースの予想の記録（追記のみ・回収率の算出用）— コミット対象
+  results.json               ★日別・場別の的中率と回収率（top.html 埋め込み用）— コミット対象
   live.<日付>.json           ★当日の直前情報と最新オッズ — コミット対象
   odds_live.jsonl            ★締切前オッズの記録（追記のみ）— コミット対象
   before.jsonl               ★過去の直前情報の無作為標本 1,640レース（部品交換などの検証用）— コミット対象
@@ -807,7 +809,8 @@ tools/
   build_boatdb.mjs           選手・モーター・場・水面条件の指数 → index.json
   fit_boat.mjs               条件付きロジットの当てはめ → model.json（BT_FIT_DROP で切り分け）
   backtest_boat.mjs          買い方ごとの的中率・回収率 → backtest.json
-  build_boat.mjs             今日・明日の全レースにモデルを当てる → today.json
+  build_boat.mjs             今日・明日の全レースにモデルを当てる → today.json。締切が過ぎたレースの予想を preds.jsonl に記録
+  build_boat_results.mjs     preds.jsonl × K で日別・場別の的中率・回収率 → results.json
   refresh_boat.mjs           変化があれば build_boat → embed → commit/push（launchd: com.boat.refresh）
   boat_check.mjs             DOM スタブで boat.html の全レースを描画して検査（ブラウザ不要）
 ```
@@ -833,8 +836,16 @@ NK_REFRESH_NOPUSH=1 NK_REFRESH_FORCE=1 node tools/refresh_boat.mjs   # 上の3�
 **当日ぶんは launchd で自動化してある**（`sh tools/launchd/install.sh` が南関の2つと一緒に登録する）。
 - `com.boat.live` … 1分おきに `fetch_live.mjs` を1周回。開催のない日・時間帯は「本日のレース」を見て何もせず終わる
 - `com.boat.refresh` … 3分おきに `refresh_boat.mjs`。直前情報・オッズ・番組表が変わっていれば
-  `build_boat → embed_db(boat) → commit / push`。1時間に1回、昨日〜明日の K・B を od2 から取り直す
-  （B は前日夕方に順次公開されるので、明日の番組表はここで入ってくる）
+  `build_boat_results → build_boat → embed_db(boat) → commit / push`。1時間に1回、昨日〜明日の K・B を od2 から取り直す
+  （B は前日夕方に順次公開されるので、明日の番組表はここで入ってくる。K は開催中に途中まで公開される）
+
+**日別・場別の回収率（`build_boat_results.mjs` → `results.json` → TOP のボート面）**
+- `build_boat` が**締切の過ぎたレース**の予想（◎〜の順・1着確率・3連単本線・そのときのオッズ）を `preds.jsonl` に1行ずつ記録する。
+  南関と同じで、**後から作り直さない**のが回収率の信用の要。モデルはオッズを使わないので記録が締切より遅れても中身は同じだが、
+  `late`（締切から何分後か）を残し、30分以上あとに記録したレース数を表に添える
+- 買い方は `backtest_boat` と同じ（◎単勝／◎複勝／◎○2連単・2連複／3艇BOX3連複(1点)／3艇BOX3連単(6点)／4艇BOX3連複(4点)／基準の1号艇）
+- 払戻は K の `pay`（`win`/`place`/`ex2`/`qn`/`wide`/`ex3`＝3連単/`tri`＝3連複）。**`ex3` と `tri` を取り違えない**
+- `boat.html` の場データにも「本日の成績」（その場のここまで）を1行出す
 
 第2段（オッズとの合成）と期待値ベースの買い方は、ここで貯まる `odds_live.jsonl`（締切8分前の3連単120通り）
 が無いと検証できないので、**止めない**こと。ログは `data/boat/live.log` / `refresh.log`、多重起動は `.live.lock` が防ぐ。
