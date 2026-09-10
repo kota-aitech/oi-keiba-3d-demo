@@ -1,7 +1,7 @@
 {
  "track": "大井",
  "meta": {
-  "builtAt": "2026-09-10T02:42:15.996Z",
+  "builtAt": "2026-09-10T13:37:25.053Z",
   "model": "data/nankan/model.live.json",
   "payLabels": [
    [
@@ -7829,7 +7829,7 @@
     "grade": "C",
     "ev": {
      "umaren": 1,
-     "sanpuku": 1.18
+     "sanpuku": 1.17
     },
     "conf": 0.206,
     "oddsSrc": "最終",
@@ -20466,7 +20466,7 @@
     "jockey": "高橋優",
     "trainer": "嶋田幸",
     "mark": "",
-    "win": 0.052,
+    "win": 0.051,
     "odds": 18.5,
     "pop": 8,
     "pos": 10,
@@ -21388,7 +21388,7 @@
     "jockey": "安藤洋一",
     "trainer": "小野晋",
     "mark": "○",
-    "win": 0.216,
+    "win": 0.217,
     "odds": 3.5,
     "pop": 1,
     "pos": 1,
@@ -26050,7 +26050,7 @@
     "jockey": "西啓太",
     "trainer": "坂井英",
     "mark": "",
-    "win": 0.019,
+    "win": 0.018,
     "odds": 82.2,
     "pop": 9,
     "pos": 8,
@@ -35302,7 +35302,7 @@
     "jockey": "藤本現暉",
     "trainer": "蛯名雄",
     "mark": "◎",
-    "win": 0.302,
+    "win": 0.303,
     "odds": 2.3,
     "pop": 1,
     "pos": null,
