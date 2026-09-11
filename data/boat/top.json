@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-11T15:09:57.727Z",
+ "builtAt": "2026-09-11T15:13:29.994Z",
  "today": "20260912",
  "nat1": 0.5498,
  "model": {
@@ -322,7 +322,7 @@
        "close": "13:14",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 3,
@@ -900,7 +900,7 @@
        "close": "13:01",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -951,7 +951,7 @@
        "close": "13:31",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1478,7 +1478,7 @@
        "close": "13:03",
        "cls": "ランチタイム",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1529,7 +1529,7 @@
        "close": "13:29",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2209,7 +2209,7 @@
        "close": "13:05",
        "cls": "昼トコ小判R",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2260,7 +2260,7 @@
        "close": "13:36",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2838,7 +2838,7 @@
        "close": "13:00",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2889,7 +2889,7 @@
        "close": "13:32",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3671,7 +3671,7 @@
        "close": "12:57",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3722,7 +3722,7 @@
        "close": "13:34",
        "cls": "記者特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4674,7 +4674,7 @@
        "close": "12:54",
        "cls": "日替艇食戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4725,7 +4725,7 @@
        "close": "13:25",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5354,7 +5354,7 @@
        "close": "13:13",
        "cls": "一般戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5405,7 +5405,7 @@
        "close": "13:44",
        "cls": "一般戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 2,
@@ -5983,7 +5983,7 @@
        "close": "13:14",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7445,7 +7445,7 @@
        "close": "13:08",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7496,7 +7496,7 @@
        "close": "13:42",
        "cls": "予選特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
