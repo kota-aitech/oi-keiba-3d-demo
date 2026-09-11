@@ -14,7 +14,13 @@ const M = readJSON('data/jra/model.json');
 const DB = readJSON(M.meta.db || 'data/jra/index.json');
 const FROM = process.env.JRA_BT_FROM || M.meta.split, TO = process.env.JRA_BT_TO || '9999-12-31';
 const LEVEL = process.env.JRA_BT_LEVEL || 'mix';
-const beta = Float64Array.from(M.base.beta), tau = M.base.tau, mix = M.mix;
+const tau = M.base.tau, mix = M.mix;
+const beta = new Float64Array(NF);
+{
+  const F = M.meta.feats, { FEATURES } = await import('./lib/jfeat.mjs');
+  FEATURES.forEach((k, i) => { const j = F.indexOf(k); if (j >= 0) beta[i] = M.base.beta[j]; });
+  const extra = F.filter(k => !FEATURES.includes(k)); if (extra.length) throw new Error(`model.json に jfeat.mjs に無い特徴量がある（${extra.join(',')}）`);
+}
 
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }

@@ -15,8 +15,16 @@ const TODAY = process.env.JRA_TODAY || new Date().toLocaleDateString('sv-SE');
 const DB = readJSON('data/jra/index.json');
 const M = readJSON('data/jra/model.json');
 let BT = null; try { BT = readJSON('data/jra/backtest.json'); } catch { }
-const beta = Float64Array.from(M.base.beta), tau = M.base.tau, mix = M.mix;
-if (M.meta.feats.join() !== FEATURES.join()) throw new Error('model.json の特徴量が lib/jfeat.mjs と合わない。jra_fit.mjs を回し直す');
+/* 係数は名前で合わせる。モデルに無い特徴量（当てはめ直し前に足したもの）は 0＝効かせない。
+   モデルにあって jfeat に無いものは止める（位置ずれで別の係数が当たるのを防ぐ） */
+const beta = new Float64Array(NF), tau = M.base.tau, mix = M.mix;
+{
+  const missing = [];
+  FEATURES.forEach((k, i) => { const j = M.meta.feats.indexOf(k); if (j < 0) missing.push(k); else beta[i] = M.base.beta[j]; });
+  const extra = M.meta.feats.filter(k => !FEATURES.includes(k));
+  if (extra.length) throw new Error(`model.json に jfeat.mjs に無い特徴量がある（${extra.join(',')}）。jra_fit.mjs を回し直す`);
+  if (missing.length) console.error(`  (モデルに無い特徴量は 0 で扱う: ${missing.join(',')}。jra_fit.mjs を回すと効く)`);
+}
 const round = (v, k = 3) => v == null || !Number.isFinite(v) ? null : Number(v.toFixed(k));
 
 const results = [];
