@@ -1,7 +1,7 @@
 {
  "track": "大井",
  "meta": {
-  "builtAt": "2026-09-11T14:00:14.903Z",
+  "builtAt": "2026-09-11T23:00:10.670Z",
   "model": "data/nankan/model.live.json",
   "payLabels": [
    [
@@ -8843,7 +8843,7 @@
     "weather": "晴",
     "grade": "C",
     "ev": {
-     "umaren": 0.96,
+     "umaren": 0.95,
      "sanpuku": 0.92
     },
     "conf": 0.197,

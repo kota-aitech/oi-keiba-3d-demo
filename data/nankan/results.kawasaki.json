@@ -1,7 +1,7 @@
 {
  "track": "川崎",
  "meta": {
-  "builtAt": "2026-09-11T14:00:14.952Z",
+  "builtAt": "2026-09-11T23:00:10.769Z",
   "model": "data/nankan/model.live.json",
   "payLabels": [
    [
@@ -13368,7 +13368,7 @@
     "grade": "S",
     "ev": {
      "umaren": 1.35,
-     "sanpuku": 2.13
+     "sanpuku": 2.14
     },
     "conf": 0.227,
     "oddsSrc": "最終",
