@@ -50,8 +50,11 @@ for (const c of cards) {
   const hasOdds = f.rows.every(x => x.odds > 0);
   let Um = U, level = 'base';
   if (hasOdds && mix) { const inv = f.rows.map(x => 1 / x.odds), s = inv.reduce((a, b) => a + b, 0); Um = U.map((u, i) => (mix.a * tau[0] * u + mix.b * Math.log(inv[i] / s)) / tau[0]); level = 'mix'; nMix++; }
-  const lanes = f.rows.map(x => x.no);
+  /* 枠順確定前（木〜金）は馬番が無い。その間は組の確率と BOX は出さず、順位と確率だけ載せる */
+  const gates = f.rows.every(x => x.no > 0);
+  const lanes = f.rows.map((x, i) => gates ? x.no : i + 1);
   const C = combosOf(Um, tau, lanes);
+  if (!gates) for (const k of ['umatan', 'umaren', 'santan', 'sanpuku', 'wide']) C[k] = [];
   const order = C.p1.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
   const marks = {}; ['◎', '○', '▲', '△', '△', '☆'].forEach((m, i) => { if (order[i] != null) marks[order[i]] = m; });
   const horses = f.rows.map((x, i) => {
@@ -71,17 +74,19 @@ for (const c of cards) {
       c: contrib(x.x), jIdx: round(x.jIdx, 2), tIdx: round(x.tIdx, 2), cIdx: round(x.cIdx, 2), note, past,
     };
   });
-  const box = k => order.slice(0, k).map(i => lanes[i]).sort((a, b) => a - b);
+  const box = k => gates ? order.slice(0, k).map(i => lanes[i]).sort((a, b) => a - b) : [];
   const top = i => horses[order[i]];
+  const nn = h => gates ? `${h.no} ${h.name}` : h.name;
   const pts = [];
-  pts.push(`本命 ${top(0).no} ${top(0).name}（1着 ${(C.p1[order[0]] * 100).toFixed(1)}%）、対抗 ${top(1).no} ${top(1).name}（${(C.p1[order[1]] * 100).toFixed(1)}%）、単穴 ${top(2).no} ${top(2).name}。`);
+  if (!gates) pts.push('枠順確定前（金曜夕方に確定）。馬番・枠・組の確率は確定後に出す。');
+  pts.push(`本命 ${nn(top(0))}（1着 ${(C.p1[order[0]] * 100).toFixed(1)}%）、対抗 ${nn(top(1))}（${(C.p1[order[1]] * 100).toFixed(1)}%）、単穴 ${nn(top(2))}。`);
   const K = DB.course?.[`${c.venue}|${c.surface}|${c.dist}`];
   if (K) pts.push(`${c.venue}${c.surface}${c.dist}m：3着内のうち前方にいた馬 ${(K.front3 * 100).toFixed(0)}%（出走の ${(K.frontShare * 100).toFixed(0)}%）。枠の得失 ${K.waku.map((v, i) => v != null ? `${i + 1}枠${v.toFixed(2)}` : '').filter(Boolean).join(' ')}（1.00が損得なし）。`);
   const nige = horses.filter(h => h.style === '逃げ');
   pts.push(nige.length ? `逃げ候補 ${nige.map(h => h.no + ' ' + h.name).join('、')}${nige.length >= 2 ? '（競り合えばペースが上がり差しが届く）' : '（単騎なら楽に運べる）'}。` : '明確な逃げ馬が不在。先行馬有利の流れになりやすい。');
-  pts.push(`馬連の本線 ${C.umaren[0][0]}（${(C.umaren[0][1] * 100).toFixed(1)}%）、三連複 ${C.sanpuku[0][0]}（${(C.sanpuku[0][1] * 100).toFixed(1)}%）。`);
+  if (gates) pts.push(`馬連の本線 ${C.umaren[0][0]}（${(C.umaren[0][1] * 100).toFixed(1)}%）、三連複 ${C.sanpuku[0][0]}（${(C.sanpuku[0][1] * 100).toFixed(1)}%）。`);
   const race1 = {
-    raceId: c.raceId, r: c.r, name: c.name, grade: c.grade || null, start: c.start, surface: c.surface, dist: c.dist, turn: c.turn, inner: c.inner || null, cond: c.cond, cls: race.cls, weather: c.weather, baba: c.baba, n: horses.length, level,
+    raceId: c.raceId, r: c.r, name: c.name, grade: c.grade || null, start: c.start, surface: c.surface, dist: c.dist, turn: c.turn, inner: c.inner || null, cond: c.cond, cls: race.cls, weather: c.weather, baba: c.baba, n: horses.length, level, gates,
     horses, box3: box(3), box4: box(4), box5: box(5),
     umaren: C.umaren.slice(0, 6).map(([k, p]) => ({ k, p: round(p, 4) })), umatan: C.umatan.slice(0, 5).map(([k, p]) => ({ k, p: round(p, 4) })),
     sanpuku: C.sanpuku.slice(0, 6).map(([k, p]) => ({ k, p: round(p, 4) })), santan: C.santan.slice(0, 8).map(([k, p]) => ({ k, p: round(p, 4) })), wide: C.wide.slice(0, 5).map(([k, p]) => ({ k, p: round(p, 4) })),
@@ -107,7 +112,7 @@ const top = {
   builtAt: out.meta.built, today: TODAY, model: out.meta.model, backtest: out.meta.backtest,
   days: out.days.map(d => ({ date: d.date, venues: d.venues.map(v => ({ venue: v.venue, races: v.races.map(r => {
     const t = r.horses.slice().sort((a, b) => b.p1 - a.p1).slice(0, 3);
-    return { r: r.r, name: r.name, grade: r.grade, start: r.start, surface: r.surface, dist: r.dist, n: r.n, cls: r.cls, level: r.level, conf: r.conf,
+    return { r: r.r, name: r.name, grade: r.grade, start: r.start, surface: r.surface, dist: r.dist, n: r.n, cls: r.cls, level: r.level, conf: r.conf, gates: r.gates,
       top: t.map(h => ({ no: h.no, waku: h.waku, name: h.name, p: r.horses.length ? round(h.p1, 3) : null, odds: h.odds, jockey: (h.jockey || '').replace(/\s/g, '') })),
       box3: r.box3, umaren: r.umaren[0], sanpuku: r.sanpuku[0] };
   }) })) })),
