@@ -14,7 +14,12 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const CACHE = path.join(ROOT, 'data', 'cache', 'jra');
-const WAIT = Number(process.env.JRA_WAIT || 1200);
+/* 1.2秒間隔で約4,000ページ取ったところで CloudFront が HTTP 400 を返すようになった（IP 単位の規制、
+   UA を変えても同じ、トップページも 400）。既定は 3秒に落とし、400/403/429 が来たら
+   10分休んでからやり直す（何度も叩くと解除が遅れる）。 */
+const WAIT = Number(process.env.JRA_WAIT || 3000);
+const BLOCK_WAIT = Number(process.env.JRA_BLOCK_WAIT || 600000);
+export const stats = { blocked: 0 };
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let last = 0;
@@ -46,13 +51,19 @@ export async function get(url, { ttlDays = 3650, tries = 3, referer = RACE + '/'
   for (let a = 0; a < tries; a++) {
     try {
       const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'ja', Referer: referer, ...headers } });
+      if ([400, 403, 429, 503].includes(res.status)) {
+        stats.blocked++;
+        console.error(`  ! HTTP ${res.status}（規制）。${BLOCK_WAIT / 60000}分休む（${a + 1}/${tries}）`);
+        await sleep(BLOCK_WAIT);
+        throw new Error('HTTP ' + res.status);
+      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       body = await res.text();
       if (body.length < 200 && !url.includes('api_get')) throw new Error('空ページ（規制の可能性）');
       break;
     } catch (e) {
       if (a === tries - 1) throw e;
-      await sleep(3000 * (a + 1));
+      if (!/HTTP (400|403|429|503)/.test(e.message)) await sleep(3000 * (a + 1));
     }
   }
   fs.writeFileSync(f, body);
