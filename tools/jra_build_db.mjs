@@ -112,7 +112,8 @@ console.error(`  コンビ ${Object.keys(combo).length}組（10走以上）`);
 const K = new Map();
 for (const r of races) {
   const key = `${r.venue}|${r.surface}|${r.dist}`;
-  let v = K.get(key); if (!v) K.set(key, v = { venue: r.venue, surface: r.surface, dist: r.dist, races: 0, n: 0, p3: 0, front: 0, frontP3: 0, waku: Array(9).fill(0), wakuP3: Array(9).fill(0), agari: 0, agariN: 0, pace: { S: 0, M: 0, H: 0 }, winTime: 0, winTimeN: 0 });
+  let v = K.get(key); if (!v) K.set(key, v = { venue: r.venue, surface: r.surface, dist: r.dist, races: 0, n: 0, p3: 0, front: 0, frontP3: 0, waku: Array(9).fill(0), wakuP3: Array(9).fill(0), agari: 0, agariN: 0, pace: { S: 0, M: 0, H: 0 }, winTime: 0, winTimeN: 0,
+    bw: 0, bwN: 0, bw3: 0, bw3N: 0, bwW: 0, bwWN: 0, style: { '逃げ': [0, 0], '先行': [0, 0], '差し': [0, 0], '追込': [0, 0] } });
   v.races++;
   if (r.pace && v.pace[r.pace] != null) v.pace[r.pace]++;
   const n = r.entries.filter(e => typeof e.pos === 'number').length;
@@ -123,6 +124,10 @@ for (const r of races) {
     if (c1 != null && c1 <= n / 2) { v.front++; if (in3) v.frontP3++; }
     if (e.waku >= 1 && e.waku <= 8) { v.waku[e.waku]++; if (in3) v.wakuP3[e.waku]++; }
     if (e.agari) { v.agari += e.agari; v.agariN++; }
+    /* 馬体重：出走全体・3着内・勝ち馬の平均（大型有利か小柄有利かをコースごとに見る） */
+    if (e.bw >= 380 && e.bw <= 620) { v.bw += e.bw; v.bwN++; if (in3) { v.bw3 += e.bw; v.bw3N++; } if (e.pos === 1) { v.bwW += e.bw; v.bwWN++; } }
+    /* 脚質（このレースでの序盤位置から）：逃げ≤20%・先行≤42%・差し≤70%・追込。出走数と3着内数 */
+    if (c1 != null && n > 1) { const ep = c1 / (n + 1); const st = ep <= 0.2 ? '逃げ' : ep <= 0.42 ? '先行' : ep <= 0.7 ? '差し' : '追込'; v.style[st][0]++; if (in3) v.style[st][1]++; }
     if (e.pos === 1 && e.time) { const [m, s] = e.time.split(':').map(Number); v.winTime += m * 60 + s; v.winTimeN++; }
   }
 }
@@ -138,9 +143,21 @@ for (const [key, v] of K) {
     agari: v.agariN ? r3(v.agari / v.agariN) : null,
     winTime: v.winTimeN ? r3(v.winTime / v.winTimeN) : null,
     pace: v.pace, p3: r3(p3),
+    bwAvg: v.bwN ? Math.round(v.bw / v.bwN) : null, bwTop3: v.bw3N ? Math.round(v.bw3 / v.bw3N) : null, bwWin: v.bwWN ? Math.round(v.bwW / v.bwWN) : null,
+    bwDiff3: v.bwN && v.bw3N ? r3(v.bw3 / v.bw3N - v.bw / v.bwN) : null,           // ＋なら大型馬が好走しやすい
+    style: Object.fromEntries(Object.entries(v.style).map(([k, [n, p]]) => [k, { n, p3: n ? r3(p / n) : null, share: v.n ? r3(n / v.n) : null }])),
   };
 }
 console.error(`  コース ${Object.keys(course).length}通り（5レース以上）`);
+
+/* ---- 毛色・馬体重帯の参考表（全体。予測には使わず「データとして見せる」用）---- */
+const colorStat = new Map(), bwBand = new Map();
+for (const r of races) for (const e of r.entries) {
+  if (typeof e.pos !== 'number') continue;
+  if (e.bw >= 380 && e.bw <= 620) { const b = Math.floor(e.bw / 20) * 20; const v = bwBand.get(b) || { n: 0, w: 0, p3: 0 }; v.n++; if (e.pos === 1) v.w++; if (e.pos <= 3) v.p3++; bwBand.set(b, v); }
+}
+const bwBands = Object.fromEntries([...bwBand].sort((a, b) => a[0] - b[0]).filter(([, v]) => v.n >= 200).map(([b, v]) => [`${b}-${b + 19}`, { n: v.n, win: r3(v.w / v.n), top3: r3(v.p3 / v.n) }]));
+void colorStat;
 
 /* ---- 馬（参照用。前走の無い転入馬などの突き合わせと、ページの「この馬の通算」に使う）---- */
 const horse = {};
@@ -149,7 +166,7 @@ for (const [id, x] of H) horse[id] = { name: x.name, n: x.n, w: x.w, p3: x.p3, l
 writeJSON(OUT, {
   meta: { built: new Date().toISOString().slice(0, 10), from: races[0]?.date, to: races.at(-1)?.date, races: races.length, runs, P0: r3(P0), P3: r3(P3), L0: r3(L0), L3: r3(L3), fit: FIT,
     note: '指数は「JRA 平地の平均勝率に対する対数オッズ差」。0 が平均、+0.7 でおよそ勝率2倍。20走未満の主体は載せない' },
-  jockey, trainer, combo, course, horse,
+  jockey, trainer, combo, course, horse, bwBands,
 });
 const top = (o, n = 8) => Object.values(o).filter(x => x.n >= 200).sort((a, b) => b.idx - a.idx).slice(0, n).map(x => `${x.name} ${x.idx}`).join(' / ');
 console.error(`  騎手上位: ${top(jockey)}`);

@@ -37,6 +37,8 @@ export const FEATURES = [
   'frontPress', 'soloNige', 'sameStyle',
   /* 血統・馬主（馬ページから。種牡馬・母父は前走が少ない馬ほど効かせる、馬主は常時） */
   'sIdx', 'bmsIdx', 'sSurf', 'oIdx',
+  /* 馬体重：好走時の体重との差、コースの「大型有利／小柄有利」との相性 */
+  'bwFit', 'bwEdge',
 ];
 export const NF = FEATURES.length;
 
@@ -187,8 +189,18 @@ function derive(h, race, RI) {
   });
   const ability = abW ? abS / abW : 0.45;
   const epos = epW ? epS / epW : 0.5;
-  const style = epos <= 0.2 ? '逃げ' : epos <= 0.42 ? '先行' : epos <= 0.7 ? '差し' : '追込';
+  const styleOf = ep => ep <= 0.2 ? '逃げ' : ep <= 0.42 ? '先行' : ep <= 0.7 ? '差し' : '追込';
+  const style = styleOf(epos);
+  /* 近走ごとの脚質の内訳と、好走（3着内）時の馬体重 */
+  const styleHist = { '逃げ': 0, '先行': 0, '差し': 0, '追込': 0 };
+  const good = [], all = [];
+  for (const p of past) {
+    if (p.pass && p.n) { const c1 = Number(String(p.pass).split('-')[0]); if (c1) styleHist[styleOf(c1 / (p.n + 1))]++; }
+    if (p.bw >= 380 && p.bw <= 620) { all.push(p.bw); if (p.pos <= 3) good.push(p.bw); }
+  }
+  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
   return {
+    styleHist, bwGood: mean(good), bwGoodN: good.length, bwPast: mean(all), bwMin: all.length ? Math.min(...all) : null, bwMax: all.length ? Math.max(...all) : null,
     ability, clsAbility: abW ? clS / abW : 0,
     close: agW ? -(agS / agW) : 0,                     // 速いほどプラス
     agariRel: agW ? agS / agW : 0, paceExp: tW ? (tS / tW) / 2 : 0,
@@ -203,7 +215,11 @@ function derive(h, race, RI) {
 
 export function makeFeaturizer(DB, RI, ASOF) {
   if (!ASOF) throw new Error('makeFeaturizer には buildAsOf(results) の戻り値が要る（人的要因はレース時点の指数で作る）');
+  const COURSE = (DB && DB.course) || {};
   return function featurize(race) {
+    const K = COURSE[`${race.venue}|${race.surface}|${race.dist}`];
+    /* コースの「大型有利度」：3着内馬の平均馬体重 − 出走平均（kg）。±8kg で ±1 に丸める。標本 30レース未満は 0 */
+    const bwLean = K && K.races >= 30 && K.bwDiff3 != null ? clamp(K.bwDiff3 / 8, -1, 1) : 0;
     const live = race.horses;
     if (live.length < 5) return null;
     const kgAvg = live.reduce((a, h) => a + (h.kin || 55), 0) / live.length;
@@ -247,6 +263,10 @@ export function makeFeaturizer(DB, RI, ASOF) {
         /* 血統は前5走が揃った馬では 0（実績が織り込む）。南関と同じ max(0, 1 − 前走数/4) */
         sIdx: hf.sIdx * Math.max(0, 1 - (h.past || []).length / 4), bmsIdx: hf.bmsIdx * Math.max(0, 1 - (h.past || []).length / 4),
         sSurf: hf.sSurf * Math.max(0, 1 - (h.past || []).length / 4), oIdx: hf.oIdx,
+        /* 好走時の体重との差（3着内が2走以上ある馬だけ）。差が大きいほどマイナス */
+        bwFit: h.bw && d.bwGoodN >= 2 ? -Math.min(Math.abs(h.bw - d.bwGood), 30) / 12 : 0,
+        /* コースの大型有利度 × 出走平均との差 */
+        bwEdge: h.bw && K && K.bwAvg ? bwLean * clamp((h.bw - K.bwAvg) / 25, -2, 2) : 0,
       };
       const v = new Float64Array(NF);
       FEATURES.forEach((k, i) => { v[i] = Number.isFinite(x[k]) ? x[k] : 0; });
