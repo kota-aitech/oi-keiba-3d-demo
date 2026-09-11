@@ -768,19 +768,51 @@ netkeiba の馬柱（`shutuba_past`）は規制が解けたときだけ使う（
 
 ### ファイル
 ```
+jra.html                 出馬表（新聞配色の馬柱）＋予想。NKJRA マーカーに races.json を埋める。スマホは1頭1セルで前5走を横スクロール
 data/jra/results.jsonl   結果（.gitignore。1レース1行。キャッシュから作り直せる）
-data/jra/cards.jsonl     出馬表＋前5走（.gitignore）
-tools/lib/jra.mjs        取得共通（レート制限・キャッシュ・jsonl の差し替え追記）
-tools/lib/jrapage.mjs    パーサ（parseCalendar / parseRaceList / parseResult / parseShutubaPast）
-tools/jra_fetch_results.mjs  JRA_FROM/JRA_TO（YYYYMMDD）の結果を取る
-tools/jra_fetch_cards.mjs    今日〜3日後の出馬表を取る
+data/jra/cards.jsonl     出馬表（.gitignore。前5走は results から馬IDで組んだもの）
+data/jra/index.json      ★騎手・調教師・コンビ・コース・馬の指数 — コミット対象
+data/jra/index.train.json ★先読みを避けた学習用の指数（JRA_DB_TO で切る）
+data/jra/model.json      ★条件付きロジットの係数・温度・第2段・検証結果 — コミット対象
+data/jra/backtest.json   ★買い方ごとの的中率・回収率 — コミット対象
+data/jra/races.json      ★今日以降の出馬表と予測（jra.html 用）／top.json（TOP 用）— コミット対象
+tools/lib/jra.mjs        取得共通（レート制限・キャッシュ・規制時の休止・jsonl の差し替え追記）
+tools/lib/jrapage.mjs    netkeiba のパーサ（規制が解けたときだけ）
+tools/lib/yahoo.mjs      Yahoo!スポーツのパーサ（parseMonthly / parseList / parseResult / parseDenma）
+tools/lib/jfeat.mjs      特徴量 44個（南関の feat.mjs を踏襲。学習も予測も raceFromResult / raceFromCard で同じ形にしてから featurize）
+tools/lib/jbets.mjs      組の確率（馬連・馬単・三連複・三連単・ワイド。3着までの並びを全列挙）
+tools/jra_fetch_results.mjs  結果を取る（JRA_FROM/JRA_TO、JRA_SRC=yahoo|netkeiba、取得済みは飛ばす）
+tools/jra_fetch_cards.mjs    出馬表を取る（今日〜3日後）
+tools/jra_build_db.mjs       指数 → index.json（JRA_DB_FROM/TO/OUT）
+tools/jra_fit.mjs            当てはめ → model.json（JRA_FIT_SPLIT/WARM/DB/EPOCH/L2）
+tools/jra_backtest.mjs       検証 → backtest.json（JRA_BT_LEVEL=base|mix）
+tools/jra_build_races.mjs    出馬表に当てる → races.json / top.json
+tools/jra_check.mjs          DOM スタブで jra.html の全レースを描画して検査
+tools/refresh_jra.mjs        反映係（launchd: com.jra.refresh、20分おき）
 ```
 
-### これから作るもの（南関の順に倣う）
-1. `jra_build_db.mjs` … 結果3年ぶんから 騎手／調教師／コンビ／種牡馬／母父／場×距離×馬場 の指数（`build_db.mjs` と同じ縮小ロジット）
-2. `lib/jfeat.mjs` … 馬柱の前5走＋指数から特徴量（南関の `feat.mjs` の項目を踏襲：近走の相対着順・上がり・テン・馬体重・斤量・クラス・間隔・脚質・枠・人的要因）
-3. `jra_fit.mjs` … 条件付きロジット（`lib/bpl.mjs` を共用。温度も入れる）／`jra_backtest.mjs`
-4. `jra.html` … 新聞配色の馬柱＋予想。TOP に3つ目のタブ「中央競馬」
+### パイプライン
+```bash
+JRA_FROM=20230901 JRA_TO=20260910 JRA_WAIT=2500 node tools/jra_fetch_results.mjs   # 3年ぶん。約1万レース・6時間（取得済みは飛ばす）
+node tools/jra_fetch_cards.mjs                                                      # 今日〜3日後の出馬表
+node tools/jra_build_db.mjs                                                         # 指数
+JRA_DB_TO=2026-05-31 JRA_DB_OUT=data/jra/index.train.json node tools/jra_build_db.mjs   # 学習用（先読み回避）
+JRA_FIT_DB=data/jra/index.train.json node --max-old-space-size=4000 tools/jra_fit.mjs   # 当てはめ（学習 2024-03〜2026-05／検証 2026-06〜）
+node --max-old-space-size=4000 tools/jra_backtest.mjs                               # 検証
+node --max-old-space-size=4000 tools/jra_build_races.mjs && NK_EMBED_ONLY=jra node tools/embed_db.mjs && node tools/jra_check.mjs
+```
+
+### 学習の作り（南関との違い）
+- 学習用のレースは results そのもの（騎手・斤量・枠・馬体重はレース前情報）。前5走は馬IDで「その日より前」の結果から引く。
+  データの先頭6か月は前走が揃わないので `JRA_FIT_WARM`（既定 2024-03-01）より前は学習に使わない
+- 障害戦は除く。取消・除外・中止は履歴に入れない
+- 温度（τ1/τ2）は学習の末尾2割で決める（全体で決めると β の過学習ぶんまで鋭くなり、検証で強気に出た）
+- 第2段は単勝オッズ（results は確定オッズ＝実戦よりやや有利）。出馬表側のオッズは Yahoo の denma が発売後に持つ
+- 枠順確定前（木〜金）の出馬表は馬番が無い。その間は順位と確率だけ出し、BOX・組の確率は出さない（`gates:false`）
+
+### 途中経過（2026-09-11、結果 3,916R・学習 1,126R の仮当て）
+1着的中 26.9%／上位3頭に勝ち馬 55.1%（1番人気だけなら 35.8%／68.4%）。**まだ人気に届いていない。**
+3年ぶんが揃い、履歴の助走が取れてから本番の当てはめをやり直す。結果が出たらこの節を書き換える。
 
 ---
 
