@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-11T15:22:51.346Z",
+ "builtAt": "2026-09-11T15:26:22.060Z",
  "today": "20260912",
  "nat1": 0.5498,
  "model": {
@@ -628,7 +628,7 @@
        "close": "16:30",
        "cls": "記者選抜戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1257,7 +1257,7 @@
        "close": "16:46",
        "cls": "準優勝戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1835,7 +1835,7 @@
        "close": "16:41",
        "cls": "予選特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1886,7 +1886,7 @@
        "close": "17:08",
        "cls": "予選特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2515,7 +2515,7 @@
        "close": "16:25",
        "cls": "1stドリー",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3144,7 +3144,7 @@
        "close": "16:20",
        "cls": "ドリーム戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3994,7 +3994,7 @@
        "close": "16:32",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 2,
@@ -4045,7 +4045,7 @@
        "close": "17:01",
        "cls": "住之江ファイ",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4096,7 +4096,7 @@
        "close": "17:28",
        "cls": "予選特別B戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5031,7 +5031,7 @@
        "close": "16:45",
        "cls": "優勝戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5660,7 +5660,7 @@
        "close": "16:35",
        "cls": "準優勝戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6289,7 +6289,7 @@
        "close": "16:38",
        "cls": "金剛ドリーム",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6510,7 +6510,7 @@
        "close": "16:43",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6561,7 +6561,7 @@
        "close": "17:12",
        "cls": "進入固定戦隊進入固定",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6612,7 +6612,7 @@
        "close": "17:37",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7768,7 +7768,7 @@
        "close": "16:50",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7819,7 +7819,7 @@
        "close": "17:19",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7870,7 +7870,7 @@
        "close": "17:46",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
