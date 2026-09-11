@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-11T15:28:42.513Z",
+ "builtAt": "2026-09-11T15:32:54.386Z",
  "today": "20260912",
  "nat1": 0.5498,
  "model": {
@@ -4351,7 +4351,7 @@
        "close": "19:58",
        "cls": "予選特別A戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4402,7 +4402,7 @@
        "close": "20:30",
        "cls": "予選特別A戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6867,7 +6867,7 @@
        "close": "20:07",
        "cls": "一般特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6918,7 +6918,7 @@
        "close": "20:38",
        "cls": "一般特選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8125,7 +8125,7 @@
        "close": "20:16",
        "cls": "特別選抜戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8176,7 +8176,7 @@
        "close": "20:45",
        "cls": "優勝戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
