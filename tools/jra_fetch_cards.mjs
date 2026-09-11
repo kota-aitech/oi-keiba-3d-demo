@@ -24,7 +24,7 @@ const hist = new Map();
     const r = JSON.parse(l);
     const win = r.entries.find(e => e.pos === 1);
     for (const e of r.entries) {
-      if (!e.horseId) continue;
+      if (!e.horseId || typeof e.pos !== 'number') continue;             // 取消・除外・中止は履歴に入れない
       (hist.get(e.horseId) || hist.set(e.horseId, []).get(e.horseId)).push({
         date: r.date, venue: r.venue, pos: e.pos, raceId: r.raceId, name: r.name, surface: r.surface, dist: r.dist, time: e.time, baba: r.baba,
         n: r.n, no: e.no, pop: e.pop, odds: e.odds, jockey: e.jockey, jockeyId: e.jockeyId, kin: e.kin, pass: e.pass, agari: e.agari, bw: e.bw, bwDiff: e.bwDiff,

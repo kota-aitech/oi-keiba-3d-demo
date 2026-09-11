@@ -16,7 +16,13 @@ function embedBoat() {
   try { inject('top.html', 'NKBOATREC', 'NKBR2', readJSON('data/boat/results.json')); }
   catch (e) { console.error('  (top.html のボート成績はスキップ: ' + e.message + ')'); }
 }
+/* JRA 版（jra.html）。tools/jra_build_races.mjs の races.json を NKJRA に埋める */
+function embedJra() {
+  try { inject('jra.html', 'NKJRA', 'NKJRA', readJSON('data/jra/races.json')); }
+  catch (e) { console.error('  (jra.html はスキップ: ' + e.message + ')'); }
+}
 if (process.env.NK_EMBED_ONLY === 'boat') { embedBoat(); process.exit(0); }
+if (process.env.NK_EMBED_ONLY === 'jra') { embedJra(); process.exit(0); }
 
 const TRACKS = (process.env.NK_RACE_TRACKS || '大井:oi,川崎:kawasaki').split(',').map(s => s.split(':')[1]);
 const out = {};
@@ -64,3 +70,4 @@ try {
   inject('data.html', 'NKBT', 'NKBT', bt);
 } catch (e) { console.error('  (バックテストはスキップ: ' + e.message + ')'); }
 embedBoat();
+embedJra();
