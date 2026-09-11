@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-11T15:17:00.365Z",
+ "builtAt": "2026-09-11T15:19:20.668Z",
  "today": "20260912",
  "nat1": 0.5498,
  "model": {
@@ -475,7 +475,7 @@
        "close": "14:48",
        "cls": "戸田特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -526,7 +526,7 @@
        "close": "15:21",
        "cls": "戸田特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1104,7 +1104,7 @@
        "close": "15:04",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -1682,7 +1682,7 @@
        "close": "14:56",
        "cls": "ブレイクタイ",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2413,7 +2413,7 @@
        "close": "15:11",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3042,7 +3042,7 @@
        "close": "15:08",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3841,7 +3841,7 @@
        "close": "15:17",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4878,7 +4878,7 @@
        "close": "15:02",
        "cls": "これしか9じ",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5558,7 +5558,7 @@
        "close": "15:19",
        "cls": "準優勝戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6136,7 +6136,7 @@
        "close": "14:50",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6357,7 +6357,7 @@
        "close": "15:20",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7615,7 +7615,7 @@
        "close": "15:15",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
