@@ -30,8 +30,8 @@ const posNum = p => (typeof p === 'number' ? p : null);
 
 export const FEATURES = [
   'ability', 'clsAbility', 'close', 'agariRel', 'paceExp', 'fastFit', 'stamina', 'surfFit', 'wet', 'epos',
-  'jIdx', 'jVenue', 'jSurf', 'tIdx', 'tSurf', 'cIdx', 'bond',
-  'gateEdge', 'gate', 'kgRel', 'bwLog', 'bwDiff', 'bwDev', 'bwSwing', 'bwRel',
+  'jIdx', 'jVenue', 'jSurf', 'tIdx', 'tSurf', 'cIdx', 'bond', 'jForm',
+  'gate', 'kgRel', 'bwLog', 'bwDiff', 'bwDev', 'bwSwing', 'bwRel',
   'restLog', 'layoff', 'classUp', 'downFirst', 'distChg', 'surfChg', 'lastPop', 'lastOdds', 'lastPos', 'lastMargin', 'nRuns',
   'wetX', 'age', 'mare', 'winStreak', 'afterWin', 'venueFit',
   'frontPress', 'soloNige', 'sameStyle',
@@ -51,6 +51,54 @@ export function buildRaceIndex(results) {
   }
   const tenBase = new Map([...tenAcc].map(([k, a]) => [k, a[0] / a[1]]));
   return { idx, tenBase };
+}
+
+/* ---- 人的要因の「そのレース時点」の指数 ----
+   index.json（期間まとめ）を学習に使うと、学習期間では自分の結果を含んだ指数を見ることになり
+   （検証 2026-06〜 で コンビ指数・場別の突出が 0 に落ちた＝先読み）、モデルが小標本の指数を過信する。
+   ここでは結果を日付順に流し、各レースについて「その日より前の結果だけ」で
+   騎手／調教師／コンビ／騎手の場別・芝ダ別／調教師の芝ダ別／騎手の直近調子 を縮小ロジットで作る。
+   予測（出馬表）には最終状態（latest）を使う。 */
+const logit = p => Math.log(p / (1 - p)), sig = l => 1 / (1 + Math.exp(-l));
+const shrunk = (w, n, prior, k) => logit((w + k * prior) / (n + k)) - logit(prior);
+export function buildAsOf(results) {
+  const J = new Map(), T = new Map(), C = new Map(), SR = new Map(), JR = new Map();
+  let runs = 0, wins = 0;
+  const snap = new Map();                                   // raceId|horseId -> hf
+  const get = (m, k) => { let v = m.get(k); if (!v) m.set(k, v = { n: 0, w: 0, byV: new Map(), byS: new Map(), q: [], qw: 0 }); return v; };
+  const sub = (m, k) => { let v = m.get(k); if (!v) m.set(k, v = { n: 0, w: 0 }); return v; };
+  const P0 = () => (wins + 0.073 * 200) / (runs + 200);   // 序盤は事前の 7.3% に寄せる
+  const hf = (e, venue, surface) => {
+    const p0 = P0(), L0 = logit(p0);
+    const j = J.get(e.jockeyId), t = T.get(e.trainerId), c = C.get(e.jockeyId + '|' + e.trainerId);
+    const jIdx = j ? shrunk(j.w, j.n, p0, 60) : 0, tIdx = t ? shrunk(t.w, t.n, p0, 60) : 0;
+    const own = sig(L0 + jIdx), ownT = sig(L0 + tIdx);
+    const jv = j?.byV.get(venue), js = j?.byS.get(surface), ts = t?.byS.get(surface);
+    const cExp = sig(L0 + 0.9 * jIdx + 0.55 * tIdx);
+    return {
+      jIdx, tIdx,
+      jVenue: jv ? shrunk(jv.w, jv.n, own, 30) : 0, jSurf: js ? shrunk(js.w, js.n, own, 30) : 0, tSurf: ts ? shrunk(ts.w, ts.n, ownT, 30) : 0,
+      cIdx: c ? shrunk(c.w, c.n, cExp, 45) : 0, bond: c && SR.get(e.trainerId) ? c.n / SR.get(e.trainerId) : 0,
+      jForm: j && j.q.length >= 10 ? shrunk(j.qw, j.q.length, own, 40) : 0,     // 直近60騎乗の、本人の平常値からのズレ
+      jN: j ? j.n : 0, tN: t ? t.n : 0, cN: c ? c.n : 0,
+    };
+  };
+  for (const r of results) {
+    for (const e of r.entries) { if (e.horseId) snap.set(`${r.raceId}|${e.horseId}`, hf(e, r.venue, r.surface)); }
+    for (const e of r.entries) {
+      if (typeof e.pos !== 'number') continue;
+      const win = e.pos === 1 ? 1 : 0;
+      runs++; wins += win;
+      if (e.jockeyId) { const j = get(J, e.jockeyId); j.n++; j.w += win; const v = sub(j.byV, r.venue); v.n++; v.w += win; const s = sub(j.byS, r.surface); s.n++; s.w += win; j.q.push(win); j.qw += win; if (j.q.length > 60) j.qw -= j.q.shift(); JR.set(e.jockeyId, (JR.get(e.jockeyId) || 0) + 1); }
+      if (e.trainerId) { const t = get(T, e.trainerId); t.n++; t.w += win; const s = sub(t.byS, r.surface); s.n++; s.w += win; SR.set(e.trainerId, (SR.get(e.trainerId) || 0) + 1); }
+      if (e.jockeyId && e.trainerId) { const c = sub(C, e.jockeyId + '|' + e.trainerId); c.n++; c.w += win; }
+    }
+  }
+  return {
+    of(raceId, e, venue, surface) { return snap.get(`${raceId}|${e.horseId}`) || hf(e, venue, surface); },   // 無ければ最終状態（出馬表）
+    latest(e, venue, surface) { return hf(e, venue, surface); },
+    P0: P0(),
+  };
 }
 
 /* ---- 馬ごとの履歴（新しい順）。past の1件は南関の前走欄と同じ意味の項目にそろえる ---- */
@@ -131,8 +179,8 @@ function derive(h, race, RI) {
   };
 }
 
-export function makeFeaturizer(DB, RI) {
-  const J = DB.jockey || {}, T = DB.trainer || {}, C = DB.combo || {}, K = DB.course || {};
+export function makeFeaturizer(DB, RI, ASOF) {
+  if (!ASOF) throw new Error('makeFeaturizer には buildAsOf(results) の戻り値が要る（人的要因はレース時点の指数で作る）');
   return function featurize(race) {
     const live = race.horses;
     if (live.length < 5) return null;
@@ -140,12 +188,11 @@ export function makeFeaturizer(DB, RI) {
     const isWet = race.baba && race.baba !== '良' ? 1 : 0;
     const bws = live.map(h => h.bw).filter(x => x > 0);
     const bwAvg = bws.length ? bws.reduce((a, b) => a + b, 0) / bws.length : 470;
-    const course = K[`${race.venue}|${race.surface}|${race.dist}`];
     const ds = live.map(h => derive(h, race, RI));
     const cnt = {}; ds.forEach(d => cnt[d.style] = (cnt[d.style] || 0) + 1);
     const rows = live.map((h, hi) => {
       const d = ds[hi];
-      const j = J[h.jockeyId], t = T[h.trainerId], c = C[`${h.jockeyId}|${h.trainerId}`];
+      const hf = ASOF.of(race.raceId, h, race.venue, race.surface);
       const p0 = h.past && h.past[0];
       const others = Math.max(1, live.length - 1);
       const nNigeOther = (cnt['逃げ'] || 0) - (d.style === '逃げ' ? 1 : 0), nSenOther = (cnt['先行'] || 0) - (d.style === '先行' ? 1 : 0);
@@ -153,14 +200,11 @@ export function makeFeaturizer(DB, RI) {
       const age = Number((h.sexAge || '').replace(/\D/g, '')) || 4;
       let streak = 0; for (const p of (h.past || [])) { if (p.pos === 1) streak++; else break; }
       const prevCls = p0 ? (p0.cls ?? race.cls) : race.cls;
-      const gb = course && h.waku >= 1 && course.waku[h.waku - 1] ? course.waku[h.waku - 1] : 1;
       const x = {
         ability: d.ability, clsAbility: d.clsAbility, close: d.close, agariRel: d.agariRel, paceExp: d.paceExp, fastFit: d.fastFit,
         stamina: d.stamina, surfFit: d.surfFit, wet: d.wet, epos: d.epos,
-        jIdx: j?.idx ?? 0, jVenue: j?.byVenue?.[race.venue] != null ? j.byVenue[race.venue] - j.idx : 0, jSurf: j?.bySurface?.[race.surface] != null ? j.bySurface[race.surface] - j.idx : 0,
-        tIdx: t?.idx ?? 0, tSurf: t?.bySurface?.[race.surface] != null ? t.bySurface[race.surface] - t.idx : 0,
-        cIdx: c?.cIdx ?? 0, bond: c?.bond ?? 0,
-        gateEdge: Math.log(clamp(gb, 0.5, 2)), gate: ((h.waku || 4.5) - 4.5) / 3.5,
+        jIdx: hf.jIdx, jVenue: hf.jVenue, jSurf: hf.jSurf, tIdx: hf.tIdx, tSurf: hf.tSurf, cIdx: hf.cIdx, bond: hf.bond, jForm: hf.jForm,
+        gate: ((h.waku || 4.5) - 4.5) / 3.5,
         kgRel: (h.kin || kgAvg) - kgAvg,
         bwLog: h.bw ? Math.log(h.bw / 470) : 0, bwDiff: (h.bwDiff || 0) / 10,
         bwDev: (() => { const ws = (h.past || []).map(p => p.bw).filter(x => x > 0); if (!h.bw || !ws.length) return 0; return clamp((h.bw - ws.reduce((a, b) => a + b, 0) / ws.length) / 12, -2.5, 2.5); })(),
@@ -181,7 +225,7 @@ export function makeFeaturizer(DB, RI) {
       };
       const v = new Float64Array(NF);
       FEATURES.forEach((k, i) => { v[i] = Number.isFinite(x[k]) ? x[k] : 0; });
-      return { no: h.no, waku: h.waku, name: h.name, horseId: h.horseId, x: v, d, odds: h.odds, pop: h.pop, jIdx: x.jIdx, tIdx: x.tIdx, cIdx: x.cIdx };
+      return { no: h.no, waku: h.waku, name: h.name, horseId: h.horseId, x: v, d, hf, odds: h.odds, pop: h.pop, jIdx: x.jIdx, tIdx: x.tIdx, cIdx: x.cIdx };
     });
     return { raceId: race.raceId, date: race.date, venue: race.venue, surface: race.surface, dist: race.dist, cls: race.cls, baba: race.baba, n: live.length, rows, order: race.order };
   };

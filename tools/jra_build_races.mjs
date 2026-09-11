@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/jra.mjs';
-import { FEATURES, NF, buildRaceIndex, buildHistory, raceFromCard, makeFeaturizer } from './lib/jfeat.mjs';
+import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, raceFromCard, makeFeaturizer } from './lib/jfeat.mjs';
 import { utilities } from './lib/bpl.mjs';
 import { combosOf } from './lib/jbets.mjs';
 
@@ -21,8 +21,8 @@ const round = (v, k = 3) => v == null || !Number.isFinite(v) ? null : Number(v.t
 
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }
-const RI = buildRaceIndex(results), H = buildHistory(results);
-const featurize = makeFeaturizer(DB, RI);
+const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results);
+const featurize = makeFeaturizer(DB, RI, ASOF);
 
 const cards = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/cards.jsonl'), 'utf8').split('\n')) if (l) { const c = JSON.parse(l); if (c.date >= TODAY && c.surface !== '障') cards.push(c); }

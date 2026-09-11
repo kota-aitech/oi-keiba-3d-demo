@@ -9,20 +9,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/jra.mjs';
-import { FEATURES, NF, buildRaceIndex, buildHistory, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
+import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
 import { utilities, plWin, plackettLuce, fitTau } from './lib/bpl.mjs';
 
 const SPLIT = process.env.JRA_FIT_SPLIT || '2026-06-01';
 const WARM = process.env.JRA_FIT_WARM || '2024-03-01';
 const EPOCH = Number(process.env.JRA_FIT_EPOCH || 300), LR = Number(process.env.JRA_FIT_LR || 0.08), L2 = Number(process.env.JRA_FIT_L2 || 1e-3);
 const DB = readJSON(process.env.JRA_FIT_DB || 'data/jra/index.json');
+/* 切り分け用：JRA_FIT_DROP=カンマ区切りの特徴量名 で、その列を 0 にして当てはめる */
+const DROP = new Set((process.env.JRA_FIT_DROP || '').split(',').map(s => s.trim()).filter(Boolean));
+const DROPI = [...DROP].map(k => FEATURES.indexOf(k)).filter(i => i >= 0);
 
 console.error('結果を読む…');
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }
 results.sort((a, b) => a.date.localeCompare(b.date) || a.raceId.localeCompare(b.raceId));
-const RI = buildRaceIndex(results), H = buildHistory(results);
-const featurize = makeFeaturizer(DB, RI);
+const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results);
+const featurize = makeFeaturizer(DB, RI, ASOF);
 const data = [];
 for (const r of results) {
   if (r.date < WARM) continue;
@@ -30,7 +33,9 @@ for (const r of results) {
   if (race.order.some(i => i < 0)) continue;
   const f = featurize(race);
   if (!f) continue;
-  data.push({ raceId: f.raceId, date: f.date, X: f.rows.map(x => x.x), order: race.order, odds: f.rows.map(x => x.odds) });
+  const X = f.rows.map(x => x.x);
+  if (DROPI.length) for (const x of X) for (const i of DROPI) x[i] = 0;
+  data.push({ raceId: f.raceId, date: f.date, X, order: race.order, odds: f.rows.map(x => x.odds) });
 }
 const tr = data.filter(d => d.date < SPLIT), te = data.filter(d => d.date >= SPLIT);
 console.error(`  ${results.length} レース → 学習 ${tr.length}R（${WARM}〜${SPLIT}）／検証 ${te.length}R`);
