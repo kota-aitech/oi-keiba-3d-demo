@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-11T15:26:22.060Z",
+ "builtAt": "2026-09-11T15:28:42.513Z",
  "today": "20260912",
  "nat1": 0.5498,
  "model": {
@@ -4147,7 +4147,7 @@
        "close": "17:55",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4198,7 +4198,7 @@
        "close": "18:23",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4249,7 +4249,7 @@
        "close": "18:54",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4300,7 +4300,7 @@
        "close": "19:25",
        "cls": "予選特別B戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6663,7 +6663,7 @@
        "close": "18:04",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6714,7 +6714,7 @@
        "close": "18:33",
        "cls": "エイトビート",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6765,7 +6765,7 @@
        "close": "19:04",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6816,7 +6816,7 @@
        "close": "19:36",
        "cls": "予選特賞",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7921,7 +7921,7 @@
        "close": "18:13",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -7972,7 +7972,7 @@
        "close": "18:43",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8023,7 +8023,7 @@
        "close": "19:14",
        "cls": "発祥地選抜戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8074,7 +8074,7 @@
        "close": "19:47",
        "cls": "特別選抜戦",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
