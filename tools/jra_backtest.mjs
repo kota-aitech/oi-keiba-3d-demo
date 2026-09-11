@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/jra.mjs';
-import { NF, buildRaceIndex, buildHistory, buildAsOf, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
+import { NF, buildRaceIndex, buildHistory, buildAsOf, loadPed, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
 import { utilities } from './lib/bpl.mjs';
 import { combosOf } from './lib/jbets.mjs';
 
@@ -19,7 +19,9 @@ const beta = Float64Array.from(M.base.beta), tau = M.base.tau, mix = M.mix;
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }
 results.sort((a, b) => a.date.localeCompare(b.date));
-const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results);
+const PED = loadPed(fs.existsSync(path.join(ROOT, 'data/jra/horses.jsonl')) ? fs.readFileSync(path.join(ROOT, 'data/jra/horses.jsonl'), 'utf8') : '');
+const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results, PED);
+console.error(`  血統・馬主 ${PED.size} 頭`);
 const featurize = makeFeaturizer(DB, RI, ASOF);
 
 const payOf = (r, kind, code) => { const h = (r.pay?.[kind] || []).find(x => x.c === code); return h ? h.y : 0; };

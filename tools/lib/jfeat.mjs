@@ -35,6 +35,8 @@ export const FEATURES = [
   'restLog', 'layoff', 'classUp', 'downFirst', 'distChg', 'surfChg', 'lastPop', 'lastOdds', 'lastPos', 'lastMargin', 'nRuns',
   'wetX', 'age', 'mare', 'winStreak', 'afterWin', 'venueFit',
   'frontPress', 'soloNige', 'sameStyle',
+  /* 血統・馬主（馬ページから。種牡馬・母父は前走が少ない馬ほど効かせる、馬主は常時） */
+  'sIdx', 'bmsIdx', 'sSurf', 'oIdx',
 ];
 export const NF = FEATURES.length;
 
@@ -61,13 +63,16 @@ export function buildRaceIndex(results) {
    予測（出馬表）には最終状態（latest）を使う。 */
 const logit = p => Math.log(p / (1 - p)), sig = l => 1 / (1 + Math.exp(-l));
 const shrunk = (w, n, prior, k) => logit((w + k * prior) / (n + k)) - logit(prior);
-export function buildAsOf(results) {
+/* ped: horseId -> { sire, damsire, owner }（horses.jsonl）。無い馬は血統・馬主の指数が 0 になる */
+export function buildAsOf(results, ped = new Map()) {
   const J = new Map(), T = new Map(), C = new Map(), SR = new Map(), JR = new Map();
+  const S = new Map(), B = new Map(), O = new Map();       // 種牡馬・母父・馬主
   let runs = 0, wins = 0;
   const snap = new Map();                                   // raceId|horseId -> hf
   const get = (m, k) => { let v = m.get(k); if (!v) m.set(k, v = { n: 0, w: 0, byV: new Map(), byS: new Map(), q: [], qw: 0 }); return v; };
   const sub = (m, k) => { let v = m.get(k); if (!v) m.set(k, v = { n: 0, w: 0 }); return v; };
   const P0 = () => (wins + 0.073 * 200) / (runs + 200);   // 序盤は事前の 7.3% に寄せる
+  const pedOf = e => ped.get(e.horseId) || {};
   const hf = (e, venue, surface) => {
     const p0 = P0(), L0 = logit(p0);
     const j = J.get(e.jockeyId), t = T.get(e.trainerId), c = C.get(e.jockeyId + '|' + e.trainerId);
@@ -75,12 +80,18 @@ export function buildAsOf(results) {
     const own = sig(L0 + jIdx), ownT = sig(L0 + tIdx);
     const jv = j?.byV.get(venue), js = j?.byS.get(surface), ts = t?.byS.get(surface);
     const cExp = sig(L0 + 0.9 * jIdx + 0.55 * tIdx);
+    const pd = pedOf(e);
+    const s = pd.sire ? S.get(pd.sire) : null, b = pd.damsire ? B.get(pd.damsire) : null, o = pd.owner ? O.get(pd.owner) : null;
+    const sIdx = s ? shrunk(s.w, s.n, p0, 80) : 0, ss = s?.byS.get(surface);
     return {
       jIdx, tIdx,
       jVenue: jv ? shrunk(jv.w, jv.n, own, 30) : 0, jSurf: js ? shrunk(js.w, js.n, own, 30) : 0, tSurf: ts ? shrunk(ts.w, ts.n, ownT, 30) : 0,
       cIdx: c ? shrunk(c.w, c.n, cExp, 45) : 0, bond: c && SR.get(e.trainerId) ? c.n / SR.get(e.trainerId) : 0,
       jForm: j && j.q.length >= 10 ? shrunk(j.qw, j.q.length, own, 40) : 0,     // 直近60騎乗の、本人の平常値からのズレ
-      jN: j ? j.n : 0, tN: t ? t.n : 0, cN: c ? c.n : 0,
+      sIdx, bmsIdx: b ? shrunk(b.w, b.n, p0, 80) : 0, sSurf: ss ? shrunk(ss.w, ss.n, sig(L0 + sIdx), 40) : 0,
+      oIdx: o ? shrunk(o.w, o.n, p0, 40) : 0,
+      jN: j ? j.n : 0, tN: t ? t.n : 0, cN: c ? c.n : 0, sN: s ? s.n : 0, bN: b ? b.n : 0, oN: o ? o.n : 0,
+      sire: pd.sire || null, damsire: pd.damsire || null, owner: pd.owner || null,
     };
   };
   for (const r of results) {
@@ -92,13 +103,24 @@ export function buildAsOf(results) {
       if (e.jockeyId) { const j = get(J, e.jockeyId); j.n++; j.w += win; const v = sub(j.byV, r.venue); v.n++; v.w += win; const s = sub(j.byS, r.surface); s.n++; s.w += win; j.q.push(win); j.qw += win; if (j.q.length > 60) j.qw -= j.q.shift(); JR.set(e.jockeyId, (JR.get(e.jockeyId) || 0) + 1); }
       if (e.trainerId) { const t = get(T, e.trainerId); t.n++; t.w += win; const s = sub(t.byS, r.surface); s.n++; s.w += win; SR.set(e.trainerId, (SR.get(e.trainerId) || 0) + 1); }
       if (e.jockeyId && e.trainerId) { const c = sub(C, e.jockeyId + '|' + e.trainerId); c.n++; c.w += win; }
+      const pd = pedOf(e);
+      if (pd.sire) { const s = get(S, pd.sire); s.n++; s.w += win; const x = sub(s.byS, r.surface); x.n++; x.w += win; }
+      if (pd.damsire) { const b = sub(B, pd.damsire); b.n++; b.w += win; }
+      if (pd.owner) { const o = sub(O, pd.owner); o.n++; o.w += win; }
     }
   }
   return {
     of(raceId, e, venue, surface) { return snap.get(`${raceId}|${e.horseId}`) || hf(e, venue, surface); },   // 無ければ最終状態（出馬表）
     latest(e, venue, surface) { return hf(e, venue, surface); },
-    P0: P0(),
+    P0: P0(), pedCount: ped.size,
   };
+}
+/* horses.jsonl → horseId -> {sire, damsire, owner} */
+export function loadPed(file) {
+  const m = new Map();
+  if (!file) return m;
+  for (const l of String(file).split('\n')) { if (!l) continue; try { const h = JSON.parse(l); m.set(h.horseId, { sire: h.sire || null, damsire: h.damsire || null, owner: h.owner || null }); } catch { } }
+  return m;
 }
 
 /* ---- 馬ごとの履歴（新しい順）。past の1件は南関の前走欄と同じ意味の項目にそろえる ---- */
@@ -222,6 +244,9 @@ export function makeFeaturizer(DB, RI, ASOF) {
         frontPress: (d.style === '逃げ' ? 1 : d.style === '先行' ? 0.6 : 0) * (nNigeOther + 0.6 * nSenOther) / others,
         soloNige: d.style === '逃げ' && nNigeOther === 0 ? 1 : 0,
         sameStyle: ((cnt[d.style] || 0) - 1) / others,
+        /* 血統は前5走が揃った馬では 0（実績が織り込む）。南関と同じ max(0, 1 − 前走数/4) */
+        sIdx: hf.sIdx * Math.max(0, 1 - (h.past || []).length / 4), bmsIdx: hf.bmsIdx * Math.max(0, 1 - (h.past || []).length / 4),
+        sSurf: hf.sSurf * Math.max(0, 1 - (h.past || []).length / 4), oIdx: hf.oIdx,
       };
       const v = new Float64Array(NF);
       FEATURES.forEach((k, i) => { v[i] = Number.isFinite(x[k]) ? x[k] : 0; });

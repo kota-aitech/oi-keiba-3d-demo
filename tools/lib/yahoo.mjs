@@ -95,6 +95,24 @@ export function parseResult(html, raceId) {
   return { raceId, date, venue: VENUES[raceId.slice(4, 6)], kai: Number(raceId.slice(6, 8)), day: Number(raceId.slice(8, 10)), r: Number(raceId.slice(10, 12)), ...head, n: n || entries.length, entries, pay: parsePayout(html), corners, laps, pace: null, src: 'yahoo' };
 }
 
+/* 馬ページ /keiba/directory/horse/{id}/ ：性齢・生年月日・毛色・調教師・馬主・生産者・産地と、
+   血統表（gen1st--sire＝父、gen1st--dam＝母、genSecond--dam の先頭＝母父） */
+export function parseHorse(html, horseId) {
+  const prof = (html.match(/class="hr-profile"[\s\S]*?<\/section>/) || html.match(/class="hr-profile"[\s\S]{0,6000}/) || [''])[0];
+  const item = label => { const m = prof.match(new RegExp(`${label}[^<]*<\\/(?:dt|th|span|p)>\\s*<(?:dd|td|span|p)[^>]*>([\\s\\S]*?)<\\/(?:dd|td|span|p)>`)); return m ? text(m[1]) : null; };
+  /* 血統表：gen1st は [父, 母]、genSecond は [父の父, 父の母, 母の父, 母の母] の順 */
+  const gen = cls => [...html.matchAll(new RegExp(`<div class="hr-horsePedigree__${cls} hr-horsePedigree__${cls}--(?:sire|dam)"[^>]*>([\\s\\S]*?)<\\/div>`, 'g'))].map(m => text(m[1]) || null);
+  const g1 = gen('gen1st'), g2 = gen('genSecond');
+  const name = text((html.match(/<title>競馬 - (.*?) データベース/) || [])[1] || '');
+  const sa = item('性齢');
+  return {
+    horseId, name: name || null,
+    sex: sa ? (sa.match(/[牡牝セ]/) || [])[0] || null : null, birth: item('生年月日')?.replace(/年|月/g, '-').replace(/日/, '') || null, color: item('毛色'),
+    trainer: item('調教師（所属）')?.replace(/\(.*\)/, '').trim() || null, owner: item('馬主'), breeder: item('生産者'), origin: item('産地'),
+    sire: g1[0] || null, dam: g1[1] || null, damsire: g2[2] || null,
+  };
+}
+
 export function parseDenma(html, raceId) {
   const head = parseHead(html);
   const entries = [];

@@ -35,6 +35,9 @@ const cardsDue = process.env.NK_REFRESH_FORCE || [4, 5, 6, 0].includes(dow) || p
 if (cardsDue) {
   const before = fs.existsSync(cardsFile) ? fs.statSync(cardsFile).size : 0;
   if (run('jra_fetch_cards.mjs')) { prev.cardsDay = today; const after = fs.statSync(cardsFile).size; if (after !== before || process.env.NK_REFRESH_FORCE) changed = true; }
+  /* 出馬表に出てきた新しい馬の血統・馬主（取得済みは飛ばすので数頭〜数十頭）。長い取得が走っていれば見送り */
+  let horsesRunning = false; try { horsesRunning = !!execSync('pgrep -f jra_fetch_horses.mjs', { encoding: 'utf8' }).trim(); } catch { }
+  if (!horsesRunning) run('jra_fetch_horses.mjs');
 }
 /* 2) 結果と指数：17:30 以降に1日1回 */
 if (hour >= 17 && prev.resultsDay !== today) {

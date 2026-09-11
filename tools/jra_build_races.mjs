@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/jra.mjs';
-import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, raceFromCard, makeFeaturizer } from './lib/jfeat.mjs';
+import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, loadPed, raceFromCard, makeFeaturizer } from './lib/jfeat.mjs';
 import { utilities } from './lib/bpl.mjs';
 import { combosOf } from './lib/jbets.mjs';
 
@@ -21,7 +21,9 @@ const round = (v, k = 3) => v == null || !Number.isFinite(v) ? null : Number(v.t
 
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }
-const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results);
+const PED = loadPed(fs.existsSync(path.join(ROOT, 'data/jra/horses.jsonl')) ? fs.readFileSync(path.join(ROOT, 'data/jra/horses.jsonl'), 'utf8') : '');
+const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results, PED);
+console.error(`  血統・馬主 ${PED.size} 頭`);
 const featurize = makeFeaturizer(DB, RI, ASOF);
 
 const cards = [];
@@ -33,11 +35,12 @@ const GROUP = {
   ability: '近走', clsAbility: '近走', lastPos: '近走', lastMargin: '近走', winStreak: '近走', afterWin: '近走', nRuns: '近走', lastPop: '人気', lastOdds: '人気',
   close: '脚', agariRel: '脚', paceExp: '脚', fastFit: '脚', epos: '脚', frontPress: '展開', soloNige: '展開', sameStyle: '展開',
   stamina: '適性', surfFit: '適性', wet: '適性', wetX: '適性', venueFit: '適性', distChg: '適性', surfChg: '適性', classUp: '適性', downFirst: '適性',
-  jIdx: '人', jVenue: '人', jSurf: '人', tIdx: '人', tSurf: '人', cIdx: '人', bond: '人',
+  jIdx: '人', jVenue: '人', jSurf: '人', tIdx: '人', tSurf: '人', cIdx: '人', bond: '人', jForm: '人',
+  sIdx: '血統', bmsIdx: '血統', sSurf: '血統', oIdx: '馬主',
   gateEdge: '枠', gate: '枠', kgRel: '斤量', bwLog: '馬体', bwDiff: '馬体', bwDev: '馬体', bwSwing: '馬体', bwRel: '馬体',
   restLog: '間隔', layoff: '間隔', age: 'その他', mare: 'その他',
 };
-const GROUPS = ['近走', '脚', '適性', '人', '展開', '枠', '斤量', '馬体', '間隔', '人気', 'その他'];
+const GROUPS = ['近走', '脚', '適性', '人', '血統', '馬主', '展開', '枠', '斤量', '馬体', '間隔', '人気', 'その他'];
 const contrib = x => { const g = Object.fromEntries(GROUPS.map(k => [k, 0])); for (let i = 0; i < NF; i++) g[GROUP[FEATURES[i]] || 'その他'] += beta[i] * x[i]; return GROUPS.map(k => round(g[k], 2)); };
 
 const days = new Map();
@@ -67,7 +70,10 @@ for (const c of cards) {
     note.push(`脚質 ${d.style}（序盤の位置 ${(d.epos * 100).toFixed(0)}%）${d.agariRel ? `・上がり ${d.agariRel > 0 ? '+' : ''}${d.agariRel.toFixed(1)}秒（レース平均比）` : ''}`);
     const j = DB.jockey?.[e.jockeyId], t = DB.trainer?.[e.trainerId], cb = DB.combo?.[`${e.jockeyId}|${e.trainerId}`];
     note.push(`${e.jockey || ''}${j ? `（指数 ${j.idx >= 0 ? '+' : ''}${j.idx}${j.byVenue?.[c.venue] != null ? `・${c.venue} ${j.byVenue[c.venue] >= 0 ? '+' : ''}${j.byVenue[c.venue]}` : ''}）` : '（指数なし）'}×${e.trainer || ''}${t ? `（${t.idx >= 0 ? '+' : ''}${t.idx}）` : ''}${cb ? `／コンビ${cb.n}走${cb.bond >= 0.3 ? '・主戦' : cb.bond >= 0.12 ? '・準主戦' : ''}` : ''}`);
+    const hf = x.hf || {};
+    if (hf.sire || hf.owner) note.push(`血統 ${hf.sire || e.sire || '—'}${hf.sN ? `（産駒 ${hf.sN}走・指数 ${hf.sIdx >= 0 ? '+' : ''}${hf.sIdx.toFixed(2)}${hf.sSurf ? `・${c.surface} ${hf.sSurf >= 0 ? '+' : ''}${hf.sSurf.toFixed(2)}` : ''}）` : ''}／母父 ${hf.damsire || e.damsire || '—'}${hf.bN ? `（${hf.bmsIdx >= 0 ? '+' : ''}${hf.bmsIdx.toFixed(2)}）` : ''}${hf.owner ? `／馬主 ${hf.owner}${hf.oN ? `（${hf.oN}走・${hf.oIdx >= 0 ? '+' : ''}${hf.oIdx.toFixed(2)}）` : ''}` : ''}`);
     return {
+      owner: hf.owner || null,
       no: x.no, waku: x.waku, name: x.name, horseId: x.horseId, sexAge: e.sexAge, color: e.color, kin: e.kin, jockey: e.jockey, jockeyId: e.jockeyId, trainer: e.trainer, trainerId: e.trainerId, stable: e.stable,
       sire: e.sire, dam: e.dam, damsire: e.damsire, bw: e.bw, bwDiff: e.bwDiff, odds: e.odds, pop: e.pop,
       mark: marks[i] || '', p1: round(C.p1[i], 4), top2: round(C.top2[i], 3), top3: round(C.top3[i], 3), U: round(Um[i], 2), style: d.style,

@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, readJSON, writeJSON } from './lib/jra.mjs';
-import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
+import { FEATURES, NF, buildRaceIndex, buildHistory, buildAsOf, loadPed, raceFromResult, makeFeaturizer } from './lib/jfeat.mjs';
 import { utilities, plWin, plackettLuce, fitTau } from './lib/bpl.mjs';
 
 const SPLIT = process.env.JRA_FIT_SPLIT || '2026-06-01';
@@ -24,7 +24,9 @@ console.error('結果を読む…');
 const results = [];
 for (const l of fs.readFileSync(path.join(ROOT, 'data/jra/results.jsonl'), 'utf8').split('\n')) if (l) { const r = JSON.parse(l); if (r.surface !== '障') results.push(r); }
 results.sort((a, b) => a.date.localeCompare(b.date) || a.raceId.localeCompare(b.raceId));
-const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results);
+const PED = loadPed(fs.existsSync(path.join(ROOT, 'data/jra/horses.jsonl')) ? fs.readFileSync(path.join(ROOT, 'data/jra/horses.jsonl'), 'utf8') : '');
+const RI = buildRaceIndex(results), H = buildHistory(results), ASOF = buildAsOf(results, PED);
+console.error(`  血統・馬主 ${PED.size} 頭`);
 const featurize = makeFeaturizer(DB, RI, ASOF);
 const data = [];
 for (const r of results) {
