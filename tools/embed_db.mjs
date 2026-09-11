@@ -20,6 +20,8 @@ function embedBoat() {
 function embedJra() {
   try { inject('jra.html', 'NKJRA', 'NKJRA', readJSON('data/jra/races.json')); }
   catch (e) { console.error('  (jra.html はスキップ: ' + e.message + ')'); }
+  try { inject('top.html', 'NKJRATOP', 'NKJT', readJSON('data/jra/top.json')); }
+  catch (e) { console.error('  (top.html の中央競馬面はスキップ: ' + e.message + ')'); }
 }
 if (process.env.NK_EMBED_ONLY === 'boat') { embedBoat(); process.exit(0); }
 if (process.env.NK_EMBED_ONLY === 'jra') { embedJra(); process.exit(0); }

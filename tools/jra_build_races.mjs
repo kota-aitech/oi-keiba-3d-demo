@@ -102,5 +102,16 @@ const out = {
   days: [...days].map(([date, V]) => ({ date, venues: [...V].map(([venue, races]) => ({ venue, races: races.sort((a, b) => a.r - b.r) })) })),
 };
 writeJSON('data/jra/races.json', out);
+/* TOP（top.html）用のたたんだ版 */
+const top = {
+  builtAt: out.meta.built, today: TODAY, model: out.meta.model, backtest: out.meta.backtest,
+  days: out.days.map(d => ({ date: d.date, venues: d.venues.map(v => ({ venue: v.venue, races: v.races.map(r => {
+    const t = r.horses.slice().sort((a, b) => b.p1 - a.p1).slice(0, 3);
+    return { r: r.r, name: r.name, grade: r.grade, start: r.start, surface: r.surface, dist: r.dist, n: r.n, cls: r.cls, level: r.level, conf: r.conf,
+      top: t.map(h => ({ no: h.no, waku: h.waku, name: h.name, p: r.horses.length ? round(h.p1, 3) : null, odds: h.odds, jockey: (h.jockey || '').replace(/\s/g, '') })),
+      box3: r.box3, umaren: r.umaren[0], sanpuku: r.sanpuku[0] };
+  }) })) })),
+};
+writeJSON('data/jra/top.json', top);
 console.error(`${TODAY} 以降 ${nR}R（第2段＝オッズあり ${nMix}R）-> data/jra/races.json (${(fs.statSync(path.join(ROOT, 'data/jra/races.json')).size / 1024).toFixed(0)} KB)`);
 for (const d of out.days) for (const v of d.venues) console.error(`  ${d.date} ${v.venue} ${v.races.length}R`);
