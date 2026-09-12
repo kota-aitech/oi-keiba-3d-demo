@@ -1,5 +1,5 @@
 {
- "builtAt": "2026-09-12T15:38:27.877Z",
+ "builtAt": "2026-09-12T16:21:55.113Z",
  "today": "20260913",
  "nat1": 0.5498,
  "model": {
@@ -67,7 +67,7 @@
        "close": "10:47",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -118,7 +118,7 @@
        "close": "11:16",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 6,
@@ -696,7 +696,7 @@
        "close": "11:03",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 4,
@@ -2583,7 +2583,7 @@
        "close": "10:43",
        "cls": "朝トコ小判R",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -2634,7 +2634,7 @@
        "close": "11:14",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3212,7 +3212,7 @@
        "close": "10:33",
        "cls": "ツッキーレー",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3263,7 +3263,7 @@
        "close": "11:00",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -3994,7 +3994,7 @@
        "close": "09:50",
        "cls": "みくにあさ推",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4045,7 +4045,7 @@
        "close": "10:18",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4096,7 +4096,7 @@
        "close": "10:50",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4470,7 +4470,7 @@
        "close": "10:29",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -4521,7 +4521,7 @@
        "close": "10:58",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -5728,7 +5728,7 @@
        "close": "10:56",
        "cls": "ファーストB",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6357,7 +6357,7 @@
        "close": "10:38",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -6408,7 +6408,7 @@
        "close": "11:08",
        "cls": "予選",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8397,7 +8397,7 @@
        "close": "10:02",
        "cls": "サンライズY進入固定",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8448,7 +8448,7 @@
        "close": "10:31",
        "cls": "サンライズZ",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
@@ -8499,7 +8499,7 @@
        "close": "11:05",
        "cls": "一般",
        "level": "pre",
-       "oddsKind": null,
+       "oddsKind": "pre",
        "top": [
         {
          "lane": 1,
