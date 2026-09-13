@@ -124,7 +124,8 @@ export function parseDenma(html, raceId) {
     const ped = t[5].split('｜').map(s => s.trim());
     const pick = re => { for (const s of ped) { const m = s.match(re); if (m) return m[1].trim(); } return null; };
     const bw = (t[6] || '').match(/(\d{3})\(([+\-]?\d+)\)/);
-    const od = (t[7] || '').match(/([\d.]+)\s*\(\s*(\d+)\s*\)/);
+    /* 人気(オッズ) の順。発売後は "3(6.1)"、発売前は "-(-)" */
+    const od = (t[7] || '').match(/(\d+)\s*\(\s*([\d.]+)\s*\)/);
     entries.push({
       waku: num(t[0]), no: num(t[1]), name: nm[0], horseId: idOf(c[2], 'horse'),
       sexAge: ((nm[1] || '').match(/[牡牝セ]\d+/) || [])[0] || null, color: ((nm[1] || '').match(/\/(\S+)$/) || [])[1] || null,
@@ -132,7 +133,7 @@ export function parseDenma(html, raceId) {
       trainer: tr2[0], trainerId: idOf(c[4], 'trainer'), stable: ((tr2[1] || '').match(/栗東|美浦|地方|海外/) || [])[0] || null,
       sire: pick(/^父：\s*(.+)$/), dam: pick(/^母：\s*(.+)$/), damsire: pick(/^[(（]母父：\s*(.+?)[)）]$/),
       bw: bw ? Number(bw[1]) : null, bwDiff: bw ? Number(bw[2]) : null,
-      odds: od ? Number(od[1]) : null, pop: od ? Number(od[2]) : null,
+      odds: od ? Number(od[2]) : null, pop: od ? Number(od[1]) : null,
     });
   }
   return { raceId, venue: VENUES[raceId.slice(4, 6)], kai: Number(raceId.slice(6, 8)), day: Number(raceId.slice(8, 10)), r: Number(raceId.slice(10, 12)), date: dateOf(html), ...head, n: entries.length, entries, src: 'yahoo' };
